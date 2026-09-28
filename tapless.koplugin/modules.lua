@@ -49,6 +49,7 @@ return {
     candidate_widths = "ui/candidate_widths.lua",
     trace_renderer = "ui/trace_renderer.lua",
     one_handed = "ui/one_handed.lua",
+    side_band = "ui/side_band.lua",
     panel_button = "ui/panel_button.lua",
     resize_frame = "ui/resize_frame.lua",
 }

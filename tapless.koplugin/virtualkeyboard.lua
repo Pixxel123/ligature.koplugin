@@ -129,6 +129,15 @@ local KeyboardUI = loadModule("keyboard_ui"):new{
     screen = Screen,
 }
 local OneHanded = loadModule("one_handed")
+local SideBand = loadModule("side_band"):new{
+    settings = G_reader_settings,
+    screen = Screen,
+    horizontal_span = HorizontalSpan,
+    frame_container = FrameContainer,
+    widget = require("ui/widget/widget"),
+    geometry = Geom,
+    blitbuffer = Blitbuffer,
+}
 local PanelButton = loadModule("panel_button"):new{
     input_container = InputContainer,
     frame_container = FrameContainer,
@@ -177,6 +186,7 @@ return loadModule("koreader_adapter"):new{
     trace_renderer = TraceRenderer,
     key_adapter = KeyAdapter,
     one_handed = OneHanded:new(G_reader_settings),
+    side_band = SideBand,
     resize_frame = ResizeFrame,
     overlap_group = OverlapGroup,
     virtual_key = VirtualKey,

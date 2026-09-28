@@ -188,13 +188,27 @@ function KoreaderAdapter:install(VirtualKeyboard)
             },
         }
         local bottom_child = keyboard_frame
+        self.swype_mvp_side_bands = nil
         if area then
+            local frame_size = keyboard_frame:getSize()
             bottom_child = adapter.horizontal_group:new{
                 allow_mirroring = false,
-                adapter.horizontal_span:new{ width = area.frame_x },
+                adapter.side_band:create(area.frame_x, frame_size.h),
                 keyboard_frame,
-                adapter.horizontal_span:new{ width = area.after },
+                adapter.side_band:create(area.after, frame_size.h),
             }
+            -- KOReader refreshes only the keys' area when the keyboard
+            -- shows or closes; hatched strips need their own refresh.
+            if adapter.side_band:hatched() then
+                local top = adapter.screen:getHeight() - frame_size.h
+                self.swype_mvp_side_bands = {
+                    adapter.geometry:new{ x = 0, y = top,
+                        w = area.frame_x, h = frame_size.h },
+                    adapter.geometry:new{
+                        x = area.frame_x + frame_size.w, y = top,
+                        w = area.after, h = frame_size.h },
+                }
+            end
         end
         if resize then
             bottom_child = self:_swypeResizeLayer(bottom_child, area,
@@ -615,9 +629,18 @@ function KoreaderAdapter:install(VirtualKeyboard)
         adapter.dictionary_controller:scheduleWarmUp(self, delay)
     end
 
+    function VirtualKeyboard:_swypeRefreshSideBands()
+        for _, rect in ipairs(self.swype_mvp_side_bands or {}) do
+            if rect.w > 0 then
+                adapter.ui_manager:setDirty(nil, "ui", rect)
+            end
+        end
+    end
+
     function VirtualKeyboard:onShow()
         self.swype_mvp_closed = false
         local result = original_show(self)
+        self:_swypeRefreshSideBands()
         self:_swypeScheduleWarmUp()
         adapter.dictionary_controller:scheduleLanguageSetup(self)
         return result
@@ -638,6 +661,7 @@ function KoreaderAdapter:install(VirtualKeyboard)
         self:_swypeCommitPendingContext()
         self:_swypeSaveContext()
         self:_swypeClearCandidateState()
+        self:_swypeRefreshSideBands()
         return original_close_widget(self)
     end
 

@@ -33,6 +33,7 @@ local specs = {
     "resize_frame_spec",
     "word_delete_spec",
     "candidate_widths_spec",
+    "side_band_spec",
 }
 
 for _, name in ipairs(specs) do
