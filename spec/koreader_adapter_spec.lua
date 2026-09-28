@@ -144,26 +144,43 @@ end)
 
 it("_refresh closure builds region after dimen is painted", function()
     local calls, keyboard = setup()
-    keyboard.dimen = { w = 100, h = 40 }
-    keyboard.swype_mvp_side_bands = {
-        rect(0, 10),
-        rect(110, 20),
+    -- Pre-paint dimen: has w, h but no x, y (like KOReader's getSize).
+    -- Geom-like: copy and combine will fail on nil x/y if called eagerly.
+    keyboard.dimen = {
+        w = 100, h = 40,
+        copy = function(self)
+            if not self.x then
+                error("attempt to perform arithmetic on field 'x' (a nil value)")
+            end
+            return rect(self.x, self.w)
+        end,
+        combine = function(self, other)
+            if not self.x then
+                error("attempt to perform arithmetic on field 'x' (a nil value)")
+            end
+            local left = math.min(self.x, other.x)
+            local right = math.max(self.x + self.w, other.x + other.w)
+            return rect(left, right - left)
+        end,
     }
+    -- Bands that don't span keys: only left band.
+    keyboard.swype_mvp_side_bands = { { x = 0, y = 100, w = 10, h = 40 } }
     keyboard:_refresh(false)
     local call = calls.setDirty_calls[1]
     local fn = call.fn
     -- Simulate paint: add x and y to dimen.
     keyboard.dimen.x = 10
     keyboard.dimen.y = 100
-    keyboard.dimen.copy = function(self)
-        return rect(self.x, self.w)
-    end
     -- Call closure as paint would.
     local refresh_type, region = fn()
     T.eq(refresh_type, "ui")
     T.truthy(region, "region built after paint")
-    T.eq(region.x, 0, "region x covers left band")
-    T.eq(region.w, 130, "region w covers all")
+    -- Region must be keys ∪ bands: x=0 (band), w=110 (band 10 + keys 100).
+    -- If region were bands only, w would be 10.
+    T.eq(region.x, 0, "region x = 0 (left band)")
+    T.eq(region.w, 110, "region w = 110 (keys 10-110 ∪ band 0-10)")
+    T.eq(region.y, 100, "region y = keys y")
+    T.eq(region.h, 40, "region h = keys h")
 end)
 
 it("_refresh without bands calls original unchanged", function()
