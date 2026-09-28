@@ -50,9 +50,8 @@ function CandidateWidths.compute(wants, avail, min_share)
         indices[index] = index
     end
     table.sort(indices, function(a, b)
-        local frac_cmp = fractions[b] - fractions[a]
-        if frac_cmp ~= 0 then
-            return frac_cmp > 0
+        if fractions[a] ~= fractions[b] then
+            return fractions[a] > fractions[b]
         else
             return a < b
         end

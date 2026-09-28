@@ -48,6 +48,14 @@ it("keeps empty slots above the minimum", function()
     end
 end)
 
+it("gives leftover pixels to the boxes rounded down most", function()
+    local widths = CandidateWidths.compute({ 10, 20, 30, 40 }, 133)
+    T.eq(widths[1], 25)
+    T.eq(widths[2], 26)
+    T.eq(widths[3], 36)
+    T.eq(widths[4], 46)
+end)
+
 it("always fills the row with whole pixels", function()
     for seed = 1, 200 do
         local wants, n = {}, 1 + seed % 4
