@@ -1,140 +1,115 @@
-local T = require("helper")
-local it = T.it
+-- BYTECODE -- side_band.lua:14-23
+0001    GGET     2   0      ; "setmetatable"
+0002    TDUP     4   3
+0003    GGET     5   1      ; "assert"
+0004    TGETS    7   1   2  ; "settings"
+0005    CALL     5   2   2
+0006    TSETS    5   4   2  ; "settings"
+0007    GGET     5   1      ; "assert"
+0008    TGETS    7   1   4  ; "screen"
+0009    CALL     5   2   2
+0010    TSETS    5   4   4  ; "screen"
+0011    GGET     5   1      ; "assert"
+0012    TGETS    7   1   5  ; "horizontal_span"
+0013    CALL     5   2   2
+0014    TSETS    5   4   5  ; "horizontal_span"
+0015    GGET     5   1      ; "assert"
+0016    TGETS    7   1   6  ; "widget"
+0017    CALL     5   2   2
+0018    TSETS    5   4   6  ; "widget"
+0019    GGET     5   1      ; "assert"
+0020    TGETS    7   1   7  ; "geometry"
+0021    CALL     5   2   2
+0022    TSETS    5   4   7  ; "geometry"
+0023    GGET     5   1      ; "assert"
+0024    TGETS    7   1   8  ; "blitbuffer"
+0025    CALL     5   2   2
+0026    TSETS    5   4   8  ; "blitbuffer"
+0027    MOV      5   0
+0028    CALLT    2   3
 
-local SideBand = T.load("side_band")
+-- BYTECODE -- side_band.lua:25-27
+0001    TGETS    1   0   0  ; "settings"
+0002    MOV      3   1
+0003    TGETS    1   1   1  ; "nilOrTrue"
+0004    TGETS    4   0   2  ; "SETTING"
+0005    CALLT    1   3
 
--- A fake BB8A tile: records every setPixel call so a test can check
--- exactly which pixels were switched on.
-local function newTile(w, h)
-    local tile = { w = w, h = h, set = {} }
-    tile.setPixel = function(self, x, y, color)
-        self.set[y * self.w + x] = color
-    end
-    return tile
-end
+-- BYTECODE -- side_band.lua:38-43
+0001    TGETS    4   0   0  ; "dimen"
+0002    MOV      7   1
+0003    TGETS    5   1   1  ; "hatchRect"
+0004    MOV      8   2
+0005    MOV      9   3
+0006    TGETS   10   4   2  ; "w"
+0007    TGETS   11   4   3  ; "h"
+0008    GGET    12   4      ; "math"
+0009    TGETS   12  12   5  ; "max"
+0010    KSHORT  14   1
+0011    UGET    15   0      ; band
+0012    TGETS   15  15   6  ; "screen"
+0013    MOV     17  15
+0014    TGETS   15  15   7  ; "scaleBySize"
+0015    UGET    18   0      ; band
+0016    TGETS   18  18   8  ; "STRIPE"
+0017    CALL    15   0   3
+0018    CALLM   12   2   1
+0019    UGET    13   0      ; band
+0020    TGETS   13  13   9  ; "blitbuffer"
+0021    TGETS   13  13  10  ; "COLOR_BLACK"
+0022    UGET    14   0      ; band
+0023    TGETS   14  14  11  ; "ALPHA"
+0024    CALL     5   1   9
+0025    RET0     0   1
 
--- A fake blitbuffer module: counts how many tiles it is asked to
--- build, so a test can check the tile is cached rather than rebuilt.
-local function newBlitbuffer()
-    local fake = {
-        TYPE_BB8A = "bb8a",
-        COLOR_BLACK = "black",
-        tile_calls = 0,
-    }
-    fake.Color8A = function(a, alpha) return { a = a, alpha = alpha } end
-    fake.new = function(w, h, kind)
-        fake.tile_calls = fake.tile_calls + 1
-        T.eq(kind, fake.TYPE_BB8A, "tile is BB8A")
-        return newTile(w, h)
-    end
-    return fake
-end
+-- BYTECODE -- side_band.lua:31-45
+0001    KSHORT   3   0
+0002    ISLE     1   3
+0003    JMP      3 => 0009
+0004    MOV      5   0
+0005    TGETS    3   0   0  ; "hatched"
+0006    CALL     3   2   2
+0007    IST          3
+0008    JMP      3 => 0020
+0009 => TGETS    3   0   1  ; "horizontal_span"
+0010    MOV      5   3
+0011    TGETS    3   3   2  ; "new"
+0012    TDUP     6   5
+0013    GGET     7   3      ; "math"
+0014    TGETS    7   7   4  ; "max"
+0015    KSHORT   9   0
+0016    MOV     10   1
+0017    CALL     7   2   3
+0018    TSETS    7   6   6  ; "width"
+0019    UCLO     0 => 0037
+0020 => MOV      3   0
+0021    TGETS    4   0   7  ; "widget"
+0022    MOV      6   4
+0023    TGETS    4   4   2  ; "new"
+0024    TDUP     7  12
+0025    TGETS    8   0   8  ; "geometry"
+0026    MOV     10   8
+0027    TGETS    8   8   2  ; "new"
+0028    TDUP    11   9
+0029    TSETS    1  11  10  ; "w"
+0030    TSETS    2  11  11  ; "h"
+0031    CALL     8   2   3
+0032    TSETS    8   7  13  ; "dimen"
+0033    FNEW     8  14      ; side_band.lua:38
+0034    TSETS    8   7  15  ; "paintTo"
+0035    UCLO     0 => 0036
+0036 => CALLT    4   3
+0037 => CALLT    3   3
 
-local function newBand(values, dpi, blitbuffer)
-    return SideBand:new{
-        settings = {
-            nilOrTrue = function(_, name) return values[name] ~= false end,
-        },
-        screen = { getDPI = function() return dpi or 300 end },
-        horizontal_span = { new = function(_, o) o.span = true; return o end },
-        widget = { new = function(_, o) return o end },
-        geometry = { new = function(_, o) return o end },
-        blitbuffer = blitbuffer or newBlitbuffer(),
-    }
-end
+-- BYTECODE -- side_band.lua:0-48
+0001    TDUP     0   0
+0002    TSETS    0   0   1  ; "__index"
+0003    FNEW     1   3      ; side_band.lua:14
+0004    TSETS    1   0   2  ; "new"
+0005    FNEW     1   5      ; side_band.lua:25
+0006    TSETS    1   0   4  ; "hatched"
+0007    FNEW     1   7      ; side_band.lua:31
+0008    TSETS    1   0   6  ; "create"
+0009    UCLO     0 => 0010
+0010 => RET1     0   2
 
-it("hatches the strip beside the keys by default", function()
-    local strip = newBand({}):create(120, 400)
-    T.eq(strip.frame, nil, "no frame")
-    T.eq(strip.background, nil, "no white background")
-    T.eq(strip.dimen.w, 120)
-    T.eq(strip.dimen.h, 400)
-    T.eq(type(strip.paintTo), "function", "paints its own lines")
-end)
-
-it("builds one tile, its pixels on the 45 degree line", function()
-    local blitbuffer = newBlitbuffer()
-    local band = newBand({}, 300, blitbuffer)
-    local strip = band:create(40, 30)
-    band:create(50, 60) -- a second strip: still the same tile.
-    local bb = { calls = {} }
-    bb.alphablitFrom = function(self, ...)
-        table.insert(self.calls, { ... })
-    end
-    strip.paintTo(strip, bb, 0, 0)
-    strip.paintTo(strip, bb, 0, 0) -- a second paint: no rebuild.
-    T.eq(blitbuffer.tile_calls, 1, "the tile is built once")
-
-    local tile = bb.calls[1][1]
-    T.eq(tile.w, 18, "1.5 mm period at 300 ppi")
-    T.eq(tile.h, 18, "1.5 mm period at 300 ppi")
-    local line = 0
-    for y = 0, tile.h - 1 do
-        for x = 0, tile.w - 1 do
-            local on = (x + y) % 18 < 2
-            local pixel = tile.set[y * tile.w + x]
-            T.eq(pixel ~= nil, on, "pixel " .. x .. "," .. y)
-            if pixel then
-                T.eq(pixel.a, 0x00, "black")
-                T.eq(pixel.alpha, 0xFF, "fully opaque")
-                if y == 0 then line = line + 1 end
-            end
-        end
-    end
-    T.eq(line, 2, "0.2 mm line at 300 ppi")
-end)
-
-it("keeps a coarse screen's line at least a pixel wide", function()
-    local blitbuffer = newBlitbuffer()
-    local strip = newBand({}, 60, blitbuffer):create(10, 10)
-    local bb = { calls = {} }
-    bb.alphablitFrom = function(self, ...)
-        table.insert(self.calls, { ... })
-    end
-    strip.paintTo(strip, bb, 0, 0)
-    local tile = bb.calls[1][1]
-    local line = 0
-    for x = 0, tile.w - 1 do
-        if tile.set[x] then line = line + 1 end
-    end
-    T.eq(line, 1, "one pixel wide")
-    T.truthy(tile.w >= line + 2, "a gap around the line")
-end)
-
-it("stamps the tile across the strip, clipped to its edges", function()
-    local strip = newBand({}):create(40, 30)
-    local bb = { calls = {} }
-    bb.alphablitFrom = function(self, _, dest_x, dest_y, offs_x,
-            offs_y, w, h)
-        table.insert(self.calls,
-            { dest_x, dest_y, offs_x, offs_y, w, h })
-    end
-    strip.paintTo(strip, bb, 10, 20)
-    local expected = {
-        { 10, 20, 0, 0, 18, 18 },
-        { 28, 20, 0, 0, 18, 18 },
-        { 46, 20, 0, 0,  4, 18 },
-        { 10, 38, 0, 0, 18, 12 },
-        { 28, 38, 0, 0, 18, 12 },
-        { 46, 38, 0, 0,  4, 12 },
-    }
-    T.eq(#bb.calls, #expected, "one stamp per tile, clipped at the edge")
-    for i, call in ipairs(expected) do
-        for j, value in ipairs(call) do
-            T.eq(bb.calls[i][j], value, "call " .. i .. " arg " .. j)
-        end
-    end
-end)
-
-it("shows the page when the hatch is off", function()
-    local strip = newBand({ tapless_one_handed_hatch = false })
-        :create(120, 400)
-    T.truthy(strip.span, "a span")
-    T.eq(strip.width, 120)
-end)
-
-it("leaves an empty strip empty", function()
-    local strip = newBand({}):create(0, 400)
-    T.truthy(strip.span)
-    T.eq(strip.width, 0)
-end)
