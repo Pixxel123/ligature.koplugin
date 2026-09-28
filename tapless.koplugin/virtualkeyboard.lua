@@ -140,7 +140,6 @@ local SideBand = loadModule("side_band"):new{
     settings = G_reader_settings,
     screen = Screen,
     horizontal_span = HorizontalSpan,
-    frame_container = FrameContainer,
     widget = require("ui/widget/widget"),
     geometry = Geom,
     blitbuffer = Blitbuffer,
