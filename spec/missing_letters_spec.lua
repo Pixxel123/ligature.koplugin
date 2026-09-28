@@ -50,3 +50,39 @@ it("uses the move only where the plain alignment fails", function()
         scoring:scoreEntryDynamic(trace, near, trace_chars, nil, nil,
         false, 0, false, nil, 0))
 end)
+
+it("tells beforehand when the plain alignment must fail", function()
+    -- Six keys in a row, 100 apart: each lends its neighbours.
+    local centers = {}
+    for index, letter in ipairs({ "a", "b", "c", "d", "e", "f" }) do
+        centers[string.byte(letter)] = { x = index * 100, y = 50,
+            size = 100 }
+    end
+    math.randomseed(7)
+    local function word(length)
+        local letters = {}
+        for index = 1, length do
+            letters[index] = string.char(96 + math.random(6))
+        end
+        return table.concat(letters)
+    end
+    local said_no = 0
+    for _ = 1, 3000 do
+        local trace = word(math.random(1, 9))
+        local candidate = word(math.random(1, 7))
+        local trace_chars = scoring:buildNextPositions(trace)
+        local near = math.random(2) == 1
+            and scoring:buildNearPositions(trace_chars, centers) or nil
+        local ends = math.random(2) == 1
+        local start = math.random(2) == 1
+        local may = scoring:_mayAlign(candidate, trace_chars, ends, start,
+            near)
+        local score = scoring:dynamicMatchScore(candidate, trace_chars, ends,
+            nil, nil, nil, nil, start, near)
+        T.eq(may, score < 1000, candidate .. " in " .. trace)
+        if not may then
+            said_no = said_no + 1
+        end
+    end
+    T.truthy(said_no > 100, "some words cannot align")
+end)
