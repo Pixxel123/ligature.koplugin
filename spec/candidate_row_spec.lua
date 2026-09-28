@@ -95,3 +95,50 @@ it("puts a right handle last, after a gap", function()
     T.eq(row.widget[#row.widget].handle, true)
     T.eq(row.widget[#row.widget - 1].gap, true)
 end)
+
+-- A row built with words measured at 10 px a letter and 5 px padding.
+local function createSized(candidates, fitted)
+    local VirtualKey = {}
+    function VirtualKey:new(options) return options end
+    return T.load("candidate_row"):create{
+        HorizontalGroup = { new = function() return {} end },
+        VirtualKey = VirtualKey,
+        CandidateWidths = T.load("candidate_widths"),
+        width = 424, height = 40, key_padding = 2, padding = 2,
+        horizontal_padding = {},
+        candidates = candidates,
+        on_select_candidate = function() end,
+        measure = function(word) return word == " " and 0 or #word * 10 end,
+        pad = 5,
+        fit_label = function(key, max_width)
+            fitted[#fitted + 1] = { key.label, max_width }
+        end,
+    }
+end
+
+it("sizes each box to its word", function()
+    local fitted = {}
+    local row = createSized({ { word = "international" }, { word = "in" },
+        { word = "it" }, { word = "is" } }, fitted)
+    -- Four boxes share 424 - 2*2 - 2*2 - 3*2 = 410 px.
+    local total = 0
+    for _, key in ipairs(row.keys) do total = total + key.width end
+    T.eq(total, 410)
+    T.truthy(row.keys[1].width > row.keys[2].width, "long word wider")
+    T.eq(row.keys[2].width, row.keys[3].width, "short words alike")
+    T.eq(fitted[1][1], "international")
+    T.eq(fitted[1][2], row.keys[1].width - 10, "inside the padding")
+end)
+
+it("keeps equal boxes without a measure", function()
+    local row = create()
+    T.eq(row.keys[1].width, row.keys[4].width)
+end)
+
+it("lists the words the row shows", function()
+    local words = T.load("candidate_row").words(
+        { { word = "one" }, { word = "two" } }, nil, 4)
+    T.eq(table.concat(words, "|"), "one|two| | ")
+    local offer = T.load("candidate_row").words({}, { word = "zyx" }, 4)
+    T.eq(table.concat(offer, "|"), "zyx|+| | ")
+end)

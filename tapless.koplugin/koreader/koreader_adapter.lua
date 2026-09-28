@@ -80,7 +80,7 @@ function KoreaderAdapter:install(VirtualKeyboard)
         local handle = area and self:_swypeHandle(base_key_width,
             base_key_height, block, screen)
         self.swype_mvp_handle = handle or nil
-        local candidate_row = adapter.keyboard_ui:createCandidateRow(self, {
+        local row_options = {
             width = keys_width,
             height = base_key_height,
             key_padding = self.key_padding,
@@ -88,7 +88,13 @@ function KoreaderAdapter:install(VirtualKeyboard)
             horizontal_padding = h_key_padding,
             handle = handle and { widget = handle, width = base_key_width,
                 side = area.handle_side } or nil,
-        })
+        }
+        -- Kept to rebuild the row, in the same place, when its words
+        -- change (_swypeRebuildCandidateRow).
+        self.swype_mvp_candidate_row_options = row_options
+        self.swype_mvp_candidate_group = vertical_group
+        local candidate_row = adapter.keyboard_ui:createCandidateRow(self,
+            row_options)
         self.swype_mvp_candidate_keys = candidate_row.keys
         table.insert(vertical_group, candidate_row.widget)
         table.insert(self.layout, candidate_row.layout)
@@ -175,12 +181,15 @@ function KoreaderAdapter:install(VirtualKeyboard)
             end
         end
 
+        -- Also what shows between the suggestion boxes.
+        self.swype_mvp_frame_background =
+            adapter.settings:nilOrTrue("keyboard_key_border")
+                and adapter.blitbuffer.COLOR_LIGHT_GRAY
+                or adapter.blitbuffer.COLOR_WHITE
         local keyboard_frame = adapter.frame_container:new{
             margin = 0,
             bordersize = border,
-            background = adapter.settings:nilOrTrue("keyboard_key_border")
-                and adapter.blitbuffer.COLOR_LIGHT_GRAY
-                or adapter.blitbuffer.COLOR_WHITE,
+            background = self.swype_mvp_frame_background,
             radius = 0,
             padding = self.padding,
             allow_mirroring = false,
@@ -814,6 +823,106 @@ function KoreaderAdapter:install(VirtualKeyboard)
     function VirtualKeyboard:_swypeRefreshCandidateRow(refresh_type, only_index)
         adapter.keyboard_ui:refreshCandidateRow(
             self, refresh_type, only_index)
+    end
+
+    -- A word's width on a suggestion key, in the keys' font.
+    function VirtualKeyboard:_swypeMeasureLabel(word, bold)
+        if word == "" or word == " " then
+            return 0
+        end
+        local size = adapter.key_adapter:keyFontSize()
+            or adapter.settings:readSetting("keyboard_key_font_size", 22)
+        local widget = adapter.text_widget:new{
+            text = word,
+            face = adapter.font:getFace("infont", size),
+            bold = bold or adapter.settings:isTrue("keyboard_key_bold"),
+        }
+        local width = widget:getWidth()
+        widget:free()
+        return width
+    end
+
+    -- Space kept free inside each suggestion box, each side: 1.5 mm.
+    function VirtualKeyboard:_swypeLabelPad()
+        return math.floor(1.5 * adapter.screen:getDPI() / 25.4 + 0.5)
+    end
+
+    -- Shrinks a key's label a font size at a time until it fits
+    -- max_width, as KOReader does with less room to spare.
+    function VirtualKeyboard:_swypeFitLabel(key, max_width)
+        local label = key.swype_mvp_label_widget
+        local center = key[1] and key[1][1]
+        if not label or not center or center[1] ~= label then
+            return
+        end
+        while label:getWidth() > max_width do
+            local size = label.face.orig_size - 1
+            if size < 8 then
+                break
+            end
+            -- After getWidth, KOReader may have swapped in the bold face;
+            -- built from it, the smaller label is just as bold.
+            local smaller = adapter.text_widget:new{
+                text = label.text,
+                face = adapter.font:getFace(label.face.orig_font, size),
+                bold = label.bold,
+                fgcolor = label.fgcolor,
+            }
+            label:free()
+            label = smaller
+        end
+        center[1] = label
+        key.swype_mvp_label_widget = label
+    end
+
+    -- Builds a new suggestion row when its words change and puts it
+    -- where the old one was. Returns true when it changed.
+    function VirtualKeyboard:_swypeRebuildCandidateRow(refresh_type)
+        local session = self.swype_mvp_session
+        local old_keys = self.swype_mvp_candidate_keys or {}
+        local words = adapter.candidate_row.words(session:getCandidates(),
+            session:getPersonalOffer(), #old_keys)
+        local same = #old_keys == #words
+        for index, key in ipairs(old_keys) do
+            same = same and key.label == words[index]
+        end
+        if same then
+            return false
+        end
+        -- Where the old row is on screen: its keys and the handle. The
+        -- row's first child, the handle on the left or else the first
+        -- key, is its left edge; all share its top and height.
+        local region
+        local parts = { self.swype_mvp_handle }
+        for _, key in ipairs(old_keys) do
+            parts[#parts + 1] = key
+        end
+        for _, part in ipairs(parts) do
+            -- The frame's dimen gets its x and y only once painted.
+            local dimen = part[1] and part[1].dimen
+            if dimen and dimen.x then
+                region = region and region:combine(dimen) or dimen:copy()
+            end
+        end
+        -- Box widths always sum to the same row width, so the group's
+        -- cached size and offsets stay right for the new row.
+        local row = adapter.keyboard_ui:createCandidateRow(self,
+            self.swype_mvp_candidate_row_options)
+        self.swype_mvp_candidate_group[1] = row.widget
+        self.layout[1] = row.layout
+        self.swype_mvp_candidate_keys = row.keys
+        -- The handle moves to the new row, so only the old keys go.
+        for _, key in ipairs(old_keys) do
+            key:free()
+        end
+        if region then
+            -- Clear the old boxes and gaps, then draw the new row there.
+            adapter.screen.bb:paintRect(region.x, region.y, region.w,
+                region.h, self.swype_mvp_frame_background)
+            adapter.ui_manager:widgetRepaint(row.widget, region.x, region.y)
+            adapter.ui_manager:setDirty(nil, refresh_type, region)
+        end
+        return true
     end
 
     function VirtualKeyboard:_swypeRefreshLanguageIndicator(refresh_type)

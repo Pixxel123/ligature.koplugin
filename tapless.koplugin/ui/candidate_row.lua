@@ -13,6 +13,15 @@ local function slotText(index, candidates, personal_offer)
     return candidate and (candidate.output_word or candidate.word) or " "
 end
 
+-- The text each slot shows, in order.
+function CandidateRow.words(candidates, personal_offer, slot_count)
+    local words = {}
+    for index = 1, slot_count or 4 do
+        words[index] = slotText(index, candidates or {}, personal_offer)
+    end
+    return words
+end
+
 function CandidateRow:create(options)
     local slot_count = options.slot_count or 4
     local handle = options.handle
@@ -24,10 +33,28 @@ function CandidateRow:create(options)
     local candidates = options.candidates or {}
 
     local gaps = slot_count - 1 + (handle and 1 or 0)
-    local candidate_width = math.floor(
-        (options.width - 2 * options.padding - 2 * options.key_padding
-            - gaps * options.key_padding - (handle and handle.width or 0))
-        / slot_count)
+    local avail = options.width - 2 * options.padding
+        - 2 * options.key_padding - gaps * options.key_padding
+        - (handle and handle.width or 0)
+    local words = CandidateRow.words(candidates, options.personal_offer,
+        slot_count)
+    local widths
+    if options.measure then
+        -- Each box as wide as its word and padding, as far as the row
+        -- allows (candidate_widths.lua).
+        local CandidateWidths = assert(options.CandidateWidths)
+        local wants = {}
+        for index, word in ipairs(words) do
+            local natural = options.measure(word, index == 1)
+            wants[index] = natural > 0 and natural + 2 * options.pad or 0
+        end
+        widths = CandidateWidths.compute(wants, math.floor(avail))
+    else
+        widths = {}
+        for index = 1, slot_count do
+            widths[index] = math.floor(avail / slot_count)
+        end
+    end
 
     if handle and handle.side == "left" then
         table.insert(horizontal_group, handle.widget)
@@ -35,19 +62,24 @@ function CandidateRow:create(options)
     end
 
     for index = 1, slot_count do
-        local word = slotText(index, candidates, options.personal_offer)
+        local word = words[index]
         -- Marked while built, so that empty slots showing " " are not
         -- taken for the space bar.
         local virtual_key = options.VirtualKey:new{
             key = word,
             label = word,
             keyboard = options.keyboard,
-            width = candidate_width,
+            width = widths[index],
             height = options.height,
             is_swype_candidate = true,
             -- The top suggestion is bold.
             tapless_bold = index == 1 or nil,
         }
+        if options.fit_label then
+            -- KOReader shrinks labels to fit with 2 px to spare; keep the
+            -- row's own padding instead.
+            options.fit_label(virtual_key, widths[index] - 2 * options.pad)
+        end
         virtual_key.swipe_callback = nil
         -- Holding a suggestion offers to block it; the lift that ends the
         -- hold must not also pick it.

@@ -122,6 +122,7 @@ loadModule("stray_touches").install{
 
 local KeyboardUI = loadModule("keyboard_ui"):new{
     candidate_row = CandidateRow,
+    candidate_widths = loadModule("candidate_widths"),
     confirm_box = ConfirmBox,
     horizontal_group = HorizontalGroup,
     virtual_key = VirtualKey,
@@ -183,6 +184,7 @@ return loadModule("koreader_adapter"):new{
     input_controller = InputController,
     keyboard_geometry = KeyboardGeometry,
     keyboard_ui = KeyboardUI,
+    candidate_row = CandidateRow,
     recognition_engine = RecognitionEngine,
     gesture_controller = GestureController,
     trace_renderer = TraceRenderer,
@@ -196,6 +198,8 @@ return loadModule("koreader_adapter"):new{
     virtual_key = VirtualKey,
     virtual_key_popup = VirtualKeyPopup,
     line_widget = LineWidget,
+    text_widget = TextWidget,
+    font = Font,
     icon_dir = plugin_dir .. "/icons",
     ui_manager = UIManager,
     settings = G_reader_settings,
