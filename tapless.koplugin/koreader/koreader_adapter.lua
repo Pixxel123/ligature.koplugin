@@ -66,6 +66,8 @@ function KoreaderAdapter:install(VirtualKeyboard)
         local base_key_height = math.floor((self.height
             - (row_count + 1) * self.key_padding - 2 * self.padding)
             / row_count)
+        -- One word's step for a slide from backspace.
+        self.swype_mvp_key_width = base_key_width
         local h_key_padding = adapter.horizontal_span:new{
             width = self.key_padding,
         }
@@ -655,6 +657,9 @@ function KoreaderAdapter:install(VirtualKeyboard)
             adapter.resize_frame:cancelRedraw(self.swype_mvp_resize)
             self.swype_mvp_resize = nil
         end
+        self.swype_mvp_delete_slide = nil
+        self.swype_mvp_delete_starts = nil
+        self.swype_mvp_text_highlight = nil
         self:_swypeReset()
         adapter.dictionary_controller:stopWarmUp(self)
         self:_swypeCancelBucketPrefetch()
@@ -822,6 +827,52 @@ function KoreaderAdapter:install(VirtualKeyboard)
         adapter.input_controller:clearCandidateRow(self, refresh_type)
     end
 
+    function VirtualKeyboard:_swypeScreenRect()
+        return adapter.screen:getSize()
+    end
+
+    -- A slide from backspace is starting: how many words before the
+    -- cursor it can pick, or 0 to leave it to KOReader. Input method
+    -- layouts compose their own text, passwords show only stars, and
+    -- read-only text cannot change.
+    function VirtualKeyboard:_swypeDeleteSlideBegin()
+        adapter.text_highlight:clear(self)
+        self.swype_mvp_delete_starts = nil
+        local inputbox = self.inputbox
+        if self.uwrap_func or not inputbox or inputbox.readonly
+                or inputbox.text_type == "password"
+                or (inputbox.isTextEditable
+                    and not inputbox:isTextEditable())
+                or not inputbox.charlist or not inputbox.charpos then
+            return 0
+        end
+        local starts = adapter.word_delete.boundaries(
+            inputbox.charlist, inputbox.charpos)
+        self.swype_mvp_delete_starts = starts
+        return #starts
+    end
+
+    function VirtualKeyboard:_swypeDeleteSlideShow(words)
+        local starts = self.swype_mvp_delete_starts
+        local from = words > 0 and starts and starts[words]
+        if from then
+            adapter.text_highlight:show(self, from,
+                self.inputbox.charpos - 1)
+        else
+            adapter.text_highlight:clear(self)
+        end
+    end
+
+    function VirtualKeyboard:_swypeDeleteSlideDelete(words)
+        local starts = self.swype_mvp_delete_starts
+        self.swype_mvp_delete_starts = nil
+        adapter.text_highlight:clear(self)
+        local from = starts and starts[words]
+        if from then
+            adapter.input_controller:deleteBefore(self, from)
+        end
+    end
+
     function VirtualKeyboard:_swypeSelectCandidate(candidate)
         adapter.input_controller:selectCandidate(self, candidate)
     end
@@ -849,14 +900,26 @@ function KoreaderAdapter:install(VirtualKeyboard)
     end
 
     function VirtualKeyboard:onSwypeWordSwipe(_, ges, source_key)
+        -- A slide from backspace whose lift landed on no key.
+        if adapter.key_adapter:finishDeleteSlide(self, ges) then
+            return true
+        end
         return self:_onSwypeWordPathRelease(_, ges, source_key)
     end
 
     function VirtualKeyboard:onSwypeWordMultiswipe(_, ges, source_key)
+        -- A slide from backspace whose lift landed on no key.
+        if adapter.key_adapter:finishDeleteSlide(self, ges) then
+            return true
+        end
         return self:_onSwypeWordPathRelease(_, ges, source_key)
     end
 
     function VirtualKeyboard:onSwypeWordPanRelease(_, ges)
+        -- A slide from backspace whose lift landed on no key.
+        if adapter.key_adapter:finishDeleteSlide(self, ges) then
+            return true
+        end
         return adapter.gesture_controller:onPanRelease(self, ges)
     end
 

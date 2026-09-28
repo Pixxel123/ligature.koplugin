@@ -14,6 +14,7 @@
 return {
     koreader_adapter = "koreader/koreader_adapter.lua",
     key_adapter = "koreader/key_adapter.lua",
+    text_highlight = "koreader/text_highlight.lua",
     stray_touches = "koreader/stray_touches.lua",
     concurrent_taps = "koreader/concurrent_taps.lua",
     find_upvalue = "koreader/find_upvalue.lua",

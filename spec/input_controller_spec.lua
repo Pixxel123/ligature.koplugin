@@ -539,3 +539,40 @@ it("keeps learning words optional", function()
     controller:saveContext()
     T.eq(keyboard.inputbox:text(), "hollow")
 end)
+
+it("deletes the words a slide from backspace picked in one step",
+        function()
+    local InputSession = T.load("input_session")
+    local session = InputSession:new()
+    local box = { charlist = {}, charpos = 1 }
+    for char in ("one two three"):gmatch(".") do
+        box.charlist[#box.charlist + 1] = char
+    end
+    box.charpos = #box.charlist + 1
+    local selections = 0
+    function box:delSelection(first, last)
+        selections = selections + 1
+        for index = last, first, -1 do
+            table.remove(self.charlist, index)
+        end
+        self.charpos = first
+    end
+    local refreshed = 0
+    local keyboard = {
+        inputbox = box,
+        swype_mvp_session = session,
+        swype_mvp_tapped_word = { inputbox = box, charpos = 14 },
+        _swypeReset = function() end,
+        _swypeRefreshCandidateRow = function()
+            refreshed = refreshed + 1
+        end,
+    }
+    session.last_insert = { word = "three", text = "three" }
+    newController():deleteBefore(keyboard, 5)
+    T.eq(table.concat(box.charlist), "one ")
+    T.eq(box.charpos, 5)
+    T.eq(selections, 1, "one step")
+    T.eq(session.last_insert, nil, "backspace no longer undoes a swipe")
+    T.eq(keyboard.swype_mvp_tapped_word, nil)
+    T.truthy(refreshed >= 1, "suggestion row cleared")
+end)

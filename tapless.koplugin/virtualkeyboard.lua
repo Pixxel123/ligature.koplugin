@@ -88,7 +88,8 @@ DictionaryManager.language_controller = DictionaryController
 DictionaryManager.blocked_words = BlockedWords
 
 local KeyAdapter = loadModule("key_adapter")
-    :new(Normalization, GestureRange, G_reader_settings)
+    :new(Normalization, GestureRange, G_reader_settings,
+        loadModule("word_delete"))
 -- Look this up before Tapless wraps VirtualKey.init.
 local VirtualKeyPopup = findUpvalue(VirtualKey.init, "VirtualKeyPopup")
 KeyAdapter:install(VirtualKey)
@@ -162,6 +163,7 @@ local ResizeFrame = loadModule("resize_frame"):new{
     screen = Screen,
     icon_dir = plugin_dir .. "/icons",
 }
+local TextHighlight = loadModule("text_highlight"):new(UIManager, Geom)
 local RecognitionEngine = loadModule("recognition_engine")
     :new(DictionaryStore, Scoring, GeometryReranker, PersonalDictionary,
         BlockedWords)
@@ -185,6 +187,8 @@ return loadModule("koreader_adapter"):new{
     gesture_controller = GestureController,
     trace_renderer = TraceRenderer,
     key_adapter = KeyAdapter,
+    word_delete = loadModule("word_delete"),
+    text_highlight = TextHighlight,
     one_handed = OneHanded:new(G_reader_settings),
     side_band = SideBand,
     resize_frame = ResizeFrame,
