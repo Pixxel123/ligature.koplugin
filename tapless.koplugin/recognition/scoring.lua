@@ -343,6 +343,18 @@ end
 -- Marks, in the alignment's parents, a word letter left out.
 local MISSING = "missing"
 
+-- Tables dynamicMatchScore fills afresh on every call, kept between calls:
+-- long swipes align dozens of words each, and new tables for every one
+-- were a large share of the garbage the device's collector had to clear.
+-- Every slot a call reads is written by that same call first.
+local trace_codes, weights, weight_prefix = {}, {}, { [0] = 0 }
+local rows, spare_rows = {}, {}
+-- parents[((candidate_position - 1) * (layers + 1) + used) * trace_len
+-- + trace_position]: the layer the letter was matched from, false when the
+-- trace letter was skipped, or MISSING when the word's letter was left out.
+local parents = {}
+local final_used = {}
+
 function Scoring:dynamicMatchScore(candidate, trace_chars,
         allow_endpoint_mismatch, trace_letter_points, endpoint_pos, key_centers,
         observations, allow_start_mismatch, near, missing_cost)
@@ -352,63 +364,55 @@ function Scoring:dynamicMatchScore(candidate, trace_chars,
         return 1000 + candidate_len * 20, false, {}
     end
 
-    local weights = {}
-    local weight_prefix = { [0] = 0 }
     for position = 1, trace_len do
+        trace_codes[position] = string.byte(trace_chars[position])
+            - ASCII_A + 1
         weights[position] = observations and observations[position]
             and observations[position].intent or 1
         weight_prefix[position] = weight_prefix[position - 1]
             + weights[position]
-    end
-    local function skippedWeight(from, to)
-        if from > to then
-            return 0
-        end
-        return weight_prefix[to] - weight_prefix[from - 1]
     end
 
     local infinity = 1000000
     -- One alignment per number of letters taken from neighbouring keys, so
     -- that no more than NEAR_KEY_LIMIT are used.
     local layers = near and self.NEAR_KEY_LIMIT or 0
-    local previous = {}
+    local previous, current = rows, spare_rows
     for used = 0, layers do
-        local row = { [0] = used == 0 and 0 or infinity }
+        local row = previous[used] or {}
+        previous[used] = row
+        row[0] = used == 0 and 0 or infinity
         for trace_position = 1, trace_len do
             row[trace_position] = used == 0
                 and row[trace_position - 1] + weights[trace_position] * 3
                 or infinity
         end
-        previous[used] = row
+        current[used] = current[used] or {}
     end
 
     -- A word that does not start with the first trace letter pays for it
     -- here, so the alignment can weigh taking the first trace letter as a
     -- neighbouring key against skipping it.
-    local first_trace_code = string.byte(trace_chars[1]) - ASCII_A + 1
+    local first_trace_code = trace_codes[1]
     local first_code = string.byte(candidate, 1) - ASCII_A + 1
     local first_letter_cost = first_trace_code ~= first_code
         and self.FIRST_LETTER_COST or 0
-    -- parents[candidate_position][used][trace_position]: the layer the
-    -- letter was matched from, false when the trace letter was skipped, or
-    -- MISSING when the word's letter was left out.
-    local parents = {}
+    -- final_matches[trace_position]: the best score with the word's last
+    -- letter matched there, from layer final_used[trace_position].
     local final_matches = {}
+    local stride = layers + 1
     for candidate_position = 1, candidate_len do
-        local current, parent_layers = {}, {}
         for used = 0, layers do
-            current[used] = { [0] = infinity }
-            parent_layers[used] = {}
+            current[used][0] = infinity
         end
-        parents[candidate_position] = parent_layers
+        local parent_base = (candidate_position - 1) * stride
         local candidate_byte = string.byte(candidate, candidate_position)
         local candidate_code = candidate_byte - ASCII_A + 1
         -- Only inner letters may be missing: the ends pick the word.
         local may_miss = missing_cost ~= nil and candidate_position > 1
             and candidate_position < candidate_len
         for trace_position = 1, trace_len do
-            local trace_code = string.byte(trace_chars[trace_position])
-                - ASCII_A + 1
+            local trace_code = trace_codes[trace_position]
             local endpoint_mismatch = allow_endpoint_mismatch
                 and candidate_position == candidate_len
                 and trace_position == trace_len
@@ -449,7 +453,8 @@ function Scoring:dynamicMatchScore(candidate, trace_chars,
                 end
             end
             for used = 0, layers do
-                local skipped = current[used][trace_position - 1]
+                local row = current[used]
+                local skipped = row[trace_position - 1]
                     + weights[trace_position]
                 local from
                 if exact then
@@ -470,41 +475,46 @@ function Scoring:dynamicMatchScore(candidate, trace_chars,
                 -- comparing them against it would change their parents.
                 local missing = may_miss
                     and previous[used][trace_position] + missing_cost
+                local parent = (parent_base + used) * trace_len
+                    + trace_position
                 if matched <= skipped
                         and (not missing or matched <= missing) then
-                    current[used][trace_position] = matched
-                    parent_layers[used][trace_position] = from
+                    row[trace_position] = matched
+                    parents[parent] = from
                 elseif missing and missing < skipped then
-                    current[used][trace_position] = missing
-                    parent_layers[used][trace_position] = MISSING
+                    row[trace_position] = missing
+                    parents[parent] = MISSING
                 else
-                    current[used][trace_position] = skipped
-                    parent_layers[used][trace_position] = false
+                    row[trace_position] = skipped
+                    parents[parent] = false
                 end
                 if candidate_position == candidate_len
                         and matched < infinity then
                     local best = final_matches[trace_position]
-                    if not best or matched < best.score then
-                        final_matches[trace_position] = {
-                            score = matched,
-                            used = used,
-                        }
+                    if not best or matched < best then
+                        final_matches[trace_position] = matched
+                        final_used[trace_position] = used
                     end
                 end
             end
         end
-        previous = current
+        previous, current = current, previous
     end
 
     local best_score = infinity
     local best_end, best_used
-    for trace_position, match in pairs(final_matches) do
-        local score = match.score
-            + skippedWeight(trace_position + 1, trace_len) * 3
+    -- pairs, not a count up: on a tie the first found wins, so the order
+    -- must stay the one the alignment has always had.
+    for trace_position, score in pairs(final_matches) do
+        -- What skipping the trace letters after the word's end costs.
+        if trace_position < trace_len then
+            score = score + (weight_prefix[trace_len]
+                - weight_prefix[trace_position]) * 3
+        end
         if score < best_score then
             best_score = score
             best_end = trace_position
-            best_used = match.used
+            best_used = final_used[trace_position]
         end
     end
     if not best_end then
@@ -516,7 +526,8 @@ function Scoring:dynamicMatchScore(candidate, trace_chars,
     local trace_position = best_end
     local used = best_used
     while candidate_position > 0 and trace_position > 0 do
-        local from = parents[candidate_position][used][trace_position]
+        local from = parents[((candidate_position - 1) * stride + used)
+            * trace_len + trace_position]
         if from == MISSING then
             -- The letter before it ended at this same trace position.
             missing_letters = missing_letters + 1
@@ -535,11 +546,10 @@ function Scoring:dynamicMatchScore(candidate, trace_chars,
     end
 
     local last_code = string.byte(candidate, candidate_len) - ASCII_A + 1
-    local endpoint_mismatch = string.byte(trace_chars[best_end])
-        - ASCII_A + 1 ~= last_code
+    local endpoint_mismatch = trace_codes[best_end] ~= last_code
     if endpoint_mismatch then
         best_score = best_score + 5
-    elseif string.byte(trace_chars[trace_len]) - ASCII_A + 1 ~= last_code then
+    elseif trace_codes[trace_len] ~= last_code then
         best_score = best_score + 4
     end
     return best_score, endpoint_mismatch, matched_positions, missing_letters
