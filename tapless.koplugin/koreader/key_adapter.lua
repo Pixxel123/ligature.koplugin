@@ -217,6 +217,17 @@ function KeyAdapter:finishDeleteSlide(keyboard, ges)
         return false
     end
     keyboard.swype_mvp_delete_slide = nil
+    -- A swipe or multiswipe is reported at the gesture's own start, same
+    -- as finishSpaceCursor checks for the space bar: when that is not
+    -- this slide's start, the lift belongs to a different gesture (a
+    -- stray touch elsewhere, say) and this slide's highlight is stale.
+    if ges and (ges.ges == "swipe" or ges.ges == "multiswipe")
+            and ges.pos
+            and not (ges.pos.x == state.start_x
+                and ges.pos.y == state.start_y) then
+        keyboard:_swypeDeleteSlideShow(0)
+        return false
+    end
     local words = state.words
     if ges and ges.ges == "swipe" and ges.end_pos then
         words = self:_deleteSlideWords(state, ges.end_pos)

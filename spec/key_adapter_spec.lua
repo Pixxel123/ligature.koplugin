@@ -607,6 +607,23 @@ it("ignores pans that start elsewhere", function()
     T.eq(calls.begun, nil)
 end)
 
+it("does not take a swipe whose lift is not the slide's start", function()
+    local calls, VirtualKey, adapter = setup()
+    local keyboard = newSlideKeyboard(calls, 5)
+    local key = backspaceKey(VirtualKey, keyboard)
+    key:onDeleteSlidePan(nil, slide(314))
+    key:onDeleteSlidePan(nil, slide(274))
+    -- A swipe or multiswipe is reported at the gesture's own start; one
+    -- reported at a different position is a different gesture, perhaps
+    -- from a stray touch elsewhere, and never this slide's lift.
+    T.eq(adapter:finishDeleteSlide(keyboard, { ges = "swipe",
+        pos = { x = 100, y = 120 }, end_pos = { x = 20, y = 120 } }),
+        false)
+    T.eq(calls.deleted, nil, "nothing deleted")
+    T.eq(keyboard.swype_mvp_delete_slide, nil, "slide state cleared")
+    T.eq(calls.shown[#calls.shown], 0, "highlight cleared")
+end)
+
 it("leaves a flick up that drifts left to KOReader", function()
     local calls, VirtualKey = setup()
     local keyboard = newSlideKeyboard(calls, 5)
