@@ -76,14 +76,16 @@ function PathShape.resample(points, count)
 end
 
 -- The same resampling PathShape.resample does, but read straight off a
--- signature's letters' key centres instead of a per-letter points table:
--- only the samples array is allocated. total_length must already be the
--- path's length (as build below works out), so each running cumulative
--- length is derived the same way resample's cumulative array is -- an
--- addition then, once needed, a subtraction from the same stored value --
--- which is what keeps the two bit-identical rather than merely equal.
-local function resampleSignature(signature, key_centers, count, total_length)
-    local samples = {}
+-- signature's letters' key centres instead of a per-letter points table,
+-- into samples (a new table unless one is given to reuse). total_length
+-- must already be the path's length (as measure below works out), so each
+-- running cumulative length is derived the same way resample's cumulative
+-- array is -- an addition then, once needed, a subtraction from the same
+-- stored value -- which is what keeps the two bit-identical rather than
+-- merely equal.
+local function resampleSignature(signature, key_centers, count, total_length,
+        samples)
+    samples = samples or {}
     local last = #signature
     local segment = 2
     local previous = key_centers[string.byte(signature, 1)]
@@ -147,6 +149,14 @@ function PathShape:_useLayout(key_centers)
     end
 end
 
+-- The layout key_centers belong to, switched to: a string that changes
+-- only when the keys move, so other paths worked out for the layout can
+-- be kept as long as it stays the same.
+function PathShape:useLayout(key_centers)
+    self:_useLayout(key_centers)
+    return self.layout
+end
+
 -- The swipe ready to compare: { samples, length }, or nil.
 function PathShape:swipe(points)
     local samples, length = PathShape.resample(trimTrace(points),
@@ -154,17 +164,16 @@ function PathShape:swipe(points)
     return samples and { samples = samples, length = length } or nil
 end
 
--- The word's length and average key size, straight off its letters' key
--- centres: most words considered are rejected by the length-ratio cut
--- before their shape is ever compared, so their points are never turned
--- into a table at all -- only the running length itself is kept.
-local function build(signature, key_centers)
+-- The length of a word's ideal path and its average key size, straight
+-- off its letters' key centres; nil when a letter has no key or the path
+-- has no length. signature: its letters, doubled ones collapsed.
+function PathShape.measure(signature, key_centers)
     local size_total, count, length = 0, 0, 0
     local previous
     for index = 1, #signature do
         local center = key_centers[string.byte(signature, index)]
         if not center then
-            return false
+            return nil
         end
         if previous then
             length = length + distance(previous, center)
@@ -174,12 +183,23 @@ local function build(signature, key_centers)
         count = count + 1
     end
     if count < 2 or length <= 0 then
+        return nil
+    end
+    return length, size_total / count
+end
+
+-- Most words considered are rejected by the length-ratio cut before their
+-- shape is ever compared, so only the length and key size are worked out
+-- here; the points are never turned into a table at all.
+local function build(signature, key_centers)
+    local length, scale = PathShape.measure(signature, key_centers)
+    if not length then
         return false
     end
     return {
         signature = signature,
         length = length,
-        scale = size_total / count,
+        scale = scale,
     }
 end
 
@@ -214,6 +234,14 @@ function PathShape:ensureSamples(ideal)
             self.SAMPLE_COUNT, ideal.length)
     end
     return ideal.samples
+end
+
+-- The samples of signature's ideal path, whose length is given, written
+-- into samples (reused, so that words compared only once make no table)
+-- under the layout now in use: the same values ensureSamples keeps.
+function PathShape:resampleInto(signature, length, samples)
+    return resampleSignature(signature, self.centers, self.SAMPLE_COUNT,
+        length, samples)
 end
 
 -- How far the swipe's shape is from the word's: the mean distance between

@@ -30,6 +30,8 @@ local ShapeChannel = {
 }
 ShapeChannel.__index = ShapeChannel
 
+local WEAK_KEYS = { __mode = "k" }
+
 function ShapeChannel:new(dictionary_store, path_shape, personal_dictionary,
         blocked_words)
     return setmetatable({
@@ -37,6 +39,13 @@ function ShapeChannel:new(dictionary_store, path_shape, personal_dictionary,
         path_shape = assert(path_shape),
         personal_dictionary = personal_dictionary,
         blocked_words = blocked_words,
+        -- Each word list's path lengths (see _paths), for the layout
+        -- paths_layout; a list dropped from memory drops its own.
+        paths = setmetatable({}, WEAK_KEYS),
+        paths_layout = nil,
+        -- Reused for each word's resampled path: most are compared once
+        -- and never again, so keeping a table for each is only garbage.
+        samples = {},
     }, self)
 end
 
@@ -75,6 +84,38 @@ local function swipeEnds(swipe)
         { x = samples[last - 1], y = samples[last] }
 end
 
+-- The ideal path length and average key size of each of entries' words,
+-- as two arrays in the same order, worked out once for the layout in use
+-- and kept with the list: nearly every word the channel looks at is cut
+-- by its length alone, and working that out afresh on every swipe cost
+-- more on the device than all the rest of the channel. A length of -1
+-- marks a word too short to look at, 0 one with a letter off the
+-- keyboard.
+function ShapeChannel:_paths(entries, key_centers)
+    local paths = self.paths[entries]
+    if paths and paths.count == #entries
+            and paths.min_letters == self.MIN_LETTERS then
+        return paths
+    end
+    local lengths, scales = {}, {}
+    for index, entry in ipairs(entries) do
+        local signature = entry.gesture_signature or entry.signature
+        local length, scale = -1, 0
+        if entry.word and signature
+                and #(entry.signature or signature) >= self.MIN_LETTERS then
+            length, scale = self.path_shape.measure(signature, key_centers)
+            if not length then
+                length, scale = 0, 0
+            end
+        end
+        lengths[index], scales[index] = length, scale
+    end
+    paths = { count = #entries, min_letters = self.MIN_LETTERS,
+        lengths = lengths, scales = scales }
+    self.paths[entries] = paths
+    return paths
+end
+
 -- Inserts item into found, kept sorted by rank and at most limit long.
 local function keep(found, item, limit)
     local position = #found + 1
@@ -106,6 +147,11 @@ function ShapeChannel:candidates(options)
         return {}
     end
     local key_centers = options.key_centers or {}
+    local layout = path_shape:useLayout(key_centers)
+    if layout ~= self.paths_layout then
+        self.paths = setmetatable({}, WEAK_KEYS)
+        self.paths_layout = layout
+    end
     local dictionary = options.dictionary or "en"
     local data_lang = options.data_language or dictionary
     local found, seen = {}, {}
@@ -113,11 +159,12 @@ function ShapeChannel:candidates(options)
     local sample_count = path_shape.SAMPLE_COUNT
     local max_score = path_shape.MAX_SCORE
     local a = swipe.samples
-    local function consider(entry)
+    local b = self.samples
+    -- length and scale: the word's path, from _paths; length is -1 for a
+    -- word too short to look at, which is left out before anything else.
+    local function consider(entry, length, scale)
         local word = entry.word
-        local signature = entry.gesture_signature or entry.signature
-        if not word or not signature or seen[word]
-                or #(entry.signature or signature) < self.MIN_LETTERS
+        if seen[word]
                 or (entry.lang and entry.lang ~= dictionary
                     and entry.lang ~= data_lang)
                 or (self.blocked_words
@@ -125,18 +172,17 @@ function ShapeChannel:candidates(options)
             return
         end
         seen[word] = true
-        local ideal = path_shape:ideal(signature, key_centers)
-        if not ideal or ideal.length <= 0 then
+        if length <= 0 then
             return
         end
-        local ratio = swipe.length / ideal.length
+        local ratio = swipe.length / length
         if ratio < self.MIN_RATIO or ratio > self.MAX_RATIO then
             return
         end
-        local b = path_shape:ensureSamples(ideal)
+        path_shape:resampleInto(entry.gesture_signature or entry.signature,
+            length, b)
         local length_term = math.min(max_score,
-            math.abs(swipe.length - ideal.length)
-                / math.max(ideal.scale, ideal.length))
+            math.abs(swipe.length - length) / math.max(scale, length))
         local length_component = 0.15 * length_term
         local freq = entry.freq or 0
 
@@ -161,7 +207,7 @@ function ShapeChannel:candidates(options)
             total = total + math.sqrt(dx * dx + dy * dy)
             if worst then
                 local partial = math.min(max_score,
-                    0.85 * (total / sample_count / ideal.scale)
+                    0.85 * (total / sample_count / scale)
                         + length_component)
                 if self.SHAPE_WEIGHT * partial - freq >= worst then
                     -- Would not have survived keep() below either, so
@@ -171,7 +217,7 @@ function ShapeChannel:candidates(options)
             end
         end
         local shape = math.min(max_score,
-            (total / sample_count / ideal.scale) * 0.85 + length_component)
+            (total / sample_count / scale) * 0.85 + length_component)
         local rank = self.SHAPE_WEIGHT * shape - freq
         if #found >= limit and rank >= found[limit].rank then
             -- keep() would reject this anyway; skip its table too.
@@ -179,22 +225,29 @@ function ShapeChannel:candidates(options)
         end
         keep(found, { entry = entry, shape = shape, rank = rank }, limit)
     end
+    local function scan(bucket)
+        local entries = bucket and bucket.entries
+        if not entries then
+            return
+        end
+        local paths = self:_paths(entries, key_centers)
+        local lengths, scales = paths.lengths, paths.scales
+        for index = 1, #entries do
+            local length = lengths[index]
+            if length >= 0 then
+                consider(entries[index], length, scales[index])
+            end
+        end
+    end
     local first_point, last_point = swipeEnds(swipe)
     local lasts = self:_lettersNear(last_point, key_centers)
     for _, first in ipairs(self:_lettersNear(first_point, key_centers)) do
         for _, last in ipairs(lasts) do
             if self.personal_dictionary then
-                local bucket = self.personal_dictionary:getBucket(first, last,
-                    dictionary, options.normalization_profile)
-                for _, entry in ipairs(bucket and bucket.entries or {}) do
-                    consider(entry)
-                end
+                scan(self.personal_dictionary:getBucket(first, last,
+                    dictionary, options.normalization_profile))
             end
-            local bucket = self.dictionary_store:loadBucket(first, last,
-                dictionary)
-            for _, entry in ipairs(bucket and bucket.entries or {}) do
-                consider(entry)
-            end
+            scan(self.dictionary_store:loadBucket(first, last, dictionary))
         end
     end
     return found

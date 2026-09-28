@@ -130,3 +130,23 @@ it("finds a long word past an untagged tail off the keyboard", function()
     local at = position(found, "important")
     T.truthy(at and at <= 3, table.concat(found, ","))
 end)
+
+it("works its word lengths out again when the keys move", function()
+    local points, centers = swipe("important")
+    local ch = channel()
+    local before = words(ch:candidates{ signature = LONG, points = points,
+        key_centers = centers })
+    -- The same swipe on a keyboard twice the size: words kept from the
+    -- first layout would all be half as long as the swipe.
+    local bigger, doubled = {}, {}
+    for code, center in pairs(centers) do
+        bigger[code] = { x = center.x * 2, y = center.y * 2,
+            size = center.size * 2 }
+    end
+    for index, point in ipairs(points) do
+        doubled[index] = { x = point.x * 2, y = point.y * 2 }
+    end
+    local after = words(ch:candidates{ signature = LONG, points = doubled,
+        key_centers = bigger })
+    T.eq(table.concat(after, ","), table.concat(before, ","))
+end)
