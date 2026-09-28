@@ -87,9 +87,9 @@ local DictionaryController = loadModule("dictionary_controller")
 DictionaryManager.language_controller = DictionaryController
 DictionaryManager.blocked_words = BlockedWords
 
+local WordDelete = loadModule("word_delete")
 local KeyAdapter = loadModule("key_adapter")
-    :new(Normalization, GestureRange, G_reader_settings,
-        loadModule("word_delete"))
+    :new(Normalization, GestureRange, G_reader_settings, WordDelete)
 -- Look this up before Tapless wraps VirtualKey.init.
 local VirtualKeyPopup = findUpvalue(VirtualKey.init, "VirtualKeyPopup")
 KeyAdapter:install(VirtualKey)
@@ -112,8 +112,13 @@ loadModule("stray_touches").install{
         for index = #stack, 1, -1 do
             local widget = stack[index].widget
             if not widget.toast then
-                return widget.isSwypeMvpEnabled ~= nil
-                    and widget:isSwypeMvpEnabled()
+                -- A delete slide still runs in the symbol layers, where
+                -- isSwypeMvpEnabled is false. Count it as swiping, or a
+                -- resting thumb pairs with it into a two-finger gesture:
+                -- no lift arrives and the highlight stays on.
+                return (widget.isSwypeMvpEnabled ~= nil
+                        and widget:isSwypeMvpEnabled())
+                    or widget.swype_mvp_delete_slide ~= nil
             end
         end
         return false
@@ -189,7 +194,7 @@ return loadModule("koreader_adapter"):new{
     gesture_controller = GestureController,
     trace_renderer = TraceRenderer,
     key_adapter = KeyAdapter,
-    word_delete = loadModule("word_delete"),
+    word_delete = WordDelete,
     text_highlight = TextHighlight,
     one_handed = OneHanded:new(G_reader_settings),
     side_band = SideBand,
