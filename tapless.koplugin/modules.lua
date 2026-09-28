@@ -24,6 +24,7 @@ return {
     trace_collector = "input/trace_collector.lua",
     keyboard_geometry = "input/keyboard_geometry.lua",
     text_case = "input/text_case.lua",
+    word_delete = "input/word_delete.lua",
 
     recognition_engine = "recognition/recognition_engine.lua",
     scoring = "recognition/scoring.lua",
