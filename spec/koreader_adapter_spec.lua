@@ -10,6 +10,11 @@ local function newKeyboardClass(calls)
     function VirtualKeyboard:onCloseWidget()
         calls.stock_close = (calls.stock_close or 0) + 1
     end
+    function VirtualKeyboard:_refresh(want_flash, fullscreen)
+        calls.refresh_calls = calls.refresh_calls or {}
+        table.insert(calls.refresh_calls,
+            { want_flash = want_flash, fullscreen = fullscreen })
+    end
     return VirtualKeyboard
 end
 
@@ -43,7 +48,21 @@ local function setup(settings)
     local calls = {}
     settings = settings or {}
     local function noop() end
-    local ui_manager = { widgetRepaint = noop, setDirty = noop }
+    local ui_manager = {
+        widgetRepaint = noop,
+        setDirty = function(_, mode, fn)
+            calls.setDirty_calls = calls.setDirty_calls or {}
+            if type(fn) == "function" then
+                local refresh_type, region = fn()
+                table.insert(calls.setDirty_calls,
+                    { mode = mode, refresh_type = refresh_type,
+                        region = region })
+            else
+                table.insert(calls.setDirty_calls,
+                    { mode = mode, fn = fn })
+            end
+        end,
+    }
     local VirtualKeyboard = newKeyboardClass(calls)
     T.load("koreader_adapter"):new{
         settings = {
@@ -114,6 +133,45 @@ local function rect(x, w)
         end,
     }
 end
+
+it("_refresh with bands calls setDirty('all', fn) returning " ..
+        "'ui' and combined region", function()
+    local calls, keyboard = setup()
+    keyboard.dimen = rect(10, 100)
+    keyboard.swype_mvp_side_bands = {
+        rect(0, 10),
+        rect(110, 20),
+    }
+    keyboard:_refresh(false)
+    T.eq(#calls.setDirty_calls, 1, "one setDirty call")
+    local call = calls.setDirty_calls[1]
+    T.eq(call.mode, "all", "mode is 'all'")
+    T.eq(call.refresh_type, "ui", "refresh type is 'ui'")
+    -- Region should cover keyboard and both bands.
+    T.eq(call.region.x, 0, "region x covers left band")
+    T.eq(call.region.w, 130, "region w covers all")
+end)
+
+it("_refresh without bands calls original unchanged", function()
+    local calls, keyboard = setup()
+    keyboard.dimen = rect(10, 100)
+    keyboard:_refresh(false)
+    T.eq(#calls.refresh_calls, 1, "original _refresh called")
+    T.eq(calls.refresh_calls[1].want_flash, false)
+    T.eq(calls.refresh_calls[1].fullscreen, nil)
+    T.eq(#(calls.setDirty_calls or {}), 0, "no setDirty")
+end)
+
+it("_refresh(true, true) fullscreen goes to original", function()
+    local calls, keyboard = setup()
+    keyboard.dimen = rect(10, 100)
+    keyboard.swype_mvp_side_bands = { rect(0, 10) }
+    keyboard:_refresh(true, true)
+    T.eq(#calls.refresh_calls, 1, "original _refresh called")
+    T.eq(calls.refresh_calls[1].want_flash, true)
+    T.eq(calls.refresh_calls[1].fullscreen, true)
+    T.eq(#(calls.setDirty_calls or {}), 0, "no setDirty, fullscreen mode")
+end)
 
 -- A painted suggestion key (or the handle) that records being freed.
 local function paintedKey(calls, label, x)

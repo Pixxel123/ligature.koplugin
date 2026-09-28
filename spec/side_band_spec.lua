@@ -1,115 +1,123 @@
--- BYTECODE -- side_band.lua:14-23
-0001    GGET     2   0      ; "setmetatable"
-0002    TDUP     4   3
-0003    GGET     5   1      ; "assert"
-0004    TGETS    7   1   2  ; "settings"
-0005    CALL     5   2   2
-0006    TSETS    5   4   2  ; "settings"
-0007    GGET     5   1      ; "assert"
-0008    TGETS    7   1   4  ; "screen"
-0009    CALL     5   2   2
-0010    TSETS    5   4   4  ; "screen"
-0011    GGET     5   1      ; "assert"
-0012    TGETS    7   1   5  ; "horizontal_span"
-0013    CALL     5   2   2
-0014    TSETS    5   4   5  ; "horizontal_span"
-0015    GGET     5   1      ; "assert"
-0016    TGETS    7   1   6  ; "widget"
-0017    CALL     5   2   2
-0018    TSETS    5   4   6  ; "widget"
-0019    GGET     5   1      ; "assert"
-0020    TGETS    7   1   7  ; "geometry"
-0021    CALL     5   2   2
-0022    TSETS    5   4   7  ; "geometry"
-0023    GGET     5   1      ; "assert"
-0024    TGETS    7   1   8  ; "blitbuffer"
-0025    CALL     5   2   2
-0026    TSETS    5   4   8  ; "blitbuffer"
-0027    MOV      5   0
-0028    CALLT    2   3
+local T = require("helper")
+local it = T.it
 
--- BYTECODE -- side_band.lua:25-27
-0001    TGETS    1   0   0  ; "settings"
-0002    MOV      3   1
-0003    TGETS    1   1   1  ; "nilOrTrue"
-0004    TGETS    4   0   2  ; "SETTING"
-0005    CALLT    1   3
+local SideBand = T.load("side_band")
 
--- BYTECODE -- side_band.lua:38-43
-0001    TGETS    4   0   0  ; "dimen"
-0002    MOV      7   1
-0003    TGETS    5   1   1  ; "hatchRect"
-0004    MOV      8   2
-0005    MOV      9   3
-0006    TGETS   10   4   2  ; "w"
-0007    TGETS   11   4   3  ; "h"
-0008    GGET    12   4      ; "math"
-0009    TGETS   12  12   5  ; "max"
-0010    KSHORT  14   1
-0011    UGET    15   0      ; band
-0012    TGETS   15  15   6  ; "screen"
-0013    MOV     17  15
-0014    TGETS   15  15   7  ; "scaleBySize"
-0015    UGET    18   0      ; band
-0016    TGETS   18  18   8  ; "STRIPE"
-0017    CALL    15   0   3
-0018    CALLM   12   2   1
-0019    UGET    13   0      ; band
-0020    TGETS   13  13   9  ; "blitbuffer"
-0021    TGETS   13  13  10  ; "COLOR_BLACK"
-0022    UGET    14   0      ; band
-0023    TGETS   14  14  11  ; "ALPHA"
-0024    CALL     5   1   9
-0025    RET0     0   1
+local function newBand(values)
+    return SideBand:new{
+        settings = {
+            nilOrTrue = function(_, name)
+                return values[name] ~= false
+            end,
+        },
+        screen = {
+            scaleBySize = function(_, v) return v * 1.5 end,
+        },
+        horizontal_span = {
+            new = function(_, o) o.span = true; return o end,
+        },
+        widget = {
+            new = function(_, o) return o end,
+        },
+        geometry = {
+            new = function(_, o) return o end,
+        },
+        blitbuffer = {
+            COLOR_BLACK = "black",
+        },
+    }
+end
 
--- BYTECODE -- side_band.lua:31-45
-0001    KSHORT   3   0
-0002    ISLE     1   3
-0003    JMP      3 => 0009
-0004    MOV      5   0
-0005    TGETS    3   0   0  ; "hatched"
-0006    CALL     3   2   2
-0007    IST          3
-0008    JMP      3 => 0020
-0009 => TGETS    3   0   1  ; "horizontal_span"
-0010    MOV      5   3
-0011    TGETS    3   3   2  ; "new"
-0012    TDUP     6   5
-0013    GGET     7   3      ; "math"
-0014    TGETS    7   7   4  ; "max"
-0015    KSHORT   9   0
-0016    MOV     10   1
-0017    CALL     7   2   3
-0018    TSETS    7   6   6  ; "width"
-0019    UCLO     0 => 0037
-0020 => MOV      3   0
-0021    TGETS    4   0   7  ; "widget"
-0022    MOV      6   4
-0023    TGETS    4   4   2  ; "new"
-0024    TDUP     7  12
-0025    TGETS    8   0   8  ; "geometry"
-0026    MOV     10   8
-0027    TGETS    8   8   2  ; "new"
-0028    TDUP    11   9
-0029    TSETS    1  11  10  ; "w"
-0030    TSETS    2  11  11  ; "h"
-0031    CALL     8   2   3
-0032    TSETS    8   7  13  ; "dimen"
-0033    FNEW     8  14      ; side_band.lua:38
-0034    TSETS    8   7  15  ; "paintTo"
-0035    UCLO     0 => 0036
-0036 => CALLT    4   3
-0037 => CALLT    3   3
+it("hatched by default: create(120, 400) sized, paintTo makes " ..
+        "hatchRect(10, 20, 120, 400, 3, 'black', 0.4)", function()
+    local band = newBand({})
+    local strip = band:create(120, 400)
+    T.eq(strip.dimen.w, 120)
+    T.eq(strip.dimen.h, 400)
+    T.eq(type(strip.paintTo), "function")
 
--- BYTECODE -- side_band.lua:0-48
-0001    TDUP     0   0
-0002    TSETS    0   0   1  ; "__index"
-0003    FNEW     1   3      ; side_band.lua:14
-0004    TSETS    1   0   2  ; "new"
-0005    FNEW     1   5      ; side_band.lua:25
-0006    TSETS    1   0   4  ; "hatched"
-0007    FNEW     1   7      ; side_band.lua:31
-0008    TSETS    1   0   6  ; "create"
-0009    UCLO     0 => 0010
-0010 => RET1     0   2
+    local calls = {}
+    local bb = {
+        hatchRect = function(self, x, y, w, h, sw, c, a)
+            table.insert(calls, { x, y, w, h, sw, c, a })
+        end,
+    }
+    strip.paintTo(strip, bb, 10, 20)
+    T.eq(#calls, 1, "exactly one hatchRect call")
+    local call = calls[1]
+    T.eq(call[1], 10, "x")
+    T.eq(call[2], 20, "y")
+    T.eq(call[3], 120, "w")
+    T.eq(call[4], 400, "h")
+    T.eq(call[5], 3, "stripe: 2 × 1.5")
+    T.eq(call[6], "black", "colour")
+    T.eq(call[7], 0.4, "opacity: ZenOS's 40%")
+end)
 
+it("stripe is at least 1 px when scaleBySize returns 0", function()
+    local band = SideBand:new{
+        settings = {
+            nilOrTrue = function(_, name) return true end,
+        },
+        screen = {
+            scaleBySize = function(_, v) return 0 end,
+        },
+        horizontal_span = {
+            new = function(_, o) o.span = true; return o end,
+        },
+        widget = {
+            new = function(_, o) return o end,
+        },
+        geometry = {
+            new = function(_, o) return o end,
+        },
+        blitbuffer = {
+            COLOR_BLACK = "black",
+        },
+    }
+    local calls = {}
+    local bb = {
+        hatchRect = function(self, x, y, w, h, sw, c, a)
+            table.insert(calls, { x, y, w, h, sw, c, a })
+        end,
+    }
+    local strip = band:create(10, 10)
+    strip.paintTo(strip, bb, 0, 0)
+    T.eq(calls[1][5], 1, "min stripe width is 1")
+end)
+
+it("off (setting false) gives a plain span", function()
+    local band = newBand({ tapless_one_handed_hatch = false })
+    local strip = band:create(120, 400)
+    T.truthy(strip.span, "a span")
+    T.eq(strip.width, 120)
+end)
+
+it("width 0 gives a plain span", function()
+    local band = newBand({})
+    local strip = band:create(0, 400)
+    T.truthy(strip.span)
+    T.eq(strip.width, 0)
+end)
+
+it("no fill: the only draw call is hatchRect", function()
+    local band = newBand({})
+    local strip = band:create(10, 10)
+
+    local calls = {}
+    local bb = {}
+    setmetatable(bb, {
+        __index = function(_, method)
+            if method == "hatchRect" then
+                return function(self, ...)
+                    table.insert(calls, method)
+                end
+            end
+            table.insert(calls, method)
+            error("Unexpected method: " .. method)
+        end,
+    })
+    strip.paintTo(strip, bb, 0, 0)
+    T.eq(#calls, 1, "exactly one method call")
+    T.eq(calls[1], "hatchRect", "the only method is hatchRect")
+end)

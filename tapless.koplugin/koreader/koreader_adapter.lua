@@ -14,7 +14,29 @@ function KoreaderAdapter:install(VirtualKeyboard)
     local original_init = assert(VirtualKeyboard.init)
     local original_show = assert(VirtualKeyboard.onShow)
     local original_close_widget = assert(VirtualKeyboard.onCloseWidget)
+    local original_refresh = assert(VirtualKeyboard._refresh)
     local adapter = self
+
+    -- The hatched strips are drawn over the page at 40% (as ZenOS does),
+    -- so repainting the keyboard alone would stamp the hatch on its last
+    -- copy and darken it. With strips showing, every window is
+    -- repainted, page first, but only the keyboard's band is refreshed.
+    function VirtualKeyboard:_refresh(want_flash, fullscreen)
+        local bands = self.swype_mvp_side_bands
+        if fullscreen or not bands or not self.dimen then
+            return original_refresh(self, want_flash, fullscreen)
+        end
+        local refresh_type = want_flash and "flashui" or "ui"
+        local region = self.dimen:copy()
+        for _, rect in ipairs(bands) do
+            if rect.w > 0 then
+                region = region:combine(rect)
+            end
+        end
+        adapter.ui_manager:setDirty("all", function()
+            return refresh_type, region
+        end)
+    end
 
     function VirtualKeyboard:init()
         self.swype_mvp_closed = false
