@@ -606,3 +606,21 @@ it("ignores pans that start elsewhere", function()
     T.eq(key:onDeleteSlidePan(nil, slide(100, 50)), false)
     T.eq(calls.begun, nil)
 end)
+
+it("leaves a flick up that drifts left to KOReader", function()
+    local calls, VirtualKey = setup()
+    local keyboard = newSlideKeyboard(calls, 5)
+    -- A swipe from backspace starts no word.
+    keyboard._swypeStartKeyAt = function() return nil end
+    local key = backspaceKey(VirtualKey, keyboard)
+    local start = { x = 330, y = 120 }
+    key:onDeleteSlidePan(nil,
+        { ges = "pan", start_pos = start, pos = { x = 320, y = 95 } })
+    key:onDeleteSlidePan(nil,
+        { ges = "pan", start_pos = start, pos = { x = 314, y = 80 } })
+    T.eq(calls.shown, nil, "no word picked")
+    key:onSwipeKey(nil, { ges = "swipe", direction = "north",
+        pos = start, end_pos = { x = 314, y = 70 } })
+    T.eq(calls.deleted, nil)
+    T.eq(calls.stock_swipe, 1, "KOReader's delete-word")
+end)

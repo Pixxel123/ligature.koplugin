@@ -657,9 +657,11 @@ function KoreaderAdapter:install(VirtualKeyboard)
             adapter.resize_frame:cancelRedraw(self.swype_mvp_resize)
             self.swype_mvp_resize = nil
         end
+        -- Only the keyboard may be closing, the text box staying on
+        -- screen: take a slide's highlight off it.
+        adapter.text_highlight:clear(self)
         self.swype_mvp_delete_slide = nil
         self.swype_mvp_delete_starts = nil
-        self.swype_mvp_text_highlight = nil
         self:_swypeReset()
         adapter.dictionary_controller:stopWarmUp(self)
         self:_swypeCancelBucketPrefetch()
@@ -839,7 +841,12 @@ function KoreaderAdapter:install(VirtualKeyboard)
         adapter.text_highlight:clear(self)
         self.swype_mvp_delete_starts = nil
         local inputbox = self.inputbox
-        if self.uwrap_func or not inputbox or inputbox.readonly
+        -- Switching Tapless off restores KOReader's own backspace; while
+        -- the keyboard is being resized, its keys are not for typing.
+        -- (Not isSwypeMvpEnabled: the symbol layers keep the slide.)
+        if not adapter.settings:nilOrTrue("keyboard_swype_mvp_enabled")
+                or self.swype_mvp_resize
+                or self.uwrap_func or not inputbox or inputbox.readonly
                 or inputbox.text_type == "password"
                 or (inputbox.isTextEditable
                     and not inputbox:isTextEditable())
