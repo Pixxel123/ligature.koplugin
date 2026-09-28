@@ -33,18 +33,34 @@ it("takes a different minimum share", function()
     T.eq(widths[1], 280)
 end)
 
+it("gives equal wants at avail 402 widths differing by at most 1 px", function()
+    local widths = CandidateWidths.compute({ 90, 90, 90, 90 }, 402)
+    local max_w = math.max(widths[1], widths[2], widths[3], widths[4])
+    local min_w = math.min(widths[1], widths[2], widths[3], widths[4])
+    T.truthy(max_w - min_w <= 1, "max - min is " .. (max_w - min_w))
+end)
+
+it("keeps empty slots above the minimum", function()
+    local widths = CandidateWidths.compute({ 18, 0, 0, 0 }, 30)
+    local min_width = math.floor(0.6 * 30 / 4)
+    for _, width in ipairs(widths) do
+        T.truthy(width >= min_width, "width " .. width .. " >= " .. min_width)
+    end
+end)
+
 it("always fills the row with whole pixels", function()
     for seed = 1, 200 do
         local wants, n = {}, 1 + seed % 4
         for index = 1, n do
-            wants[index] = (seed * 37 * index) % 331
+            wants[index] = (seed + index) % 3 == 0 and 0 or (seed * 37 * index) % 331
         end
         local avail = 150 + (seed * 13) % 500
         local widths = CandidateWidths.compute(wants, avail)
         T.eq(sum(widths), avail, "sum for seed " .. seed)
+        local min_floor = math.floor(0.6 * avail / n)
         for _, width in ipairs(widths) do
             T.eq(width, math.floor(width), "whole pixels")
-            T.truthy(width >= math.floor(0.6 * avail / n) - 1,
+            T.truthy(width >= min_floor,
                 "minimum for seed " .. seed)
         end
     end

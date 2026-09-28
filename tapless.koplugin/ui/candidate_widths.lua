@@ -6,7 +6,8 @@ local CandidateWidths = {
 }
 
 -- wants: the width each box would like (its word and padding); avail:
--- the width the boxes share. Returns whole-pixel widths summing to avail.
+-- the width the boxes share. min_share: minimum share as a fraction (must be
+-- at most 1); defaults to MIN_SHARE. Returns whole-pixel widths summing to avail.
 function CandidateWidths.compute(wants, avail, min_share)
     local n = #wants
     if n == 0 then
@@ -32,12 +33,34 @@ function CandidateWidths.compute(wants, avail, min_share)
             widths[index] = min_width + (sized[index] - min_width) * scale
         end
     end
-    local out, used = {}, 0
-    for index = 1, n - 1 do
-        out[index] = math.floor(widths[index] + 0.5)
-        used = used + out[index]
+    -- Largest-remainder rounding: floor each width, then hand out the
+    -- leftover pixels one each to the boxes with the largest fractional
+    -- parts. Ties go to the lower index.
+    local out, total_floor = {}, 0
+    local fractions = {}
+    for index = 1, n do
+        out[index] = math.floor(widths[index])
+        fractions[index] = widths[index] - out[index]
+        total_floor = total_floor + out[index]
     end
-    out[n] = avail - used
+    local leftover = avail - total_floor
+    -- Sort indices by fractional part (descending), with ties going to lower index
+    local indices = {}
+    for index = 1, n do
+        indices[index] = index
+    end
+    table.sort(indices, function(a, b)
+        local frac_cmp = fractions[b] - fractions[a]
+        if frac_cmp ~= 0 then
+            return frac_cmp > 0
+        else
+            return a < b
+        end
+    end)
+    -- Award the leftover pixels
+    for i = 1, leftover do
+        out[indices[i]] = out[indices[i]] + 1
+    end
     return out
 end
 
