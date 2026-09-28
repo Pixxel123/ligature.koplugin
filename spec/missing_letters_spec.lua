@@ -52,7 +52,10 @@ it("uses the move only where the plain alignment fails", function()
 end)
 
 it("tells beforehand when the plain alignment must fail", function()
-    -- Six keys in a row, 100 apart: each lends its neighbours.
+    -- Six keys in a row, 100 apart: whether a trace position lends
+    -- its neighbours is drawn at random too, so both branches of
+    -- _lendsNeighbours run (a shallow turn that does not lend, and a
+    -- sharp one, either way, that does).
     local centers = {}
     for index, letter in ipairs({ "a", "b", "c", "d", "e", "f" }) do
         centers[string.byte(letter)] = { x = index * 100, y = 50,
@@ -66,13 +69,27 @@ it("tells beforehand when the plain alignment must fail", function()
         end
         return table.concat(letters)
     end
+    local function observationsFor(length)
+        local observations = {}
+        for position = 1, length do
+            if math.random(2) == 1 then
+                observations[position] = { signed_turn = 0.1 }
+            else
+                observations[position] = { signed_turn =
+                    math.random(2) == 1 and 0.5 or -0.5 }
+            end
+        end
+        return observations
+    end
     local said_no = 0
     for _ = 1, 3000 do
         local trace = word(math.random(1, 9))
         local candidate = word(math.random(1, 7))
         local trace_chars = scoring:buildNextPositions(trace)
+        local observations = observationsFor(#trace)
         local near = math.random(2) == 1
-            and scoring:buildNearPositions(trace_chars, centers) or nil
+            and scoring:buildNearPositions(trace_chars, centers,
+                observations) or nil
         local ends = math.random(2) == 1
         local start = math.random(2) == 1
         local may = scoring:_mayAlign(candidate, trace_chars, ends, start,
@@ -85,4 +102,36 @@ it("tells beforehand when the plain alignment must fail", function()
         end
     end
     T.truthy(said_no > 100, "some words cannot align")
+end)
+
+it("scores a word matched partly by a near key and partly by a skip",
+        function()
+    -- Six keys in a row, 100 apart: each is a neighbour of the one
+    -- next to it only.
+    local centers = {}
+    for index, letter in ipairs({ "a", "b", "c", "d", "e", "f" }) do
+        centers[string.byte(letter)] = { x = index * 100, y = 50,
+            size = 100 }
+    end
+    -- Candidate "adzf" against trace "acf": a matches a; d has no key
+    -- of its own in the trace, so it borrows the c the path did
+    -- cross (a near key, used 1); z is not a key on this board at
+    -- all, so the only way past it is a missing-letter skip; f
+    -- matches f.
+    local trace = "acf"
+    local trace_chars = scoring:buildNextPositions(trace)
+    local near = scoring:buildNearPositions(trace_chars, centers)
+    local score, _, matched, missing = scoring:dynamicMatchScore(
+        "adzf", trace_chars, false, nil, nil, nil, nil, false, near, 2)
+    -- By dynamicMatchScore's costs: a exact (0) + d from near key c
+    -- (NEAR_KEY_COST 0.5) + z missing (missing_cost 2) + f exact (0)
+    -- = 2.5. The alignment that instead leaves both d and z missing
+    -- and skips c outright costs more: d missing (2) + skipped c (1,
+    -- its intent weight) + z missing (2) = 5, so the near key wins.
+    T.eq(score, 2.5)
+    T.eq(missing, 1)
+    T.eq(matched[1], 1)
+    T.eq(matched[2], 2)
+    T.eq(matched[3], nil)
+    T.eq(matched[4], 3)
 end)

@@ -413,6 +413,10 @@ function Scoring:dynamicMatchScore(candidate, trace_chars,
             and candidate_position < candidate_len
         for trace_position = 1, trace_len do
             local trace_code = trace_codes[trace_position]
+            -- Endpoint mismatch, start mismatch and near-key borrowing:
+            -- _mayAlign allows the same three, at the same limits, so
+            -- a word it wrongly rules out here would get an unearned
+            -- missing-letter score -- change both together.
             local endpoint_mismatch = allow_endpoint_mismatch
                 and candidate_position == candidate_len
                 and trace_position == trace_len
@@ -689,6 +693,9 @@ local reached = {}
 -- to NEAR_KEY_LIMIT inner letters on a key next to theirs where the path
 -- turned (with near). Matching each letter as early as it can be never
 -- rules out a match later, so one pass along the word decides it.
+-- dynamicMatchScore's endpoint, start and near-key rules must allow
+-- exactly these -- change both together, or a word it could still
+-- match gets an unearned missing-letter score.
 function Scoring:_mayAlign(candidate, trace_chars, allow_endpoint_mismatch,
         allow_start_mismatch, near)
     local trace_len = #trace_chars
@@ -741,7 +748,9 @@ function Scoring:_mayAlign(candidate, trace_chars, allow_endpoint_mismatch,
 end
 
 -- missing_cost: on long swipes, what each word letter the path never
--- crossed costs; tried only when every letter cannot be matched.
+-- crossed costs; tried when _mayAlign says the plain alignment cannot
+-- match every letter, or that alignment's score comes back 1000 or
+-- more.
 function Scoring:scoreEntryDynamic(signature, entry, trace_chars, trace_info,
         key_centers, allow_endpoint_mismatch, context_bonus,
         allow_start_mismatch, near, uses, missing_cost)
