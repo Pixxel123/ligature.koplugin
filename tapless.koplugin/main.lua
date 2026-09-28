@@ -247,6 +247,21 @@ function Tapless:addToMainMenu(menu_items)
                     OneHanded:new(G_reader_settings):toggle(screenInfo())
                 end,
             },
+            {
+                text = "Hatch beside one-handed keys",
+                help_text = "Fills the space between the one-handed keys "
+                    .. "and the screen edge with fine diagonal lines, "
+                    .. "instead of showing the page there. Tapping it "
+                    .. "still closes the keyboard.",
+                checked_func = function()
+                    return G_reader_settings:nilOrTrue(
+                        "tapless_one_handed_hatch")
+                end,
+                callback = function()
+                    G_reader_settings:flipNilOrTrue(
+                        "tapless_one_handed_hatch")
+                end,
+            },
         },
     }
 end

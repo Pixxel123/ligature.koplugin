@@ -3,17 +3,22 @@ KeyAdapter.__index = KeyAdapter
 
 KeyAdapter.SPACE_CURSOR_SETTING = "tapless_space_cursor"
 
+-- KOReader's backspace key label (a glyph in its private-use range).
+KeyAdapter.BACKSPACE_LABEL = "\u{E76D}"
+
 -- Wrappers for methods VirtualKey does not define itself.
 local OPTIONAL_METHODS = {
     onMultiswipeKey = true,
     onSpaceCursorPan = true,
+    onDeleteSlidePan = true,
 }
 
-function KeyAdapter:new(normalization, gesture_range, settings)
+function KeyAdapter:new(normalization, gesture_range, settings, word_delete)
     return setmetatable({
         normalization = assert(normalization),
         gesture_range = assert(gesture_range),
         settings = assert(settings),
+        word_delete = word_delete,
         installed = {},
         active = {},
     }, self)
@@ -137,6 +142,108 @@ function KeyAdapter:finishSpaceCursor(keyboard, ges)
         and math.abs(pos.y - state.last.y) <= slop
 end
 
+function KeyAdapter:isBackspaceKey(key)
+    return key ~= nil and not key.is_swype_candidate
+        and key.label == self.BACKSPACE_LABEL
+end
+
+-- The words a slide from backspace picks with the finger at pos. Only a
+-- mostly sideways slide picks any: a flick up that drifts left is still
+-- KOReader's delete-word.
+function KeyAdapter:_deleteSlideWords(state, pos)
+    local dx = state.start_x - pos.x
+    if math.abs(state.start_y - pos.y) > math.abs(dx) then
+        return 0
+    end
+    return self.word_delete.count(dx, state.key_width, state.available)
+end
+
+-- Slide left from backspace to pick whole words before the cursor, more
+-- the further the finger goes; the lift deletes them (finishDeleteSlide).
+-- The keyboard says how many words there are to pick, and none where the
+-- slide is not for Tapless (input method layouts, passwords, read-only
+-- text), which leaves KOReader's own backspace gestures alone.
+function KeyAdapter:moveDeleteSlide(key, ges)
+    local keyboard = key.keyboard
+    local start = ges and ges.start_pos
+    local pos = ges and ges.pos
+    if not keyboard or not start or not pos or not self.word_delete then
+        return false
+    end
+    local state = keyboard.swype_mvp_delete_slide
+    if not (state and state.start_x == start.x
+            and state.start_y == start.y) then
+        -- A new gesture: a slide whose lift no key saw is over.
+        if state then
+            keyboard.swype_mvp_delete_slide = nil
+            keyboard:_swypeDeleteSlideShow(0)
+        end
+        if not contains(key.dimen, start) then
+            return false
+        end
+        local available = keyboard:_swypeDeleteSlideBegin()
+        if not available or available == 0 then
+            return false
+        end
+        state = {
+            start_x = start.x,
+            start_y = start.y,
+            -- One word's step: a letter key's width.
+            key_width = keyboard.swype_mvp_key_width or key.dimen.h,
+            available = available,
+            words = 0,
+            picked = false,
+        }
+        keyboard.swype_mvp_delete_slide = state
+    end
+    local words = self:_deleteSlideWords(state, pos)
+    if words ~= state.words then
+        state.words = words
+        state.picked = state.picked or words > 0
+        keyboard:_swypeDeleteSlideShow(words)
+    end
+    return true
+end
+
+-- The lift that ends a slide from backspace: a pan release (slow, under
+-- the finger), a swipe (fast, reported at the start with end_pos) or a
+-- multiswipe (there and back). Once the slide has picked a word, the
+-- lift is Tapless's: it deletes the words picked, or nothing when the
+-- slide came back. A slide that never picked one is a tap or a flick,
+-- and KOReader's.
+function KeyAdapter:finishDeleteSlide(keyboard, ges)
+    local state = keyboard and keyboard.swype_mvp_delete_slide
+    if not state then
+        return false
+    end
+    keyboard.swype_mvp_delete_slide = nil
+    -- A swipe or multiswipe is reported at the gesture's own start, same
+    -- as finishSpaceCursor checks for the space bar: when that is not
+    -- this slide's start, the lift belongs to a different gesture (a
+    -- stray touch elsewhere, say) and this slide's highlight is stale.
+    if ges and (ges.ges == "swipe" or ges.ges == "multiswipe")
+            and ges.pos
+            and not (ges.pos.x == state.start_x
+                and ges.pos.y == state.start_y) then
+        keyboard:_swypeDeleteSlideShow(0)
+        return false
+    end
+    local words = state.words
+    if ges and ges.ges == "swipe" and ges.end_pos then
+        words = self:_deleteSlideWords(state, ges.end_pos)
+        state.picked = state.picked or words > 0
+    end
+    if not state.picked then
+        return false
+    end
+    if words > 0 then
+        keyboard:_swypeDeleteSlideDelete(words)
+    else
+        keyboard:_swypeDeleteSlideShow(0)
+    end
+    return true
+end
+
 -- Key height before scaling, and key font size when the text size is
 -- automatic, for each Tapless keyboard size.
 local KEY_HEIGHTS = {
@@ -253,6 +360,18 @@ function KeyAdapter:wrappers()
                         },
                     }
                 end
+                if adapter:isBackspaceKey(key) then
+                    -- The whole screen: a one-handed slide may leave the
+                    -- keys.
+                    key.ges_events.DeleteSlidePan = {
+                        adapter.gesture_range:new{
+                            ges = "pan",
+                            range = function()
+                                return key.keyboard:_swypeScreenRect()
+                            end,
+                        },
+                    }
+                end
             end
         end,
 
@@ -262,8 +381,17 @@ function KeyAdapter:wrappers()
             end
         end,
 
+        onDeleteSlidePan = function()
+            return function(key, _, ges)
+                return adapter:moveDeleteSlide(key, ges)
+            end
+        end,
+
         onSwipeKey = function(original)
             return function(key, arg, ges)
+                if adapter:finishDeleteSlide(key.keyboard, ges) then
+                    return true
+                end
                 local keyboard = key.keyboard
                 if adapter:finishSpaceCursor(keyboard, ges) then
                     return true
@@ -285,6 +413,9 @@ function KeyAdapter:wrappers()
 
         onMultiswipeKey = function()
             return function(key, arg, ges)
+                if adapter:finishDeleteSlide(key.keyboard, ges) then
+                    return true
+                end
                 local keyboard = key.keyboard
                 if keyboard and keyboard:isSwypeMvpEnabled() then
                     if adapter:isTextKey(key) then
@@ -303,6 +434,9 @@ function KeyAdapter:wrappers()
 
         onPanReleaseKey = function(original)
             return function(key, arg, ges)
+                if adapter:finishDeleteSlide(key.keyboard, ges) then
+                    return true
+                end
                 local keyboard = key.keyboard
                 if adapter:finishSpaceCursor(keyboard, ges) then
                     return true

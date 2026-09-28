@@ -856,4 +856,21 @@ function InputController:delChar(keyboard)
     self:_afterManualEdit(keyboard, false)
 end
 
+-- Deletes from char index from up to the cursor in one step, for a slide
+-- from backspace. The slide starts at the cursor, so a just-swiped word
+-- is among the words deleted: backspace must no longer undo it, and its
+-- word pair is not learned.
+function InputController:deleteBefore(keyboard, from)
+    keyboard.swype_mvp_space_charpos = nil
+    keyboard.swype_mvp_pending_space = nil
+    keyboard.swype_mvp_tapped_word = nil
+    keyboard:_swypeReset()
+    self:clearCandidateRow(keyboard)
+    local inputbox = keyboard.inputbox
+    if from < inputbox.charpos then
+        inputbox:delSelection(from, inputbox.charpos - 1)
+    end
+    self:_afterManualEdit(keyboard, false)
+end
+
 return InputController

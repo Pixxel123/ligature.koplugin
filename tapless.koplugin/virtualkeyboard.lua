@@ -88,8 +88,9 @@ local DictionaryController = loadModule("dictionary_controller")
 DictionaryManager.language_controller = DictionaryController
 DictionaryManager.blocked_words = BlockedWords
 
+local WordDelete = loadModule("word_delete")
 local KeyAdapter = loadModule("key_adapter")
-    :new(Normalization, GestureRange, G_reader_settings)
+    :new(Normalization, GestureRange, G_reader_settings, WordDelete)
 -- Look this up before Tapless wraps VirtualKey.init.
 local VirtualKeyPopup = findUpvalue(VirtualKey.init, "VirtualKeyPopup")
 KeyAdapter:install(VirtualKey)
@@ -112,8 +113,13 @@ loadModule("stray_touches").install{
         for index = #stack, 1, -1 do
             local widget = stack[index].widget
             if not widget.toast then
-                return widget.isSwypeMvpEnabled ~= nil
-                    and widget:isSwypeMvpEnabled()
+                -- A delete slide still runs in the symbol layers, where
+                -- isSwypeMvpEnabled is false. Count it as swiping, or a
+                -- resting thumb pairs with it into a two-finger gesture:
+                -- no lift arrives and the highlight stays on.
+                return (widget.isSwypeMvpEnabled ~= nil
+                        and widget:isSwypeMvpEnabled())
+                    or widget.swype_mvp_delete_slide ~= nil
             end
         end
         return false
@@ -122,6 +128,7 @@ loadModule("stray_touches").install{
 
 local KeyboardUI = loadModule("keyboard_ui"):new{
     candidate_row = CandidateRow,
+    candidate_widths = loadModule("candidate_widths"),
     confirm_box = ConfirmBox,
     horizontal_group = HorizontalGroup,
     virtual_key = VirtualKey,
@@ -130,6 +137,14 @@ local KeyboardUI = loadModule("keyboard_ui"):new{
     screen = Screen,
 }
 local OneHanded = loadModule("one_handed")
+local SideBand = loadModule("side_band"):new{
+    settings = G_reader_settings,
+    screen = Screen,
+    horizontal_span = HorizontalSpan,
+    widget = require("ui/widget/widget"),
+    geometry = Geom,
+    blitbuffer = Blitbuffer,
+}
 local PanelButton = loadModule("panel_button"):new{
     input_container = InputContainer,
     frame_container = FrameContainer,
@@ -156,6 +171,7 @@ local ResizeFrame = loadModule("resize_frame"):new{
 }
 local ShapeChannel = loadModule("shape_channel"):new(DictionaryStore,
     PathShape, PersonalDictionary, BlockedWords)
+local TextHighlight = loadModule("text_highlight"):new(UIManager, Geom)
 local RecognitionEngine = loadModule("recognition_engine")
     :new(DictionaryStore, Scoring, GeometryReranker, PersonalDictionary,
         BlockedWords, ShapeChannel)
@@ -175,16 +191,22 @@ return loadModule("koreader_adapter"):new{
     input_controller = InputController,
     keyboard_geometry = KeyboardGeometry,
     keyboard_ui = KeyboardUI,
+    candidate_row = CandidateRow,
     recognition_engine = RecognitionEngine,
     gesture_controller = GestureController,
     trace_renderer = TraceRenderer,
     key_adapter = KeyAdapter,
+    word_delete = WordDelete,
+    text_highlight = TextHighlight,
     one_handed = OneHanded:new(G_reader_settings),
+    side_band = SideBand,
     resize_frame = ResizeFrame,
     overlap_group = OverlapGroup,
     virtual_key = VirtualKey,
     virtual_key_popup = VirtualKeyPopup,
     line_widget = LineWidget,
+    text_widget = TextWidget,
+    font = Font,
     icon_dir = plugin_dir .. "/icons",
     ui_manager = UIManager,
     settings = G_reader_settings,

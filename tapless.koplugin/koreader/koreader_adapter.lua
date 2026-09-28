@@ -14,7 +14,31 @@ function KoreaderAdapter:install(VirtualKeyboard)
     local original_init = assert(VirtualKeyboard.init)
     local original_show = assert(VirtualKeyboard.onShow)
     local original_close_widget = assert(VirtualKeyboard.onCloseWidget)
+    local original_refresh = assert(VirtualKeyboard._refresh)
     local adapter = self
+
+    -- The hatched strips are drawn over the page at 40% (as ZenOS does),
+    -- so repainting the keyboard alone would stamp the hatch on its last
+    -- copy and darken it. With strips showing, every window is
+    -- repainted, page first, but only the keyboard's band is refreshed.
+    -- Read the keys' place once they have been painted (addKeys leaves it
+    -- unset), as KOReader's own _refresh does.
+    function VirtualKeyboard:_refresh(want_flash, fullscreen)
+        if fullscreen or not self.swype_mvp_side_bands then
+            return original_refresh(self, want_flash, fullscreen)
+        end
+        local refresh_type = want_flash and "flashui" or "ui"
+        adapter.ui_manager:setDirty("all", function()
+            local region = self.dimen and self.dimen.x
+                and self.dimen:copy()
+            for _, rect in ipairs(self.swype_mvp_side_bands or {}) do
+                if rect.w > 0 then
+                    region = region and region:combine(rect) or rect
+                end
+            end
+            return refresh_type, region
+        end)
+    end
 
     function VirtualKeyboard:init()
         self.swype_mvp_closed = false
@@ -66,6 +90,8 @@ function KoreaderAdapter:install(VirtualKeyboard)
         local base_key_height = math.floor((self.height
             - (row_count + 1) * self.key_padding - 2 * self.padding)
             / row_count)
+        -- One word's step for a slide from backspace.
+        self.swype_mvp_key_width = base_key_width
         local h_key_padding = adapter.horizontal_span:new{
             width = self.key_padding,
         }
@@ -78,7 +104,7 @@ function KoreaderAdapter:install(VirtualKeyboard)
         local handle = area and self:_swypeHandle(base_key_width,
             base_key_height, block, screen)
         self.swype_mvp_handle = handle or nil
-        local candidate_row = adapter.keyboard_ui:createCandidateRow(self, {
+        local row_options = {
             width = keys_width,
             height = base_key_height,
             key_padding = self.key_padding,
@@ -86,7 +112,13 @@ function KoreaderAdapter:install(VirtualKeyboard)
             horizontal_padding = h_key_padding,
             handle = handle and { widget = handle, width = base_key_width,
                 side = area.handle_side } or nil,
-        })
+        }
+        -- Kept to rebuild the row, in the same place, when its words
+        -- change (_swypeRebuildCandidateRow).
+        self.swype_mvp_candidate_row_options = row_options
+        self.swype_mvp_candidate_group = vertical_group
+        local candidate_row = adapter.keyboard_ui:createCandidateRow(self,
+            row_options)
         self.swype_mvp_candidate_keys = candidate_row.keys
         table.insert(vertical_group, candidate_row.widget)
         table.insert(self.layout, candidate_row.layout)
@@ -173,12 +205,15 @@ function KoreaderAdapter:install(VirtualKeyboard)
             end
         end
 
+        -- Also what shows between the suggestion boxes.
+        self.swype_mvp_frame_background =
+            adapter.settings:nilOrTrue("keyboard_key_border")
+                and adapter.blitbuffer.COLOR_LIGHT_GRAY
+                or adapter.blitbuffer.COLOR_WHITE
         local keyboard_frame = adapter.frame_container:new{
             margin = 0,
             bordersize = border,
-            background = adapter.settings:nilOrTrue("keyboard_key_border")
-                and adapter.blitbuffer.COLOR_LIGHT_GRAY
-                or adapter.blitbuffer.COLOR_WHITE,
+            background = self.swype_mvp_frame_background,
             radius = 0,
             padding = self.padding,
             allow_mirroring = false,
@@ -188,13 +223,27 @@ function KoreaderAdapter:install(VirtualKeyboard)
             },
         }
         local bottom_child = keyboard_frame
+        self.swype_mvp_side_bands = nil
         if area then
+            local frame_size = keyboard_frame:getSize()
             bottom_child = adapter.horizontal_group:new{
                 allow_mirroring = false,
-                adapter.horizontal_span:new{ width = area.frame_x },
+                adapter.side_band:create(area.frame_x, frame_size.h),
                 keyboard_frame,
-                adapter.horizontal_span:new{ width = area.after },
+                adapter.side_band:create(area.after, frame_size.h),
             }
+            -- KOReader refreshes only the keys' area when the keyboard
+            -- shows or closes; hatched strips need their own refresh.
+            if adapter.side_band:hatched() then
+                local top = adapter.screen:getHeight() - frame_size.h
+                self.swype_mvp_side_bands = {
+                    adapter.geometry:new{ x = 0, y = top,
+                        w = area.frame_x, h = frame_size.h },
+                    adapter.geometry:new{
+                        x = area.frame_x + frame_size.w, y = top,
+                        w = area.after, h = frame_size.h },
+                }
+            end
         end
         if resize then
             bottom_child = self:_swypeResizeLayer(bottom_child, area,
@@ -344,10 +393,13 @@ function KoreaderAdapter:install(VirtualKeyboard)
             end
             table.insert(row, key)
             key[1].background = white
-            -- KOReader builds icon keys without alpha, which paints our
-            -- transparent SVGs as black squares.
+            -- KOReader builds icon keys as plain images: without alpha,
+            -- which paints our transparent SVGs as black squares, and
+            -- kept in their original colours in night mode, which leaves
+            -- them black on the inverted keys.
             if key.icon and key[1][1][1] then
                 key[1][1][1].alpha = true
+                key[1][1][1].original_in_nightmode = false
             end
             key.swipe_callback = nil
             -- KOReader skips the first lift on the centre key, which it
@@ -615,9 +667,18 @@ function KoreaderAdapter:install(VirtualKeyboard)
         adapter.dictionary_controller:scheduleWarmUp(self, delay)
     end
 
+    function VirtualKeyboard:_swypeRefreshSideBands()
+        for _, rect in ipairs(self.swype_mvp_side_bands or {}) do
+            if rect.w > 0 then
+                adapter.ui_manager:setDirty(nil, "ui", rect)
+            end
+        end
+    end
+
     function VirtualKeyboard:onShow()
         self.swype_mvp_closed = false
         local result = original_show(self)
+        self:_swypeRefreshSideBands()
         self:_swypeScheduleWarmUp()
         adapter.dictionary_controller:scheduleLanguageSetup(self)
         return result
@@ -632,12 +693,18 @@ function KoreaderAdapter:install(VirtualKeyboard)
             adapter.resize_frame:cancelRedraw(self.swype_mvp_resize)
             self.swype_mvp_resize = nil
         end
+        -- Only the keyboard may be closing, the text box staying on
+        -- screen: take a slide's highlight off it.
+        adapter.text_highlight:clear(self)
+        self.swype_mvp_delete_slide = nil
+        self.swype_mvp_delete_starts = nil
         self:_swypeReset()
         adapter.dictionary_controller:stopWarmUp(self)
         self:_swypeCancelBucketPrefetch()
         self:_swypeCommitPendingContext()
         self:_swypeSaveContext()
         self:_swypeClearCandidateState()
+        self:_swypeRefreshSideBands()
         return original_close_widget(self)
     end
 
@@ -785,6 +852,123 @@ function KoreaderAdapter:install(VirtualKeyboard)
             self, refresh_type, only_index)
     end
 
+    -- A word's width on a suggestion key, in the keys' font.
+    function VirtualKeyboard:_swypeMeasureLabel(word, bold)
+        if word == "" or word == " " then
+            return 0
+        end
+        local size = adapter.key_adapter:keyFontSize()
+            or adapter.settings:readSetting("keyboard_key_font_size", 22)
+        local widget = adapter.text_widget:new{
+            text = word,
+            face = adapter.font:getFace("infont", size),
+            bold = bold or adapter.settings:isTrue("keyboard_key_bold"),
+        }
+        local width = widget:getWidth()
+        widget:free()
+        return width
+    end
+
+    -- Space kept free inside each suggestion box, each side: 1.5 mm.
+    function VirtualKeyboard:_swypeLabelPad()
+        return math.floor(1.5 * adapter.screen:getDPI() / 25.4 + 0.5)
+    end
+
+    -- Shrinks a key's label a font size at a time until it fits
+    -- max_width, as KOReader does with less room to spare.
+    function VirtualKeyboard:_swypeFitLabel(key, max_width)
+        local label = key.swype_mvp_label_widget
+        local center = key[1] and key[1][1]
+        if not label or not center or center[1] ~= label then
+            return
+        end
+        while label:getWidth() > max_width do
+            local size = label.face.orig_size - 1
+            if size < 8 then
+                break
+            end
+            -- After getWidth, KOReader may have swapped in the bold face;
+            -- built from it, the smaller label is just as bold.
+            local smaller = adapter.text_widget:new{
+                text = label.text,
+                face = adapter.font:getFace(label.face.orig_font, size),
+                bold = label.bold,
+                fgcolor = label.fgcolor,
+            }
+            label:free()
+            label = smaller
+        end
+        center[1] = label
+        key.swype_mvp_label_widget = label
+    end
+
+    -- Builds a new suggestion row when its words change and puts it
+    -- where the old one was. Returns true when it changed.
+    function VirtualKeyboard:_swypeRebuildCandidateRow(refresh_type)
+        -- New candidate keys take live gestures as soon as they are made,
+        -- ahead of the resize frame's own layer taking over the drags.
+        -- addKeys rebuilds the row itself on reset, redraw and finish, so
+        -- skip a rebuild here and leave the faded row alone until then.
+        if self.swype_mvp_resize then
+            return false
+        end
+        local session = self.swype_mvp_session
+        local old_keys = self.swype_mvp_candidate_keys or {}
+        local words = adapter.candidate_row.words(session:getCandidates(),
+            session:getPersonalOffer(), #old_keys)
+        local same = #old_keys == #words
+        for index, key in ipairs(old_keys) do
+            same = same and key.label == words[index]
+        end
+        if same then
+            return false
+        end
+        -- Where the old row is on screen: its keys and the handle. The
+        -- row's first child, the handle on the left or else the first
+        -- key, is its left edge; all share its top and height.
+        local region
+        local parts = { self.swype_mvp_handle }
+        for _, key in ipairs(old_keys) do
+            parts[#parts + 1] = key
+        end
+        for _, part in ipairs(parts) do
+            -- The frame's dimen gets its x and y only once painted.
+            local dimen = part[1] and part[1].dimen
+            if dimen and dimen.x then
+                region = region and region:combine(dimen) or dimen:copy()
+            end
+        end
+        -- VirtualKey:paintTo widens and heightens a key's dimen by the
+        -- key padding for its touch area, and the group sizes children by
+        -- dimen: the handle, painted in the old row, would push the new
+        -- row's keys right and down. Set in place, as its gesture ranges
+        -- hold this table; the next paint widens it again.
+        local handle = self.swype_mvp_handle
+        if handle and handle.dimen then
+            handle.dimen.w = handle.width
+            handle.dimen.h = handle.height
+        end
+        -- Box widths always sum to the same row width, so the group's
+        -- cached size and offsets stay right for the new row.
+        local row = adapter.keyboard_ui:createCandidateRow(self,
+            self.swype_mvp_candidate_row_options)
+        self.swype_mvp_candidate_group[1] = row.widget
+        self.layout[1] = row.layout
+        self.swype_mvp_candidate_keys = row.keys
+        -- The handle moves to the new row, so only the old keys go.
+        for _, key in ipairs(old_keys) do
+            key:free()
+        end
+        if region then
+            -- Clear the old boxes and gaps, then draw the new row there.
+            adapter.screen.bb:paintRect(region.x, region.y, region.w,
+                region.h, self.swype_mvp_frame_background)
+            adapter.ui_manager:widgetRepaint(row.widget, region.x, region.y)
+            adapter.ui_manager:setDirty(nil, refresh_type, region)
+        end
+        return true
+    end
+
     function VirtualKeyboard:_swypeRefreshLanguageIndicator(refresh_type)
         adapter.keyboard_ui:refreshLanguageIndicator(self, refresh_type)
     end
@@ -796,6 +980,57 @@ function KoreaderAdapter:install(VirtualKeyboard)
 
     function VirtualKeyboard:_swypeClearCandidateRow(refresh_type)
         adapter.input_controller:clearCandidateRow(self, refresh_type)
+    end
+
+    function VirtualKeyboard:_swypeScreenRect()
+        return adapter.screen:getSize()
+    end
+
+    -- A slide from backspace is starting: how many words before the
+    -- cursor it can pick, or 0 to leave it to KOReader. Input method
+    -- layouts compose their own text, passwords show only stars, and
+    -- read-only text cannot change.
+    function VirtualKeyboard:_swypeDeleteSlideBegin()
+        adapter.text_highlight:clear(self)
+        self.swype_mvp_delete_starts = nil
+        local inputbox = self.inputbox
+        -- Switching Tapless off restores KOReader's own backspace; while
+        -- the keyboard is being resized, its keys are not for typing.
+        -- (Not isSwypeMvpEnabled: the symbol layers keep the slide.)
+        if not adapter.settings:nilOrTrue("keyboard_swype_mvp_enabled")
+                or self.swype_mvp_resize
+                or self.uwrap_func or not inputbox or inputbox.readonly
+                or inputbox.text_type == "password"
+                or (inputbox.isTextEditable
+                    and not inputbox:isTextEditable())
+                or not inputbox.charlist or not inputbox.charpos then
+            return 0
+        end
+        local starts = adapter.word_delete.boundaries(
+            inputbox.charlist, inputbox.charpos)
+        self.swype_mvp_delete_starts = starts
+        return #starts
+    end
+
+    function VirtualKeyboard:_swypeDeleteSlideShow(words)
+        local starts = self.swype_mvp_delete_starts
+        local from = words > 0 and starts and starts[words]
+        if from then
+            adapter.text_highlight:show(self, from,
+                self.inputbox.charpos - 1)
+        else
+            adapter.text_highlight:clear(self)
+        end
+    end
+
+    function VirtualKeyboard:_swypeDeleteSlideDelete(words)
+        local starts = self.swype_mvp_delete_starts
+        self.swype_mvp_delete_starts = nil
+        adapter.text_highlight:clear(self)
+        local from = starts and starts[words]
+        if from then
+            adapter.input_controller:deleteBefore(self, from)
+        end
     end
 
     function VirtualKeyboard:_swypeSelectCandidate(candidate)
@@ -825,14 +1060,26 @@ function KoreaderAdapter:install(VirtualKeyboard)
     end
 
     function VirtualKeyboard:onSwypeWordSwipe(_, ges, source_key)
+        -- A slide from backspace whose lift landed on no key.
+        if adapter.key_adapter:finishDeleteSlide(self, ges) then
+            return true
+        end
         return self:_onSwypeWordPathRelease(_, ges, source_key)
     end
 
     function VirtualKeyboard:onSwypeWordMultiswipe(_, ges, source_key)
+        -- A slide from backspace whose lift landed on no key.
+        if adapter.key_adapter:finishDeleteSlide(self, ges) then
+            return true
+        end
         return self:_onSwypeWordPathRelease(_, ges, source_key)
     end
 
     function VirtualKeyboard:onSwypeWordPanRelease(_, ges)
+        -- A slide from backspace whose lift landed on no key.
+        if adapter.key_adapter:finishDeleteSlide(self, ges) then
+            return true
+        end
         return adapter.gesture_controller:onPanRelease(self, ges)
     end
 

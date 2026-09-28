@@ -35,6 +35,10 @@ local specs = {
     "icons_spec",
     "panel_button_spec",
     "resize_frame_spec",
+    "word_delete_spec",
+    "candidate_widths_spec",
+    "side_band_spec",
+    "koreader_adapter_spec",
 }
 
 for _, name in ipairs(specs) do

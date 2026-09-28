@@ -80,7 +80,8 @@ local function setup(settings)
     settings = newSettings(settings)
     calls.settings = settings
     local adapter = T.load("key_adapter")
-        :new(T.normalization, T.gesture_range, settings)
+        :new(T.normalization, T.gesture_range, settings,
+            T.load("word_delete"))
     adapter:install(VirtualKey)
     return calls, VirtualKey, adapter
 end
@@ -479,4 +480,164 @@ end)
 it("never takes the one-handed handle for a letter", function()
     local _, _, adapter = setup()
     T.eq(adapter:isTextKey({ key = "a", is_tapless_handle = true }), false)
+end)
+
+-- ---------- Slide left on backspace ----------
+
+local BACKSPACE = "\u{E76D}"
+local BKSP_DIMEN = { x = 300, y = 100, w = 60, h = 40 }
+
+-- A keyboard that records what the slide asks of it: available words,
+-- the words shown, and the words deleted.
+local function newSlideKeyboard(calls, available)
+    local keyboard = newKeyboard(calls)
+    keyboard.swype_mvp_key_width = 40
+    keyboard._swypeScreenRect = function()
+        return { x = 0, y = 0, w = 600, h = 800 }
+    end
+    keyboard._swypeDeleteSlideBegin = function()
+        calls.begun = (calls.begun or 0) + 1
+        return available
+    end
+    keyboard._swypeDeleteSlideShow = function(_, words)
+        calls.shown = calls.shown or {}
+        calls.shown[#calls.shown + 1] = words
+    end
+    keyboard._swypeDeleteSlideDelete = function(_, words)
+        calls.deleted = words
+    end
+    -- As on the device: a lift that ends no word swipe is not Tapless's.
+    keyboard.onSwypeWordMultiswipe = function() return false end
+    keyboard.onSwypeWordPanRelease = function() return false end
+    return keyboard
+end
+
+local function backspaceKey(VirtualKey, keyboard)
+    local key = VirtualKey:new{ key = BACKSPACE, label = BACKSPACE,
+        keyboard = keyboard }
+    key.dimen = BKSP_DIMEN
+    return key
+end
+
+local function slide(x, start_x)
+    return { ges = "pan", start_pos = { x = start_x or 330, y = 120 },
+        pos = { x = x, y = 120 } }
+end
+
+it("highlights more words the further a slide from backspace goes",
+        function()
+    local calls, VirtualKey = setup()
+    local keyboard = newSlideKeyboard(calls, 5)
+    local key = backspaceKey(VirtualKey, keyboard)
+    T.truthy(key.ges_events.DeleteSlidePan, "pan registered")
+    T.truthy(key:onDeleteSlidePan(nil, slide(320)))
+    T.eq(calls.begun, 1)
+    T.eq(calls.shown, nil, "nothing before 0.4 of a key")
+    key:onDeleteSlidePan(nil, slide(314))   -- 16 px = 0.4 key
+    key:onDeleteSlidePan(nil, slide(274))   -- 56 px
+    key:onDeleteSlidePan(nil, slide(250))   -- 80 px, still 2
+    key:onDeleteSlidePan(nil, slide(320))   -- back to 10 px
+    T.eq(table.concat(calls.shown, ","), "1,2,0")
+end)
+
+it("deletes the highlighted words when the finger lifts", function()
+    local calls, VirtualKey = setup()
+    local keyboard = newSlideKeyboard(calls, 5)
+    local key = backspaceKey(VirtualKey, keyboard)
+    key:onDeleteSlidePan(nil, slide(314))
+    key:onDeleteSlidePan(nil, slide(274))
+    -- Lifted over a letter: a slow slide ends with a pan release there.
+    local letter = VirtualKey:new{ key = "n", keyboard = keyboard }
+    T.truthy(letter:onPanReleaseKey(nil,
+        { ges = "pan_release", pos = { x = 274, y = 120 } }))
+    T.eq(calls.deleted, 2)
+    T.eq(calls.stock_pan_release, nil, "the letter is not typed")
+    T.eq(calls.tapless_pan_release, nil)
+    T.eq(keyboard.swype_mvp_delete_slide, nil, "slide over")
+end)
+
+it("counts a fast slide's words from where it lifted", function()
+    local calls, VirtualKey = setup()
+    local keyboard = newSlideKeyboard(calls, 5)
+    local key = backspaceKey(VirtualKey, keyboard)
+    key:onDeleteSlidePan(nil, slide(314))
+    T.truthy(key:onSwipeKey(nil, { ges = "swipe", direction = "west",
+        pos = { x = 330, y = 120 }, end_pos = { x = 230, y = 120 } }))
+    T.eq(calls.deleted, 3, "100 px")
+    T.eq(calls.stock_swipe, nil, "not KOReader's delete-word")
+end)
+
+it("deletes nothing when the slide comes back", function()
+    local calls, VirtualKey = setup()
+    local keyboard = newSlideKeyboard(calls, 5)
+    local key = backspaceKey(VirtualKey, keyboard)
+    key:onDeleteSlidePan(nil, slide(300))
+    key:onDeleteSlidePan(nil, slide(328))
+    T.truthy(key:onMultiswipeKey(nil,
+        { ges = "multiswipe", pos = { x = 330, y = 120 } }))
+    T.eq(calls.deleted, nil)
+    T.eq(calls.shown[#calls.shown], 0, "highlight cleared")
+    T.eq(calls.stock_swipe, nil)
+end)
+
+it("leaves taps and short slides on backspace to KOReader", function()
+    local calls, VirtualKey = setup()
+    local keyboard = newSlideKeyboard(calls, 5)
+    local key = backspaceKey(VirtualKey, keyboard)
+    key:onDeleteSlidePan(nil, slide(325))
+    key:onPanReleaseKey(nil,
+        { ges = "pan_release", pos = { x = 325, y = 120 } })
+    T.eq(calls.deleted, nil)
+    T.eq(calls.stock_pan_release, 1, "one backspace")
+end)
+
+it("does not take the slide when nothing can be deleted", function()
+    local calls, VirtualKey = setup()
+    local keyboard = newSlideKeyboard(calls, 0)
+    local key = backspaceKey(VirtualKey, keyboard)
+    T.eq(key:onDeleteSlidePan(nil, slide(300)), false)
+    T.eq(keyboard.swype_mvp_delete_slide, nil)
+end)
+
+it("ignores pans that start elsewhere", function()
+    local calls, VirtualKey = setup()
+    local keyboard = newSlideKeyboard(calls, 5)
+    local key = backspaceKey(VirtualKey, keyboard)
+    T.eq(key:onDeleteSlidePan(nil, slide(100, 50)), false)
+    T.eq(calls.begun, nil)
+end)
+
+it("does not take a swipe whose lift is not the slide's start", function()
+    local calls, VirtualKey, adapter = setup()
+    local keyboard = newSlideKeyboard(calls, 5)
+    local key = backspaceKey(VirtualKey, keyboard)
+    key:onDeleteSlidePan(nil, slide(314))
+    key:onDeleteSlidePan(nil, slide(274))
+    -- A swipe or multiswipe is reported at the gesture's own start; one
+    -- reported at a different position is a different gesture, perhaps
+    -- from a stray touch elsewhere, and never this slide's lift.
+    T.eq(adapter:finishDeleteSlide(keyboard, { ges = "swipe",
+        pos = { x = 100, y = 120 }, end_pos = { x = 20, y = 120 } }),
+        false)
+    T.eq(calls.deleted, nil, "nothing deleted")
+    T.eq(keyboard.swype_mvp_delete_slide, nil, "slide state cleared")
+    T.eq(calls.shown[#calls.shown], 0, "highlight cleared")
+end)
+
+it("leaves a flick up that drifts left to KOReader", function()
+    local calls, VirtualKey = setup()
+    local keyboard = newSlideKeyboard(calls, 5)
+    -- A swipe from backspace starts no word.
+    keyboard._swypeStartKeyAt = function() return nil end
+    local key = backspaceKey(VirtualKey, keyboard)
+    local start = { x = 330, y = 120 }
+    key:onDeleteSlidePan(nil,
+        { ges = "pan", start_pos = start, pos = { x = 320, y = 95 } })
+    key:onDeleteSlidePan(nil,
+        { ges = "pan", start_pos = start, pos = { x = 314, y = 80 } })
+    T.eq(calls.shown, nil, "no word picked")
+    key:onSwipeKey(nil, { ges = "swipe", direction = "north",
+        pos = start, end_pos = { x = 314, y = 70 } })
+    T.eq(calls.deleted, nil)
+    T.eq(calls.stock_swipe, 1, "KOReader's delete-word")
 end)

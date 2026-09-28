@@ -106,3 +106,59 @@ it("passes the handle on to the candidate row", function()
 
     T.eq(received.handle, handle)
 end)
+
+it("sizes the candidate row's boxes with the keyboard's measure",
+        function()
+    local received
+    local widths = { widths = true }
+    local ui = T.load("keyboard_ui"):new{
+        candidate_row = {
+            create = function(_, options) received = options end,
+        },
+        candidate_widths = widths,
+        confirm_box = {},
+        horizontal_group = {},
+        virtual_key = {},
+        ui_manager = {},
+        gesture_range = {},
+        screen = {},
+    }
+    local fitted
+    local keyboard = {
+        swype_mvp_session = {
+            getCandidates = function() end,
+            getPersonalOffer = function() end,
+        },
+        _swypeMeasureLabel = function(_, word, bold)
+            return #word * (bold and 11 or 10)
+        end,
+        _swypeLabelPad = function() return 5 end,
+        _swypeFitLabel = function(_, key, max_width)
+            fitted = { key, max_width }
+        end,
+    }
+    ui:createCandidateRow(keyboard, {
+        width = 400, height = 40, key_padding = 2, padding = 2,
+        horizontal_padding = {},
+    })
+
+    T.eq(received.CandidateWidths, widths)
+    T.eq(received.measure("abc", true), 33)
+    T.eq(received.pad, 5)
+    received.fit_label("key", 70)
+    T.eq(fitted[1], "key")
+    T.eq(fitted[2], 70)
+end)
+
+it("rebuilds the candidate row when the keyboard can", function()
+    local ui, keyboard, dirty = setup{}
+    local rebuilt
+    keyboard.swype_mvp_candidate_group = {}
+    keyboard._swypeRebuildCandidateRow = function(_, refresh_type)
+        rebuilt = refresh_type
+        return false
+    end
+    ui:refreshCandidateRow(keyboard)
+    T.eq(rebuilt, "ui")
+    T.eq(#dirty, 0)
+end)

@@ -14,6 +14,7 @@
 return {
     koreader_adapter = "koreader/koreader_adapter.lua",
     key_adapter = "koreader/key_adapter.lua",
+    text_highlight = "koreader/text_highlight.lua",
     stray_touches = "koreader/stray_touches.lua",
     concurrent_taps = "koreader/concurrent_taps.lua",
     find_upvalue = "koreader/find_upvalue.lua",
@@ -24,6 +25,7 @@ return {
     trace_collector = "input/trace_collector.lua",
     keyboard_geometry = "input/keyboard_geometry.lua",
     text_case = "input/text_case.lua",
+    word_delete = "input/word_delete.lua",
 
     recognition_engine = "recognition/recognition_engine.lua",
     scoring = "recognition/scoring.lua",
@@ -47,8 +49,10 @@ return {
 
     keyboard_ui = "ui/keyboard_ui.lua",
     candidate_row = "ui/candidate_row.lua",
+    candidate_widths = "ui/candidate_widths.lua",
     trace_renderer = "ui/trace_renderer.lua",
     one_handed = "ui/one_handed.lua",
+    side_band = "ui/side_band.lua",
     panel_button = "ui/panel_button.lua",
     resize_frame = "ui/resize_frame.lua",
 }
