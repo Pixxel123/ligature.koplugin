@@ -33,7 +33,8 @@ it("takes a different minimum share", function()
     T.eq(widths[1], 280)
 end)
 
-it("gives equal wants at avail 402 widths differing by at most 1 px", function()
+it("gives equal wants at avail 402 widths differing by at most 1 px",
+        function()
     local widths = CandidateWidths.compute({ 90, 90, 90, 90 }, 402)
     local max_w = math.max(widths[1], widths[2], widths[3], widths[4])
     local min_w = math.min(widths[1], widths[2], widths[3], widths[4])
@@ -60,7 +61,8 @@ it("always fills the row with whole pixels", function()
     for seed = 1, 200 do
         local wants, n = {}, 1 + seed % 4
         for index = 1, n do
-            wants[index] = (seed + index) % 3 == 0 and 0 or (seed * 37 * index) % 331
+            wants[index] = (seed + index) % 3 == 0 and 0
+                or (seed * 37 * index) % 331
         end
         local avail = 150 + (seed * 13) % 500
         local widths = CandidateWidths.compute(wants, avail)

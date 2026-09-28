@@ -6,8 +6,9 @@ local CandidateWidths = {
 }
 
 -- wants: the width each box would like (its word and padding); avail:
--- the width the boxes share. min_share: minimum share as a fraction (must be
--- at most 1); defaults to MIN_SHARE. Returns whole-pixel widths summing to avail.
+-- the width the boxes share. min_share: minimum share as a fraction
+-- (must be at most 1); defaults to MIN_SHARE. Returns whole-pixel
+-- widths summing to avail.
 function CandidateWidths.compute(wants, avail, min_share)
     local n = #wants
     if n == 0 then
@@ -44,7 +45,8 @@ function CandidateWidths.compute(wants, avail, min_share)
         total_floor = total_floor + out[index]
     end
     local leftover = avail - total_floor
-    -- Sort indices by fractional part (descending), with ties going to lower index
+    -- table.sort is not stable, so the comparator breaks ties itself,
+    -- to keep them going to the lower index every time.
     local indices = {}
     for index = 1, n do
         indices[index] = index
@@ -56,7 +58,6 @@ function CandidateWidths.compute(wants, avail, min_share)
             return a < b
         end
     end)
-    -- Award the leftover pixels
     for i = 1, leftover do
         out[indices[i]] = out[indices[i]] + 1
     end

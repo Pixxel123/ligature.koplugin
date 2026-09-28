@@ -10,7 +10,9 @@ local function newBand(values, dpi)
         },
         screen = { getDPI = function() return dpi or 300 end },
         horizontal_span = { new = function(_, o) o.span = true; return o end },
-        frame_container = { new = function(_, o) o.frame = true; return o end },
+        frame_container = {
+            new = function(_, o) o.frame = true; return o end,
+        },
         widget = { new = function(_, o) return o end },
         geometry = { new = function(_, o) return o end },
         blitbuffer = { COLOR_WHITE = "white", COLOR_DARK_GRAY = "dark" },
