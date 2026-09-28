@@ -904,9 +904,19 @@ function KoreaderAdapter:install(VirtualKeyboard)
                 region = region and region:combine(dimen) or dimen:copy()
             end
         end
+        -- VirtualKey:paintTo widens and heightens a key's dimen by the
+        -- key padding for its touch area, and the group sizes children by
+        -- dimen: the handle, painted in the old row, would push the new
+        -- row's keys right and down. Set in place, as its gesture ranges
+        -- hold this table; the next paint widens it again.
+        local handle = self.swype_mvp_handle
+        if handle and handle.dimen then
+            handle.dimen.w = handle.width
+            handle.dimen.h = handle.height
+        end
         -- Box widths always sum to the same row width, so the group's
         -- cached size and offsets stay right for the new row.
-        local row = adapter.keyboard_ui:createCandidateRow(self,
+        local row =adapter.keyboard_ui:createCandidateRow(self,
             self.swype_mvp_candidate_row_options)
         self.swype_mvp_candidate_group[1] = row.widget
         self.layout[1] = row.layout

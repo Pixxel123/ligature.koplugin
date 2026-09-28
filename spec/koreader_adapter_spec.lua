@@ -126,6 +126,12 @@ local function paintedKey(calls, label, x)
     }
 end
 
+-- The handle's size as the new row is laid out and painted.
+local function handleSize(calls)
+    local handle = calls.handle
+    return handle and handle.dimen.w .. "x" .. handle.dimen.h
+end
+
 -- A keyboard showing "one two", with a handle at handle_x, whose row is
 -- rebuilt from the session's candidates.
 local function setupRow(candidates, handle_x)
@@ -138,6 +144,7 @@ local function setupRow(candidates, handle_x)
         keyboard_ui = {
             createCandidateRow = function(_, _, options)
                 calls.row_options = options
+                calls.handle_built = handleSize(calls)
                 return new_row
             end,
         },
@@ -147,6 +154,7 @@ local function setupRow(candidates, handle_x)
         ui_manager = {
             widgetRepaint = function(_, widget, x, y)
                 calls.repainted[#calls.repainted + 1] = { widget, x, y }
+                calls.handle_painted = handleSize(calls)
             end,
             setDirty = function(_, widget, refresh_type, region)
                 calls.dirty[#calls.dirty + 1] =
@@ -158,6 +166,13 @@ local function setupRow(candidates, handle_x)
     for index, word in ipairs{ "one", "two", " ", " " } do
         keys[index] = paintedKey(calls, word, 100 + 60 * (index - 1))
     end
+    if handle_x then
+        -- As KOReader's VirtualKey:paintTo left it: grown by the 2 px key
+        -- padding for its touch area.
+        calls.handle = paintedKey(calls, "handle", handle_x)
+        calls.handle.width, calls.handle.height = 50, 40
+        calls.handle.dimen = { x = handle_x - 1, y = 99, w = 52, h = 42 }
+    end
     local old_row = { old = true }
     local keyboard = setmetatable({
         swype_mvp_session = {
@@ -165,8 +180,7 @@ local function setupRow(candidates, handle_x)
             getPersonalOffer = function() end,
         },
         swype_mvp_candidate_keys = keys,
-        swype_mvp_handle = handle_x
-            and paintedKey(calls, "handle", handle_x) or nil,
+        swype_mvp_handle = calls.handle,
         swype_mvp_candidate_group = { old_row, "gap" },
         swype_mvp_candidate_row_options = { row = true },
         swype_mvp_frame_background = "grey",
@@ -203,6 +217,16 @@ it("rebuilds the suggestion row in place when its words change",
     T.eq(calls.dirty[1][2], "fast")
     T.eq(calls.dirty[1][3].x, 30)
     T.eq(calls.dirty[1][3].w, 300)
+end)
+
+it("lays out a rebuilt row with the handle at its real size", function()
+    local calls, keyboard = setupRow({ { word = "three" } }, 30)
+    local dimen = calls.handle.dimen
+    keyboard:_swypeRebuildCandidateRow("ui")
+    T.eq(calls.handle_built, "50x40", "as the row is built")
+    T.eq(calls.handle_painted, "50x40", "as the row is painted")
+    -- Its gesture ranges hold this table.
+    T.eq(calls.handle.dimen, dimen, "the same table")
 end)
 
 it("swaps in a row not yet on screen without painting it", function()
