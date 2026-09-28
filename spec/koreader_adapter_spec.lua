@@ -219,6 +219,18 @@ it("rebuilds the suggestion row in place when its words change",
     T.eq(calls.dirty[1][3].w, 300)
 end)
 
+it("leaves the row alone while a resize is under way", function()
+    local calls, keyboard = setupRow({ { word = "three" } }, 30)
+    keyboard.swype_mvp_resize = {}
+    T.eq(keyboard:_swypeRebuildCandidateRow("ui"), false)
+    T.eq(calls.row_options, nil, "not rebuilt")
+    T.eq(#calls.painted + #calls.repainted + #calls.dirty, 0)
+    T.eq(#calls.freed, 0, "old keys kept")
+    T.eq(keyboard.swype_mvp_candidate_group[1].old, true)
+    T.eq(keyboard.layout[1].old, true)
+    T.eq(calls.handle.dimen.w, 52, "not yet set to its own size")
+end)
+
 it("lays out a rebuilt row with the handle at its real size", function()
     local calls, keyboard = setupRow({ { word = "three" } }, 30)
     local dimen = calls.handle.dimen

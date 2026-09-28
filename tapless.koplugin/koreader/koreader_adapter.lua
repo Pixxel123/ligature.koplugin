@@ -878,6 +878,13 @@ function KoreaderAdapter:install(VirtualKeyboard)
     -- Builds a new suggestion row when its words change and puts it
     -- where the old one was. Returns true when it changed.
     function VirtualKeyboard:_swypeRebuildCandidateRow(refresh_type)
+        -- New candidate keys take live gestures as soon as they are made,
+        -- ahead of the resize frame's own layer taking over the drags.
+        -- addKeys rebuilds the row itself on reset, redraw and finish, so
+        -- skip a rebuild here and leave the faded row alone until then.
+        if self.swype_mvp_resize then
+            return false
+        end
         local session = self.swype_mvp_session
         local old_keys = self.swype_mvp_candidate_keys or {}
         local words = adapter.candidate_row.words(session:getCandidates(),
@@ -916,7 +923,7 @@ function KoreaderAdapter:install(VirtualKeyboard)
         end
         -- Box widths always sum to the same row width, so the group's
         -- cached size and offsets stay right for the new row.
-        local row =adapter.keyboard_ui:createCandidateRow(self,
+        local row = adapter.keyboard_ui:createCandidateRow(self,
             self.swype_mvp_candidate_row_options)
         self.swype_mvp_candidate_group[1] = row.widget
         self.layout[1] = row.layout
