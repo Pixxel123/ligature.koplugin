@@ -4,8 +4,11 @@
 -- lie near the swipe's ends and whose ideal path is about as long as the
 -- swipe, ranked by how closely the paths match, and by frequency.
 local ShapeChannel = {
-    -- Letters a swipe must cross for the channel to run.
-    TRIGGER_LETTERS = 10,
+    -- Letters a swipe must cross for the channel to run. Recorded long
+    -- words gained as much from 8 to 16, and 8 also fixed the most
+    -- shorter words; long swipes cross far more letters, so it costs them
+    -- no more time.
+    TRIGGER_LETTERS = 8,
     -- The shortest word looked at.
     MIN_LETTERS = 6,
     -- How far a word's first or last key may be from the swipe's ends, in
@@ -14,10 +17,15 @@ local ShapeChannel = {
     -- The swipe's length over the word's ideal path length.
     MIN_RATIO = 0.7,
     MAX_RATIO = 1.4,
-    -- How many candidates are handed on.
-    KEEP = 20,
+    -- How many candidates are handed on. 20 put the same words first on
+    -- the recorded sessions but took about 1.5 ms more per long swipe on
+    -- a PC, over the device's budget.
+    KEEP = 10,
     -- rank = SHAPE_WEIGHT * shape score - frequency, lower is better; also
-    -- the shape weight of the merged ranking on long swipes.
+    -- the shape weight of the merged ranking on long swipes. Replaying the
+    -- recorded sessions, it fixed more long words than the lower weights
+    -- fitted to their long swipes (4243, and 3620 between that and the
+    -- reranker's 3089).
     SHAPE_WEIGHT = 6000,
 }
 ShapeChannel.__index = ShapeChannel

@@ -6,18 +6,18 @@
 --     [--context] [--context-settings FILE] [--usage]
 --     [--usage-settings FILE] [--per-session] [--no-learning] [--no-pairs]
 --     [--no-shape] [--min-length N] [--shape-trigger N] [--shape-weight N]
---     [--missing-cost N] [--misses] [--losses] [--keep-suspect]
---     SESSION.jsonl...
+--     [--shape-keep N] [--missing-cost N] [--misses] [--losses]
+--     [--keep-suspect] SESSION.jsonl...
 --
 -- The dictionary's word-pair table is used as on the device; --no-pairs
 -- leaves it out. --no-shape leaves out the shape channel, which looks for
 -- long words by the shape of the whole swipe. For experiments with it,
 -- --min-length replays only swipes meant as words of N letters or more,
--- and --shape-trigger, --shape-weight and --missing-cost set the
--- channel's TRIGGER_LETTERS and SHAPE_WEIGHT and the scoring's
--- MISSING_LETTER_COST, in the plugin under test only. The ms column is the
--- recognition engine's mean time per swipe, first loads from disk
--- included.
+-- and --shape-trigger, --shape-weight, --shape-keep and --missing-cost
+-- set the channel's TRIGGER_LETTERS, SHAPE_WEIGHT and KEEP and the
+-- scoring's MISSING_LETTER_COST, in the plugin under test only. The ms
+-- column is the recognition engine's mean time per swipe, first loads
+-- from disk included.
 --
 -- --usage-settings and --context-settings read the counts from a KOReader
 -- settings file (settings.reader.lua). A session is recorded with learning
@@ -889,6 +889,9 @@ local function main(args)
         elseif value == "--shape-weight" then
             index = index + 1
             shape_overrides.SHAPE_WEIGHT = tonumber(args[index])
+        elseif value == "--shape-keep" then
+            index = index + 1
+            shape_overrides.KEEP = tonumber(args[index])
         elseif value == "--missing-cost" then
             index = index + 1
             missing_cost = tonumber(args[index])
@@ -909,7 +912,8 @@ local function main(args)
             .. "[--context-settings FILE] [--usage] "
             .. "[--usage-settings FILE] [--per-session] [--no-learning] "
             .. "[--no-pairs] [--no-shape] [--min-length N] "
-            .. "[--shape-trigger N] [--shape-weight N] [--missing-cost N] "
+            .. "[--shape-trigger N] [--shape-weight N] [--shape-keep N] "
+            .. "[--missing-cost N] "
             .. "[--misses] [--losses] [--keep-suspect] "
             .. "SESSION.jsonl...\n")
         os.exit(2)

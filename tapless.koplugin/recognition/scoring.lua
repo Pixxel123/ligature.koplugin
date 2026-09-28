@@ -36,7 +36,8 @@ local Scoring = {
     NEAR_KEY_MIN_TURN = 0.3,
     -- On long swipes, a word may be missing inner letters the path never
     -- crossed (fingers flatten long words); each costs this much, in the
-    -- units of a skipped swipe letter. Fitted on recorded long swipes.
+    -- units of a skipped swipe letter. Replaying the recorded sessions, 2
+    -- fixed as many long words as the fitted 3.13 and more than 4.13.
     MISSING_LETTER_COST = 2,
 }
 Scoring.__index = Scoring
