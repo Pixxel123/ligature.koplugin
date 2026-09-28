@@ -46,6 +46,7 @@ return {
 
     keyboard_ui = "ui/keyboard_ui.lua",
     candidate_row = "ui/candidate_row.lua",
+    candidate_widths = "ui/candidate_widths.lua",
     trace_renderer = "ui/trace_renderer.lua",
     one_handed = "ui/one_handed.lua",
     panel_button = "ui/panel_button.lua",
