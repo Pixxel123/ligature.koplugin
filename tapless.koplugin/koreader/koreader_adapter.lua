@@ -21,19 +21,21 @@ function KoreaderAdapter:install(VirtualKeyboard)
     -- so repainting the keyboard alone would stamp the hatch on its last
     -- copy and darken it. With strips showing, every window is
     -- repainted, page first, but only the keyboard's band is refreshed.
+    -- Read the keys' place once they have been painted (addKeys leaves it
+    -- unset), as KOReader's own _refresh does.
     function VirtualKeyboard:_refresh(want_flash, fullscreen)
-        local bands = self.swype_mvp_side_bands
-        if fullscreen or not bands or not self.dimen then
+        if fullscreen or not self.swype_mvp_side_bands then
             return original_refresh(self, want_flash, fullscreen)
         end
         local refresh_type = want_flash and "flashui" or "ui"
-        local region = self.dimen:copy()
-        for _, rect in ipairs(bands) do
-            if rect.w > 0 then
-                region = region:combine(rect)
-            end
-        end
         adapter.ui_manager:setDirty("all", function()
+            local region = self.dimen and self.dimen.x
+                and self.dimen:copy()
+            for _, rect in ipairs(self.swype_mvp_side_bands or {}) do
+                if rect.w > 0 then
+                    region = region and region:combine(rect) or rect
+                end
+            end
             return refresh_type, region
         end)
     end

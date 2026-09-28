@@ -52,15 +52,8 @@ local function setup(settings)
         widgetRepaint = noop,
         setDirty = function(_, mode, fn)
             calls.setDirty_calls = calls.setDirty_calls or {}
-            if type(fn) == "function" then
-                local refresh_type, region = fn()
-                table.insert(calls.setDirty_calls,
-                    { mode = mode, refresh_type = refresh_type,
-                        region = region })
-            else
-                table.insert(calls.setDirty_calls,
-                    { mode = mode, fn = fn })
-            end
+            table.insert(calls.setDirty_calls,
+                { mode = mode, fn = fn })
         end,
     }
     local VirtualKeyboard = newKeyboardClass(calls)
@@ -134,10 +127,10 @@ local function rect(x, w)
     }
 end
 
-it("_refresh with bands calls setDirty('all', fn) returning " ..
-        "'ui' and combined region", function()
+it("_refresh with bands calls setDirty('all', fn) with closure " ..
+        "that builds region after paint", function()
     local calls, keyboard = setup()
-    keyboard.dimen = rect(10, 100)
+    keyboard.dimen = { w = 100, h = 40 }
     keyboard.swype_mvp_side_bands = {
         rect(0, 10),
         rect(110, 20),
@@ -146,15 +139,36 @@ it("_refresh with bands calls setDirty('all', fn) returning " ..
     T.eq(#calls.setDirty_calls, 1, "one setDirty call")
     local call = calls.setDirty_calls[1]
     T.eq(call.mode, "all", "mode is 'all'")
-    T.eq(call.refresh_type, "ui", "refresh type is 'ui'")
-    -- Region should cover keyboard and both bands.
-    T.eq(call.region.x, 0, "region x covers left band")
-    T.eq(call.region.w, 130, "region w covers all")
+    T.eq(type(call.fn), "function", "fn is closure")
+end)
+
+it("_refresh closure builds region after dimen is painted", function()
+    local calls, keyboard = setup()
+    keyboard.dimen = { w = 100, h = 40 }
+    keyboard.swype_mvp_side_bands = {
+        rect(0, 10),
+        rect(110, 20),
+    }
+    keyboard:_refresh(false)
+    local call = calls.setDirty_calls[1]
+    local fn = call.fn
+    -- Simulate paint: add x and y to dimen.
+    keyboard.dimen.x = 10
+    keyboard.dimen.y = 100
+    keyboard.dimen.copy = function(self)
+        return rect(self.x, self.w)
+    end
+    -- Call closure as paint would.
+    local refresh_type, region = fn()
+    T.eq(refresh_type, "ui")
+    T.truthy(region, "region built after paint")
+    T.eq(region.x, 0, "region x covers left band")
+    T.eq(region.w, 130, "region w covers all")
 end)
 
 it("_refresh without bands calls original unchanged", function()
     local calls, keyboard = setup()
-    keyboard.dimen = rect(10, 100)
+    keyboard.dimen = { w = 100, h = 40, x = 10, y = 100 }
     keyboard:_refresh(false)
     T.eq(#calls.refresh_calls, 1, "original _refresh called")
     T.eq(calls.refresh_calls[1].want_flash, false)
@@ -164,7 +178,7 @@ end)
 
 it("_refresh(true, true) fullscreen goes to original", function()
     local calls, keyboard = setup()
-    keyboard.dimen = rect(10, 100)
+    keyboard.dimen = { w = 100, h = 40, x = 10, y = 100 }
     keyboard.swype_mvp_side_bands = { rect(0, 10) }
     keyboard:_refresh(true, true)
     T.eq(#calls.refresh_calls, 1, "original _refresh called")
