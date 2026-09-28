@@ -142,6 +142,8 @@ it("_refresh with bands calls setDirty('all', fn) with closure " ..
     T.eq(type(call.fn), "function", "fn is closure")
 end)
 
+local NIL_X = "attempt to perform arithmetic on field 'x' (a nil value)"
+
 it("_refresh closure builds region after dimen is painted", function()
     local calls, keyboard = setup()
     -- Pre-paint dimen: has w, h but no x, y (like KOReader's getSize).
@@ -150,13 +152,13 @@ it("_refresh closure builds region after dimen is painted", function()
         w = 100, h = 40,
         copy = function(self)
             if not self.x then
-                error("attempt to perform arithmetic on field 'x' (a nil value)")
+                error(NIL_X)
             end
             return rect(self.x, self.w)
         end,
         combine = function(self, other)
             if not self.x then
-                error("attempt to perform arithmetic on field 'x' (a nil value)")
+                error(NIL_X)
             end
             local left = math.min(self.x, other.x)
             local right = math.max(self.x + self.w, other.x + other.w)
