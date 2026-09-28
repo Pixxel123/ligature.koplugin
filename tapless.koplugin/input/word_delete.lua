@@ -17,6 +17,9 @@ local SPACES = { [" "] = true, ["\t"] = true, ["\u{00A0}"] = true }
 -- within its line.
 function WordDelete.boundaries(charlist, charpos, max)
     max = max or WordDelete.MAX_WORDS
+    -- Clamp the cursor to the valid range; the index returned is used to
+    -- delete real characters, so we never look past the end of charlist.
+    charpos = math.min(charpos, #charlist + 1)
     local starts = {}
     local index = charpos - 1
     while index >= 1 and #starts < max and charlist[index] ~= "\n" do

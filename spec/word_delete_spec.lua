@@ -65,3 +65,7 @@ it("counts one word per key width after the first step", function()
     T.eq(WordDelete.count(-50, 100, 3), 0, "slid right")
     T.eq(WordDelete.count(50, 0, 3), 0, "no key width")
 end)
+
+it("treats a cursor past the end as at the end", function()
+    same(WordDelete.boundaries(chars("hi "), 10), { 1 })
+end)
