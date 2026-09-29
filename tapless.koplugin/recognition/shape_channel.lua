@@ -90,10 +90,7 @@ end
 -- by its length alone, and working that out afresh on every swipe cost
 -- more on the device than all the rest of the channel. A length of -1
 -- marks a word too short to look at, 0 one with a letter off the
--- keyboard. min and max are the smallest and largest length over the
--- words that can ever be scored (length > 0), or nil when none can;
--- candidates uses them to rule a whole list out at once, without
--- checking each of its entries against the ratio cut in turn.
+-- keyboard.
 function ShapeChannel:_paths(entries, key_centers)
     local paths = self.paths[entries]
     if paths and paths.count == #entries
@@ -101,7 +98,6 @@ function ShapeChannel:_paths(entries, key_centers)
         return paths
     end
     local lengths, scales = {}, {}
-    local min, max
     for index, entry in ipairs(entries) do
         local signature = entry.gesture_signature or entry.signature
         local length, scale = -1, 0
@@ -113,13 +109,9 @@ function ShapeChannel:_paths(entries, key_centers)
             end
         end
         lengths[index], scales[index] = length, scale
-        if length > 0 then
-            if not min or length < min then min = length end
-            if not max or length > max then max = length end
-        end
     end
     paths = { count = #entries, min_letters = self.MIN_LETTERS,
-        lengths = lengths, scales = scales, min = min, max = max }
+        lengths = lengths, scales = scales }
     self.paths[entries] = paths
     return paths
 end
@@ -233,25 +225,6 @@ function ShapeChannel:candidates(options)
         end
         keep(found, { entry = entry, shape = shape, rank = rank }, limit)
     end
-    -- Whether every word entries could ever score (length > 0, from
-    -- _paths' cached min/max) is already known to fail the ratio cut
-    -- against this swipe, so scoring the list can be skipped outright.
-    -- ratio = swipe.length / length is a non-increasing function of
-    -- length, and division correctly rounded to the nearest double --
-    -- what consider() and this both use -- rounds that real-valued
-    -- order the same way (round-to-nearest is itself non-decreasing),
-    -- so swipe.length / max <= swipe.length / length <= swipe.length /
-    -- min in floating point too, for every entry's length in [min,
-    -- max]. So if swipe.length / max is already > MAX_RATIO, every
-    -- entry's own ratio is too, by the same margin or more; if
-    -- swipe.length / min is already < MIN_RATIO, likewise every
-    -- entry's ratio is too -- exactly the two rejections consider()
-    -- itself would make on that entry, so this never skips a word
-    -- consider() would have kept.
-    local function outOfRange(paths)
-        return not paths.min or swipe.length / paths.max > self.MAX_RATIO
-            or swipe.length / paths.min < self.MIN_RATIO
-    end
     local function scan(bucket)
         local entries = bucket and bucket.entries
         if not entries then
@@ -259,36 +232,6 @@ function ShapeChannel:candidates(options)
         end
         local paths = self:_paths(entries, key_centers)
         local lengths, scales = paths.lengths, paths.scales
-        if outOfRange(paths) then
-            -- No entry here can pass the ratio cut (proved above), so
-            -- consider() would either return before marking `seen`
-            -- (already seen, wrong language) or mark it and then
-            -- reject on length <= 0 or the ratio, exactly as every
-            -- entry here would too -- never adding to found either
-            -- way, and never reaching resampleInto or the scoring
-            -- loop, which only run once the ratio check has already
-            -- passed. What this replaces per entry is the consider()
-            -- call itself: its blocked_words:contains lookup, and its
-            -- own swipe.length / length division -- with one shared
-            -- division pair for the whole list, above. Reproducing
-            -- just the seen marking, for the same entries and the
-            -- same language test, keeps every later consider() call's
-            -- seen/lang/blocked branch -- and so its decision to
-            -- return -- identical. A blocked word that would not have
-            -- been marked gets marked here instead, but that changes
-            -- nothing: blocked_words:contains depends only on
-            -- (dictionary, word), both fixed for this call, so every
-            -- later entry for it is rejected on that branch anyway.
-            for index = 1, #entries do
-                local entry = entries[index]
-                if lengths[index] >= 0 and not (entry.lang
-                        and entry.lang ~= dictionary
-                        and entry.lang ~= data_lang) then
-                    seen[entry.word] = true
-                end
-            end
-            return
-        end
         for index = 1, #entries do
             local length = lengths[index]
             if length >= 0 then
