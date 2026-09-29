@@ -335,6 +335,49 @@ it("limits letters from neighbouring keys in the final alignment too",
     T.truthy(score < 1000, "score " .. score)
 end)
 
+it("charges only the endpoint cost for a word whose last letter is " ..
+        "taken through the endpoint allowance", function()
+    local scoring = T.load("scoring"):new(T.normalization)
+    -- "cat" against the trace "cas": c and a match in order, and only
+    -- the endpoint allowance lets t stand in for the trace's last
+    -- letter, s -- with no other letters skipped, the score is exactly
+    -- the endpoint cost.
+    local chars, next_positions = scoring:buildNextPositions("cas")
+    local score, mismatch, matched =
+        scoring:matchScore("cat", chars, next_positions, true)
+    T.truthy(mismatch, "matchScore allows the endpoint mismatch")
+    T.eq(score, scoring.ENDPOINT_MISMATCH_COST)
+    T.eq(matched[3], 3, "t is placed at the trace's last position")
+
+    local dyn_chars = scoring:buildNextPositions("cas")
+    local dyn_score, dyn_mismatch, dyn_matched =
+        scoring:dynamicMatchScore("cat", dyn_chars, true)
+    T.truthy(dyn_mismatch, "dynamicMatchScore allows the endpoint mismatch")
+    T.eq(dyn_score, scoring.ENDPOINT_MISMATCH_COST)
+    T.eq(dyn_matched[3], 3)
+end)
+
+it("places a word ending on a neighbouring key first once the lower " ..
+        "endpoint cost lets it past the gate", function()
+    -- "the" swiped as "tyhtr" (a fix from the replay comparison): it
+    -- ends on r, next to the word's last letter e. "thr", fully
+    -- crossed in order, is the rival.
+    local layout = newLayout()
+    local start = center(layout, "t")
+    local function order(tune)
+        return words(recognize({ { "the", 8000 }, { "thr", 3000 } },
+            "tyhtr", start, nil, nil, nil, nil, tune))
+    end
+    -- At the old cost, 5, "the" scores 7 (2 skipped + 5): past the
+    -- recognition engine's max(6, #signature) gate, so it never
+    -- reaches the results at all.
+    T.eq(order(function(scoring) scoring.ENDPOINT_MISMATCH_COST = 5 end),
+        "thr")
+    -- At the new cost, "the" scores 4 (2 skipped + 2): inside the
+    -- gate, and common enough to outrank "thr".
+    T.eq(order(nil), "the,thr")
+end)
+
 it("never suggests a blocked word", function()
     local words = { { "was", 6000 }, { "wqs", 3000 } }
     T.eq(recognize(words, "wqas", { x = 150, y = 50 })[1].word, "was")

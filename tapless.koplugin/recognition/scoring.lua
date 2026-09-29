@@ -23,6 +23,14 @@ local Scoring = {
     FIRST_LETTER_COST = 6,
     -- Cost of taking the key the swipe started on as a neighbouring key.
     START_MISMATCH_COST = 1,
+    -- Cost of a word whose last letter the path did not cross, taken
+    -- instead from the key the swipe lifted off on. The lift point is
+    -- often scattered onto a key next to the last letter's, so the old
+    -- cost of 5 lost words that ended one key off. Replaying the
+    -- recorded sessions, 2 fixed 9 one-handed and 27 full-width
+    -- sentence swipes and broke none of them; 1 began to break rare
+    -- words.
+    ENDPOINT_MISMATCH_COST = 2,
     -- A word whose letters the path did not all cross may take up to
     -- NEAR_KEY_LIMIT of its inner letters from a crossed key next to them,
     -- at NEAR_KEY_COST each. Keys are next to each other when their
@@ -329,7 +337,7 @@ function Scoring:matchScore(candidate, trace_chars, next_positions,
             score = score + 4
         end
         if endpoint_mismatch then
-            score = score + 5
+            score = score + self.ENDPOINT_MISMATCH_COST
         end
         score = score + near_used * self.NEAR_KEY_COST
     end
@@ -552,7 +560,7 @@ function Scoring:dynamicMatchScore(candidate, trace_chars,
     local last_code = string.byte(candidate, candidate_len) - ASCII_A + 1
     local endpoint_mismatch = trace_codes[best_end] ~= last_code
     if endpoint_mismatch then
-        best_score = best_score + 5
+        best_score = best_score + self.ENDPOINT_MISMATCH_COST
     elseif trace_codes[trace_len] ~= last_code then
         best_score = best_score + 4
     end
