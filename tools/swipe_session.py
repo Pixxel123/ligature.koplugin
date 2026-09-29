@@ -137,6 +137,46 @@ def fetch_settings(kindle):
     return None
 
 
+ONE_HANDED_BELOW = 0.85
+
+
+def keyboard_mode(path):
+    """The keyboard's mode ("one-handed" or "full-width"), its letter
+    keys' width and their span as a percent of the screen, from the
+    saved session log at path; None if it cannot be told. The recorder
+    reports keys only with each attempt -- there is none at the "start"
+    record, before the first prompt is swiped -- so this reads the saved
+    log rather than the live stream. Mirrors the span check
+    tools/replay.lua's Replay.keyboardMode uses to tag sessions."""
+    screen = None
+    with open(path, encoding="utf-8") as log:
+        for line in log:
+            try:
+                record = json.loads(line)
+            except ValueError:
+                continue
+            if record.get("type") == "start":
+                screen = record.get("screen")
+            keys = [key for key in record.get("keys") or []
+                    if len(key.get("key", "")) == 1
+                    and "a" <= key["key"] <= "z"]
+            if not keys or not screen:
+                continue
+            left = min(key["x"] for key in keys)
+            right = max(key["x"] + key["w"] for key in keys)
+            width = keys[0]["w"]
+            # A keyboard rebuild can leave every key read at one point;
+            # such a degenerate set says nothing about the mode, so keep
+            # reading for a later attempt's keys.
+            if right - left <= width:
+                continue
+            percent = 100 * (right - left) / screen[0]
+            mode = ("one-handed" if percent < 100 * ONE_HANDED_BELOW
+                    else "full-width")
+            return mode, width, percent
+    return None
+
+
 def show(record, stats):
     kind = record.get("type")
     if kind == "start":
@@ -250,6 +290,11 @@ def main():
     log = collect(kindle)
     if log:
         print(f"Saved {os.path.relpath(log, ROOT)}\n")
+        mode_info = keyboard_mode(log)
+        if mode_info:
+            kind, width, percent = mode_info
+            print(f"Keyboard: {kind} (keys {width} px, "
+                  f"{percent:.0f}% of the screen)")
         if args.no_replay:
             return
         command = ["luajit", os.path.join(TOOLS, "replay.lua"), "--misses"]

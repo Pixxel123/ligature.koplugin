@@ -270,6 +270,42 @@ end
 
 local function noop() end
 
+-- A one-handed keyboard narrows its keys to one side of the screen; a
+-- span under this share of the screen's width reads as one-handed.
+local ONE_HANDED_BELOW = 0.85
+
+-- The keyboard's mode, from its single-letter keys' span (leftmost x to
+-- rightmost x + w) against screen_width. Returns the mode ("one-handed"
+-- or "full-width"), the letter keys' width, and the span as a percent of
+-- screen_width. Returns nil, nil, nil when there is no screen width, or
+-- when the letter keys do not spread out: a keyboard rebuild can leave
+-- every key read at one point (Replay.auditAttempt's "keys not laid out"
+-- glitch), which says nothing about the mode.
+function Replay.keyboardMode(keys, screen_width)
+    local left, right, width
+    for _, key in ipairs(keys or {}) do
+        if key.key and key.key:match("^[a-z]$") then
+            left = left and math.min(left, key.x) or key.x
+            right = right and math.max(right, key.x + key.w)
+                or key.x + key.w
+            width = width or key.w
+        end
+    end
+    if not left or not screen_width or screen_width == 0
+            or right - left <= width then
+        return nil, nil, nil
+    end
+    local share = (right - left) / screen_width
+    local mode = share < ONE_HANDED_BELOW and "one-handed" or "full-width"
+    return mode, width, share * 100
+end
+
+-- The results table's "full-width"/"one-handed" row for row.keyboard, as
+-- groupOf's "words"/"sentences" row is row.mode.
+function Replay.keyboardGroup(row)
+    return row.keyboard
+end
+
 local function layoutOf(plugin, attempt)
     local info = plugin.manifest(attempt.dictionary or "en") or {}
     return buildLayout(attempt.keys), info.normalization_profile
@@ -764,13 +800,21 @@ function Replay.auditAttempt(attempt)
 end
 
 -- Attempts in file order, each with its session's mode and the index of
--- its file, and a count of attempts left out by reason.
+-- its file, and a count of attempts left out by reason. Also returns
+-- sessions: one { path, keyboard, width, percent } per file, keyboard
+-- and the rest from Replay.keyboardMode (nil when it could not tell).
 -- options.keep_suspect keeps them all.
 function Replay.readSessions(paths, json, options)
     local keep = options and options.keep_suspect
-    local attempts, left_out = {}, {}
+    local attempts, left_out, sessions = {}, {}, {}
     for session, path in ipairs(paths) do
         local mode = "words"
+        local screen_width
+        local keyboard, keyboard_width, keyboard_percent
+        -- Attempts kept before the keyboard's mode is known (its first
+        -- laid-out keys may come after a degenerate set, or after the
+        -- first attempt) get it filled in below, once it is.
+        local first_index = #attempts + 1
         -- Outcomes name their attempt by id, and ids start again at 1 in
         -- each session.
         local by_id = {}
@@ -778,7 +822,13 @@ function Replay.readSessions(paths, json, options)
             local record = json.decode(line)
             if record and record.type == "start" then
                 mode = record.mode or mode
-            elseif record and record.type == "attempt" and record.target then
+                screen_width = record.screen and record.screen[1]
+            end
+            if record and not keyboard and record.keys then
+                keyboard, keyboard_width, keyboard_percent =
+                    Replay.keyboardMode(record.keys, screen_width)
+            end
+            if record and record.type == "attempt" and record.target then
                 record.mode = mode
                 record.session = session
                 if record.id then
@@ -799,8 +849,13 @@ function Replay.readSessions(paths, json, options)
                 end
             end
         end
+        for index = first_index, #attempts do
+            attempts[index].keyboard = keyboard
+        end
+        sessions[session] = { path = path, keyboard = keyboard,
+            width = keyboard_width, percent = keyboard_percent }
     end
-    return attempts, left_out
+    return attempts, left_out, sessions
 end
 
 -- "Left out 7 suspect attempts: keys not laid out (1), ...", or nil.
@@ -926,8 +981,16 @@ local function main(args)
         os.exit(2)
     end
 
-    local attempts, left_out = Replay.readSessions(paths, json,
+    local attempts, left_out, sessions = Replay.readSessions(paths, json,
         { keep_suspect = keep_suspect })
+    for _, info in ipairs(sessions) do
+        if info.keyboard then
+            local name = info.path:match("[^/]+$") or info.path
+            print(string.format(
+                "Keyboard: %s %s, keys %d px, %.0f%% of the screen width",
+                name, info.keyboard, info.width, info.percent))
+        end
+    end
     local left_out_line = Replay.describeLeftOut(left_out)
     if left_out_line then
         print(left_out_line)
@@ -1034,6 +1097,7 @@ local function main(args)
                 letters = result.letters,
                 ms = result.ms,
                 mode = attempt.mode,
+                keyboard = attempt.keyboard,
                 number_row = number_row,
                 on_first_key = result.letters:sub(1, 1)
                     == attempt.target:sub(1, 1):lower(),
@@ -1043,6 +1107,7 @@ local function main(args)
                 target = attempt.target,
                 words = device_words,
                 mode = attempt.mode,
+                keyboard = attempt.keyboard,
                 number_row = number_row,
                 on_first_key = row.on_first_key,
             }
@@ -1073,6 +1138,7 @@ local function main(args)
     end
     local groupings = {
         { "mode", groupOf },
+        { "keyboard", Replay.keyboardGroup },
         { "length", lengthGroup },
         { "start", function(row)
             return row.on_first_key and "started on first key"

@@ -528,3 +528,110 @@ it("attaches a pick and a deletion to their own attempt", function()
     T.eq(attempts[2].picked, nil)
     T.eq(attempts[3].picked, nil, "the next session's attempt 1 is its own")
 end)
+
+it("reads a full-width or one-handed mode from a keyboard's keys",
+        function()
+    local mode, width, percent = Replay.keyboardMode(keys(), 1272)
+    T.eq(mode, "full-width")
+    T.eq(width, 125)
+    T.truthy(percent > 98 and percent < 99, "percent " .. tostring(percent))
+
+    -- The same keys (span 0..1250), on a screen wide enough to leave
+    -- them under 85% of it.
+    T.eq(Replay.keyboardMode(keys(), 1600), "one-handed")
+end)
+
+it("draws the one-handed/full-width line at 85% of the screen", function()
+    local function span(edge)
+        return {
+            { key = "a", x = 0, y = 0, w = 100, h = 70 },
+            { key = "z", x = edge - 100, y = 0, w = 100, h = 70 },
+        }
+    end
+    T.eq(Replay.keyboardMode(span(850), 1000), "full-width")
+    T.eq(Replay.keyboardMode(span(849), 1000), "one-handed")
+end)
+
+it("cannot tell the mode from keys a rebuild left all at one point",
+        function()
+    -- Replay.auditAttempt's "keys not laid out" glitch: every key read
+    -- at the same point.
+    local glitched = {
+        { key = "a", x = 5, y = 5, w = 50, h = 50 },
+        { key = "a", x = 5, y = 5, w = 50, h = 50 },
+    }
+    local mode, width, percent = Replay.keyboardMode(glitched, 1272)
+    T.eq(mode, nil)
+    T.eq(width, nil)
+    T.eq(percent, nil)
+end)
+
+it("attaches the session's keyboard mode to each attempt, even one kept "
+        .. "before the mode could be told", function()
+    local path = os.tmpname()
+    local file = assert(io.open(path, "w"))
+    file:write("start\nfirst\nsecond\n")
+    file:close()
+    local records = {
+        start = { type = "start", mode = "words",
+            screen = { 1272, 1696 } },
+        -- Its only letter key ("1" is a number key) cannot say the mode
+        -- on its own; readSessions must fill it in once a later
+        -- attempt's keys can.
+        first = { type = "attempt", target = "a", keys = {
+            { key = "1", x = 0, y = 0, w = 50, h = 50 },
+            { key = "a", x = 200, y = 0, w = 50, h = 50 },
+        } },
+        second = { type = "attempt", target = "you", keys = {
+            { key = "a", x = 0, y = 0, w = 75, h = 70 },
+            { key = "z", x = 625, y = 0, w = 75, h = 70 },
+        } },
+    }
+    local json = { decode = function(line) return records[line] end }
+    local attempts, _, sessions = Replay.readSessions({ path }, json)
+    os.remove(path)
+    T.eq(#attempts, 2)
+    T.eq(attempts[1].keyboard, "one-handed",
+        "backfilled once the second attempt's keys were read")
+    T.eq(attempts[2].keyboard, "one-handed")
+    T.eq(sessions[1].keyboard, "one-handed")
+    T.eq(sessions[1].path, path)
+end)
+
+it("finds a full-width session's keyboard from a whole layout's keys",
+        function()
+    local path = os.tmpname()
+    local file = assert(io.open(path, "w"))
+    file:write("start\ngood\n")
+    file:close()
+    local records = {
+        start = { type = "start", mode = "sentences",
+            screen = { 1272, 1696 } },
+        good = { type = "attempt", target = "you", keys = keys() },
+    }
+    local json = { decode = function(line) return records[line] end }
+    local attempts = Replay.readSessions({ path }, json)
+    os.remove(path)
+    T.eq(attempts[1].keyboard, "full-width")
+end)
+
+it("groups replayed rows into full-width/one-handed table rows",
+        function()
+    local rows = {
+        { target = "cat", words = { "cat" }, keyboard = "full-width" },
+        { target = "dog", words = { "dog" }, keyboard = "full-width" },
+    }
+    local summary = Replay.summarize(rows, Replay.keyboardGroup)
+    T.eq(#summary.order, 1)
+    T.eq(summary.order[1], "full-width")
+    T.eq(summary.groups["full-width"].n, 2)
+    T.eq(summary.groups["one-handed"], nil,
+        "no one-handed row when nothing was one-handed")
+
+    rows[#rows + 1] = { target = "cow", words = { "cow" },
+        keyboard = "one-handed" }
+    summary = Replay.summarize(rows, Replay.keyboardGroup)
+    T.eq(#summary.order, 2)
+    T.truthy(summary.groups["one-handed"] ~= nil)
+    T.eq(summary.groups["one-handed"].n, 1)
+end)
