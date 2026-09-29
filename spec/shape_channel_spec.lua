@@ -61,6 +61,17 @@ it("finds a long word by the shape of its swipe", function()
     T.truthy(at and at <= 3, table.concat(found, ","))
 end)
 
+it("finds a short word by the shape of its swipe", function()
+    -- A clean swipe of "help", with the letters a recorded swipe of it
+    -- crossed: enough to run the channel, which now looks at words this
+    -- short.
+    local points, centers = swipe("help")
+    local found = words(channel():candidates{ signature = "hgrerghjkop",
+        points = points, key_centers = centers })
+    local at = position(found, "help")
+    T.truthy(at and at <= 3, table.concat(found, ","))
+end)
+
 it("does nothing for a swipe crossing few letters", function()
     local points, centers = swipe("important")
     T.eq(#channel():candidates{ signature = "imt", points = points,

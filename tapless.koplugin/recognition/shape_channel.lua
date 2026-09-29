@@ -1,16 +1,19 @@
--- Words a long swipe could be, by the shape of its whole path. Fingers
--- flatten long words, so their swipes often miss letters the word needs;
--- the shape still shows. Candidates are words whose first and last keys
--- lie near the swipe's ends and whose ideal path is about as long as the
--- swipe, ranked by how closely the paths match, and by frequency.
+-- Words a swipe could be, by the shape of its whole path. Fingers
+-- flatten long words, so their swipes often miss letters the word needs,
+-- and often start or lift off on a key next to the word's first or last
+-- letter; the shape still shows. Candidates are words whose first and
+-- last keys lie near the swipe's ends and whose ideal path is about as
+-- long as the swipe, ranked by how closely the paths match, and by
+-- frequency.
 local ShapeChannel = {
-    -- Letters a swipe must cross for the channel to run. Recorded long
-    -- words gained as much from 8 to 16, and 8 also fixed the most
-    -- shorter words; long swipes cross far more letters, so it costs them
-    -- no more time.
-    TRIGGER_LETTERS = 8,
-    -- The shortest word looked at.
-    MIN_LETTERS = 6,
+    -- Letters a swipe must cross for the channel to run. With MIN_LETTERS
+    -- 3, replaying the recorded sentence sessions, 5 fixed more words than
+    -- 8 (one-handed +10/-0 against +7/-0, full-width +34/-3 against
+    -- +29/-1), and on the Kindle it cost no measurable time per swipe.
+    TRIGGER_LETTERS = 5,
+    -- The shortest word looked at. Most words a swipe misses are short
+    -- and lost at one end, not to ranking; 3 finds them where 6 did not.
+    MIN_LETTERS = 3,
     -- How far a word's first or last key may be from the swipe's ends, in
     -- key sizes.
     REACH = 1.0,

@@ -13,7 +13,7 @@ end
 local DYNAMIC_CANDIDATE_LIMIT = 40
 local GEOMETRY_CANDIDATE_LIMIT = 12
 
--- shape_channel: optional; finds long words by the shape of the swipe.
+-- shape_channel: optional; finds words by the shape of the swipe.
 function RecognitionEngine:new(dictionary_store, scoring, geometry_reranker,
         personal_dictionary, blocked_words, shape_channel)
     return setmetatable({
@@ -151,9 +151,10 @@ function RecognitionEngine:pickCandidates(options)
         end
     end
     local results, final_seen = {}, {}
-    -- On a long swipe the shape channel adds words the letters missed; the
-    -- alignment may then leave out letters the path never crossed, and the
-    -- shape of the whole swipe counts for SHAPE_WEIGHT.
+    -- On a swipe crossing enough letters the shape channel adds words the
+    -- letters missed; the alignment may then leave out letters the path
+    -- never crossed, and the shape of the whole swipe counts for
+    -- SHAPE_WEIGHT.
     local shape_channel = self.shape_channel
     local triggered = shape_channel ~= nil
         and shape_channel:triggered(signature)
