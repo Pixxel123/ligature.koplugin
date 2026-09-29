@@ -67,6 +67,53 @@ it("does nothing for a swipe crossing few letters", function()
         key_centers = centers }, 0)
 end)
 
+it("returns nothing for a swipe too short for any candidate, but "
+        .. "leaves a real one unaffected", function()
+    local points, centers = swipe("important")
+    -- Two points a few pixels apart near one key: its length is far
+    -- below MIN_RATIO times any real word's ideal path (every letter
+    -- is at least a key size from its neighbours), so every bucket
+    -- this swipe would scan is out of range and skipped, and
+    -- candidates() must return {} without checking any word
+    -- individually against the ratio cut.
+    local q = centers[string.byte("q")]
+    local tiny_points = { { x = q.x - 2, y = q.y - 2 },
+        { x = q.x + 2, y = q.y + 2 } }
+    T.eq(#channel():candidates{ signature = LONG, points = tiny_points,
+        key_centers = centers }, 0)
+
+    -- The real swipe of "important" still matches: skipping an
+    -- out-of-range bucket never rejects a swipe a real word could
+    -- pass.
+    local found = words(channel():candidates{ signature = LONG,
+        points = points, key_centers = centers })
+    local at = position(found, "important")
+    T.truthy(at and at <= 3, table.concat(found, ","))
+end)
+
+it("keeps a word out that an out-of-range personal entry already "
+        .. "marked seen, matching the unskipped scan", function()
+    local points, centers = swipe("important")
+    -- A personal-dictionary bucket that always holds one entry for
+    -- "important", under a synthetic 6-letter signature ("aaaaaz")
+    -- that collapses to two adjacent keys ("az"): its ideal path is
+    -- far shorter than the swipe's, so this one-entry list is out of
+    -- range and its scan is skipped. Unskipped, consider() would
+    -- still have marked "important" seen before rejecting it on the
+    -- ratio, so the real dictionary's own "important" entry, found
+    -- under the same first/last pair, must stay excluded too, not
+    -- take its shadowed entry's place.
+    local shadow = { word = "important", signature = "aaaaaz",
+        gesture_signature = "az", freq = 0 }
+    local personal = { getBucket = function()
+        return { entries = { shadow } }
+    end }
+    local ch = ShapeChannel:new(store, PathShape:new(), personal)
+    local found = words(ch:candidates{ signature = LONG, points = points,
+        key_centers = centers })
+    T.eq(position(found, "important"), nil, table.concat(found, ","))
+end)
+
 it("only offers words whose ends and length fit the swipe", function()
     local points, centers = swipe("important")
     local shapes = PathShape:new()
