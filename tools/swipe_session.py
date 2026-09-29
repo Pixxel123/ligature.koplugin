@@ -13,6 +13,7 @@ import random
 import re
 import select
 import shlex
+import shutil
 import subprocess
 import sys
 import tempfile
@@ -55,35 +56,77 @@ def sentence_prompts(count, rng):
 
 
 class Kindle:
-    def __init__(self, host, port, koreader):
+    """The Kindle over SSH. Every command shares one connection, opened by
+    connect(), so a session logs in once. KOReader's "Login without
+    password" takes an empty password; unless ask_password, that is
+    answered by an askpass script, so nothing asks for it at all."""
+
+    def __init__(self, host, port, koreader, ask_password=False):
         self.host = host
         self.port = str(port)
         self.koreader = koreader
         self.dev = koreader + "/tapless-dev"
         self.patch = koreader + "/patches/2-tapless-recorder.lua"
+        self.temp = tempfile.mkdtemp(prefix="tapless-ssh-")
+        self.env = dict(os.environ)
+        if not ask_password:
+            askpass = os.path.join(self.temp, "askpass.sh")
+            with open(askpass, "w") as script:
+                script.write("#!/bin/sh\necho\n")
+            os.chmod(askpass, 0o700)
+            self.env.update(SSH_ASKPASS=askpass, SSH_ASKPASS_REQUIRE="force",
+                            DISPLAY=self.env.get("DISPLAY", ":0"))
+        # ControlMaster=auto: should the shared connection drop (KOReader
+        # restarting its SSH server, say), a command logs in again itself.
+        self.options = [
+            "-o", "ControlMaster=auto",
+            "-o", "ControlPath=" + os.path.join(self.temp, "control"),
+            "-o", "PreferredAuthentications=publickey,password",
+            # The Kindle drops connections it will not take, rather than
+            # refusing them: without this, a wrong address waits minutes.
+            "-o", "ConnectTimeout=10",
+        ]
+
+    def connect(self):
+        """Logs in and keeps the connection open in the background for the
+        commands that follow; False if the Kindle refused or is out of
+        reach."""
+        return subprocess.run(
+            ["ssh", "-p", self.port, *self.options, "-o", "ControlPersist=yes",
+             "-M", "-N", "-f", self.host],
+            env=self.env, stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL).returncode == 0
+
+    def close(self):
+        subprocess.run(["ssh", "-p", self.port, *self.options, "-O", "exit",
+                        self.host], env=self.env, capture_output=True)
+        shutil.rmtree(self.temp, ignore_errors=True)
+
+    def _ssh(self, command):
+        return ["ssh", "-p", self.port, *self.options, self.host, command]
 
     def ssh(self, command, check=True):
-        return subprocess.run(["ssh", "-p", self.port, self.host, command],
+        return subprocess.run(self._ssh(command), env=self.env,
                               check=check, capture_output=True, text=True)
 
     def put(self, local, remote):
-        subprocess.run(["scp", "-q", "-P", self.port, local,
-                        f"{self.host}:{remote}"], check=True)
+        subprocess.run(["scp", "-q", "-P", self.port, *self.options, local,
+                        f"{self.host}:{remote}"], env=self.env, check=True)
 
     def get(self, remote, local):
-        return subprocess.run(["scp", "-q", "-P", self.port,
-                               f"{self.host}:{remote}", local]).returncode == 0
+        return subprocess.run(["scp", "-q", "-P", self.port, *self.options,
+                               f"{self.host}:{remote}", local],
+                              env=self.env).returncode == 0
 
     def write(self, remote, text):
-        subprocess.run(["ssh", "-p", self.port, self.host,
-                        f"cat > {shlex.quote(remote)}"],
-                       input=text, text=True, check=True)
+        subprocess.run(self._ssh(f"cat > {shlex.quote(remote)}"),
+                       env=self.env, input=text, text=True, check=True)
 
     def follow(self):
         return subprocess.Popen(
-            ["ssh", "-p", self.port, self.host,
-             f"tail -n +1 -f {shlex.quote(self.dev + '/session.jsonl')}"],
-            stdout=subprocess.PIPE, bufsize=0)
+            self._ssh(f"tail -n +1 -f "
+                      f"{shlex.quote(self.dev + '/session.jsonl')}"),
+            env=self.env, stdout=subprocess.PIPE, bufsize=0)
 
 
 def install(kindle, prompts, mode):
@@ -266,6 +309,10 @@ def main():
     parser.add_argument("--koreader", default="/mnt/us/koreader")
     parser.add_argument("--print-prompts", action="store_true",
                         help="print the prompts and exit")
+    parser.add_argument("--ask-password", action="store_true",
+                        help="ask for the Kindle's SSH password once, "
+                             "instead of sending the empty password of "
+                             "KOReader's \"Login without password\"")
     args = parser.parse_args()
 
     if args.long and args.sentences:
@@ -280,7 +327,19 @@ def main():
         print("\n".join(prompts))
         return
 
-    kindle = Kindle(args.host, args.port, args.koreader)
+    kindle = Kindle(args.host, args.port, args.koreader, args.ask_password)
+    try:
+        if not kindle.connect():
+            print("Could not log in to the Kindle. Is KOReader's SSH server "
+                  "running, with \"Login without password\" on? With a "
+                  "password set, run this with --ask-password.")
+            sys.exit(1)
+        record(kindle, prompts, mode, args.no_replay)
+    finally:
+        kindle.close()
+
+
+def record(kindle, prompts, mode, no_replay):
     install(kindle, prompts, mode)
     try:
         run(kindle)
@@ -295,7 +354,7 @@ def main():
             kind, width, percent = mode_info
             print(f"Keyboard: {kind} (keys {width} px, "
                   f"{percent:.0f}% of the screen)")
-        if args.no_replay:
+        if no_replay:
             return
         command = ["luajit", os.path.join(TOOLS, "replay.lua"), "--misses"]
         settings = fetch_settings(kindle)
