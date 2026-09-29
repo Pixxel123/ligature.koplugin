@@ -25,15 +25,19 @@ function Recorder:new(options)
     }, self)
 end
 
+-- Modes whose prompts are whole lines, prompted a word at a time.
+local BY_WORD = { sentences = true, queries = true }
+
 -- Words mode: one word per line. Sentences mode: one sentence per line,
--- prompted a word at a time. number and total count lines.
+-- prompted a word at a time; queries mode the same, one search query per
+-- line. number and total count lines.
 function Recorder.parsePrompts(lines, mode)
     local prompts, count = {}, 0
     for _, line in ipairs(lines) do
         line = line:match("^%s*(.-)%s*$")
         if line ~= "" then
             count = count + 1
-            if mode == "sentences" then
+            if BY_WORD[mode] then
                 local words = {}
                 for word in line:gmatch("%S+") do
                     words[#words + 1] = word
@@ -80,8 +84,9 @@ function Recorder:promptText()
             parts[index] = index == prompt.word_index
                 and "[" .. word .. "]" or word
         end
-        return string.format("%s (%d/%d)", table.concat(parts, " "),
-            prompt.number, prompt.total)
+        return string.format("%s%s (%d/%d)",
+            self.mode == "queries" and "Search: " or "",
+            table.concat(parts, " "), prompt.number, prompt.total)
     end
     return string.format("Swipe: %s (%d/%d)", prompt.target,
         prompt.number, prompt.total)

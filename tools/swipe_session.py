@@ -48,11 +48,12 @@ def word_prompts(dictionary, count, rng, pattern=WORD):
     return words
 
 
-def sentence_prompts(count, rng):
-    path = os.path.join(TOOLS, "prompts", "sentences.txt")
+def line_prompts(name, count, rng):
+    """count lines drawn from tools/prompts/<name>.txt."""
+    path = os.path.join(TOOLS, "prompts", name + ".txt")
     with open(path, encoding="utf-8") as text:
-        sentences = [line.strip() for line in text if line.strip()]
-    return rng.sample(sentences, min(count, len(sentences)))
+        lines = [line.strip() for line in text if line.strip()]
+    return rng.sample(lines, min(count, len(lines)))
 
 
 class Kindle:
@@ -294,14 +295,19 @@ def run(kindle):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--sentences", action="store_true",
-                        help="prompt short sentences instead of words")
-    parser.add_argument("--long", action="store_true",
-                        help="prompt words of 8 to 14 letters")
+    kind = parser.add_mutually_exclusive_group()
+    kind.add_argument("--sentences", action="store_true",
+                      help="prompt short sentences instead of words")
+    kind.add_argument("--queries", action="store_true",
+                      help="prompt search queries: authors, titles, "
+                           "characters and words looked up")
+    kind.add_argument("--long", action="store_true",
+                      help="prompt words of 8 to 14 letters")
     parser.add_argument("--no-replay", action="store_true",
                         help="save the session without replaying it")
     parser.add_argument("--count", type=int,
-                        help="words (default 50) or sentences (default 20)")
+                        help="words (default 50), sentences (default 20) "
+                             "or queries (default 40)")
     parser.add_argument("--seed", type=int, help="repeatable prompts")
     parser.add_argument("--dictionary", default="en")
     parser.add_argument("--host", default="root@10.0.10.166")
@@ -315,14 +321,17 @@ def main():
                              "KOReader's \"Login without password\"")
     args = parser.parse_args()
 
-    if args.long and args.sentences:
-        parser.error("--long prompts words, not sentences")
     rng = random.Random(args.seed)
-    mode = "sentences" if args.sentences else "words"
-    count = args.count or (20 if args.sentences else 50)
-    prompts = (sentence_prompts(count, rng) if args.sentences
-               else word_prompts(args.dictionary, count, rng,
-                                 LONG_WORD if args.long else WORD))
+    if args.sentences:
+        mode = "sentences"
+        prompts = line_prompts("sentences", args.count or 20, rng)
+    elif args.queries:
+        mode = "queries"
+        prompts = line_prompts("queries", args.count or 40, rng)
+    else:
+        mode = "words"
+        prompts = word_prompts(args.dictionary, args.count or 50, rng,
+                               LONG_WORD if args.long else WORD)
     if args.print_prompts:
         print("\n".join(prompts))
         return

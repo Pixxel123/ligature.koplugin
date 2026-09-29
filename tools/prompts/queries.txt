@@ -1,0 +1,168 @@
+jane austen
+charles dickens
+leo tolstoy
+mark twain
+virginia woolf
+franz kafka
+agatha christie
+arthur conan doyle
+george orwell
+oscar wilde
+herman melville
+mary shelley
+bram stoker
+jules verne
+alexandre dumas
+victor hugo
+emily dickinson
+edgar allan poe
+john steinbeck
+ernest hemingway
+scott fitzgerald
+toni morrison
+margaret atwood
+terry pratchett
+neil gaiman
+stephen king
+kazuo ishiguro
+haruki murakami
+ursula le guin
+isaac asimov
+ray bradbury
+philip pullman
+hilary mantel
+zadie smith
+cormac mccarthy
+thomas hardy
+george eliot
+henry james
+joseph conrad
+walt whitman
+william shakespeare
+homer
+dostoevsky
+chekhov
+tolkien
+nabokov
+dante
+cervantes
+flaubert
+proust
+pride and prejudice
+war and peace
+moby dick
+great expectations
+wuthering heights
+jane eyre
+anna karenina
+crime and punishment
+the great gatsby
+brave new world
+animal farm
+little women
+treasure island
+the odyssey
+the iliad
+dracula
+frankenstein
+middlemarch
+ulysses
+persuasion
+emma
+sense and sensibility
+heart of darkness
+the time machine
+the jungle book
+dune
+the hobbit
+the road
+beloved
+rebecca
+the secret garden
+peter pan
+alice in wonderland
+the picture of dorian gray
+the count of monte cristo
+les miserables
+don quixote
+the old man and the sea
+of mice and men
+north and south
+bleak house
+far from the madding crowd
+the woman in white
+a tale of two cities
+the wind in the willows
+around the world in eighty days
+the call of the wild
+the scarlet letter
+lord of the flies
+the handmaids tale
+elizabeth bennet
+sherlock holmes
+doctor watson
+captain ahab
+heathcliff
+gandalf
+frodo
+hermione
+atticus finch
+jay gatsby
+miss havisham
+ebenezer scrooge
+dorian gray
+jean valjean
+raskolnikov
+hercule poirot
+long john silver
+huckleberry finn
+tom sawyer
+ephemeral
+melancholy
+ubiquitous
+quixotic
+sycophant
+obfuscate
+lugubrious
+perfunctory
+magnanimous
+recalcitrant
+sanguine
+verisimilitude
+anachronism
+soliloquy
+epiphany
+denouement
+protagonist
+allegory
+metaphor
+irony
+paradox
+juxtaposition
+ambivalent
+capricious
+diffident
+ebullient
+fastidious
+garrulous
+harbinger
+iconoclast
+laconic
+mendacious
+nefarious
+obsequious
+pernicious
+reticent
+taciturn
+vicarious
+chapter one
+table of contents
+footnotes
+bibliography
+glossary
+appendix
+epilogue
+prologue
+index
+maps
+darcy

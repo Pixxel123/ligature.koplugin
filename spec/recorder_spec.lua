@@ -63,6 +63,27 @@ it("brackets the prompted word when the sentence starts with a " ..
     T.eq(sentences:promptText(), "i [left] my keys (1/1)")
 end)
 
+it("splits search query prompts into words, like sentences", function()
+    local Recorder = load()
+    local prompts = Recorder.parsePrompts({ "pride and prejudice",
+        "dickens" }, "queries")
+    T.eq(#prompts, 4)
+    T.eq(prompts[3].target, "prejudice")
+    T.eq(prompts[3].sentence, "pride and prejudice")
+    T.eq(prompts[4].target, "dickens")
+    T.eq(prompts[4].number, 2)
+    T.eq(prompts[4].total, 2)
+end)
+
+it("formats search query prompts", function()
+    local queries = newRecorder({ "pride and prejudice", "dickens" },
+        "queries")
+    queries.position = 2
+    T.eq(queries:promptText(), "Search: pride [and] prejudice (1/2)")
+    queries.position = 4
+    T.eq(queries:promptText(), "Search: [dickens] (2/2)")
+end)
+
 it("formats word and sentence prompts", function()
     local words = newRecorder({ "water", "hello" })
     T.eq(words:promptText(), "Swipe: water (1/2)")

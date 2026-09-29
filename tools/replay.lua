@@ -793,7 +793,8 @@ function Replay.auditAttempt(attempt)
     end
     local target = (attempt.target or ""):lower()
     local previous = (attempt.previous_word or ""):lower()
-    if attempt.mode == "sentences" and #target > 0
+    if (attempt.mode == "sentences" or attempt.mode == "queries")
+            and #target > 0
             and previous:sub(-#target) == target then
         return "target already typed"
     end
