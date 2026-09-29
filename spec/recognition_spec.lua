@@ -368,13 +368,13 @@ it("places a word ending on a neighbouring key first once the lower " ..
         return words(recognize({ { "the", 8000 }, { "thr", 3000 } },
             "tyhtr", start, nil, nil, nil, nil, tune))
     end
-    -- At the old cost, 5, "the" scores 7 (2 skipped + 5): past the
-    -- recognition engine's max(6, #signature) gate, so it never
-    -- reaches the results at all.
+    -- At the old cost, 5, "the" scores 8: past the recognition
+    -- engine's max(6, #signature) gate, so it never reaches the
+    -- results at all.
     T.eq(order(function(scoring) scoring.ENDPOINT_MISMATCH_COST = 5 end),
         "thr")
-    -- At the new cost, "the" scores 4 (2 skipped + 2): inside the
-    -- gate, and common enough to outrank "thr".
+    -- At the new cost, "the" scores 5: inside the gate, and common
+    -- enough to outrank "thr".
     T.eq(order(nil), "the,thr")
 end)
 
