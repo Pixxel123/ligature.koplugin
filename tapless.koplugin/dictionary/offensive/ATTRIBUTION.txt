@@ -1,0 +1,9 @@
+Offensive-word lists (<language code>.txt)
+
+The words the keyboard ranks down, one list per language, are the single
+words of the "List of Dirty, Naughty, Obscene and Otherwise Bad Words"
+(https://github.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words),
+by its contributors, licensed under the Creative Commons Attribution 4.0
+International licence (CC BY 4.0, https://creativecommons.org/licenses/by/4.0/).
+Phrases were left out and the words lower-cased by
+tools/build_offensive_lists.py; nothing else was changed.

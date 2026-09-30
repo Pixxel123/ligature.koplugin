@@ -268,6 +268,23 @@ function Tapless:addToMainMenu(menu_items)
                 end,
             },
             {
+                text = "Rank offensive words down",
+                help_text = "Swear words and slurs are suggested only when "
+                    .. "a swipe fits them clearly better than any other "
+                    .. "word, so they stop taking the place of the words "
+                    .. "you mean. A word you keep using is ranked like any "
+                    .. "other. Tapping out a word letter by letter types it "
+                    .. "as always.",
+                checked_func = function()
+                    return G_reader_settings:nilOrTrue(
+                        "tapless_rank_down_offensive")
+                end,
+                callback = function()
+                    G_reader_settings:flipNilOrTrue(
+                        "tapless_rank_down_offensive")
+                end,
+            },
+            {
                 text = "One-handed keyboard",
                 help_text = "Narrows the keys to one side of the screen, "
                     .. "with the page beside them. A ◨ handle at the "

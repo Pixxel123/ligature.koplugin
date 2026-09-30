@@ -175,9 +175,13 @@ local ResizeFrame = loadModule("resize_frame"):new{
 local ShapeChannel = loadModule("shape_channel"):new(DictionaryStore,
     PathShape, PersonalDictionary, BlockedWords)
 local TextHighlight = loadModule("text_highlight"):new(UIManager, Geom)
+local OffensiveWords = loadModule("offensive_words")
+    :new(plugin_dir .. "/dictionary/offensive", function()
+        return G_reader_settings:nilOrTrue("tapless_rank_down_offensive")
+    end)
 local RecognitionEngine = loadModule("recognition_engine")
     :new(DictionaryStore, Scoring, GeometryReranker, PersonalDictionary,
-        BlockedWords, ShapeChannel)
+        BlockedWords, ShapeChannel, OffensiveWords)
 
 -- Expose dictionary management to the plugin's permanent main-menu entry.
 -- Passing nil as the keyboard deliberately clears any stale keyboard

@@ -47,6 +47,7 @@ return {
     prefetch_controller = "dictionary/prefetch_controller.lua",
     personal_dictionary = "dictionary/personal_dictionary.lua",
     blocked_words = "dictionary/blocked_words.lua",
+    offensive_words = "dictionary/offensive_words.lua",
     word_list_file = "dictionary/word_list_file.lua",
 
     keyboard_ui = "ui/keyboard_ui.lua",

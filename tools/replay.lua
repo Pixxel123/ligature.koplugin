@@ -5,13 +5,14 @@
 -- luajit tools/replay.lua [--plugin DIR] [--compare DIR] [--personal DIR]
 --     [--context] [--context-settings FILE] [--usage]
 --     [--usage-settings FILE] [--touch] [--per-session] [--no-learning]
---     [--no-pairs]
+--     [--no-pairs] [--no-offensive]
 --     [--no-shape] [--min-length N] [--shape-trigger N] [--shape-weight N]
 --     [--shape-keep N] [--missing-cost N] [--misses] [--losses]
 --     [--keep-suspect] SESSION.jsonl...
 --
 -- The dictionary's word-pair table is used as on the device; --no-pairs
--- leaves it out. --no-shape leaves out the shape channel, which looks for
+-- leaves it out. Offensive words are ranked down as on the device;
+-- --no-offensive does not. --no-shape leaves out the shape channel, which looks for
 -- long words by the shape of the whole swipe. For experiments with it,
 -- --min-length replays only swipes meant as words of N letters or more,
 -- and --shape-trigger, --shape-weight, --shape-keep and --missing-cost
@@ -204,6 +205,17 @@ function Replay.loadPlugin(plugin_dir, options)
         path_shape_file:close()
         path_shape = load("path_shape"):new()
     end
+    -- Offensive words ranked down, as on the device, unless
+    -- options.no_offensive; plugins from before offensive_words.lua have
+    -- none.
+    local offensive_file = not (options and options.no_offensive)
+        and io.open(path("offensive_words"), "r")
+    local offensive_words
+    if offensive_file then
+        offensive_file:close()
+        offensive_words = load("offensive_words"):new(
+            plugin_dir .. "/dictionary/offensive")
+    end
     -- The shape channel, unless options.no_shape; plugins from before
     -- shape_channel.lua have none.
     local shape_channel_file = not (options and options.no_shape)
@@ -224,7 +236,7 @@ function Replay.loadPlugin(plugin_dir, options)
         engine = load("recognition_engine"):new(store,
             load("scoring"):new(normalization),
             load("geometry_reranker"):new(path_shape),
-            personal_dictionary, nil, shape_channel),
+            personal_dictionary, nil, shape_channel, offensive_words),
     }
     plugin.context_model, plugin.usage_model = newLearning()
     -- options.touch: plugin.touch_model, learning from nothing; not
@@ -961,6 +973,7 @@ local function main(args)
     local use_context, context_settings = false, nil
     local use_usage, usage_settings, per_session = false, nil, false
     local frozen, no_pairs, no_shape = false, false, false
+    local no_offensive = false
     local use_touch = false
     local min_length, shape_overrides, missing_cost = 0, {}, nil
     local index = 1
@@ -995,6 +1008,8 @@ local function main(args)
             no_pairs = true
         elseif value == "--no-shape" then
             no_shape = true
+        elseif value == "--no-offensive" then
+            no_offensive = true
         elseif value == "--min-length" then
             index = index + 1
             min_length = tonumber(args[index])
@@ -1071,7 +1086,7 @@ local function main(args)
     local options = { personal_dir = personal_dir, context = use_context,
         context_counts = context_counts, usage = use_usage,
         usage_counts = usage_counts, frozen = frozen, no_pairs = no_pairs,
-        no_shape = no_shape, touch = use_touch }
+        no_shape = no_shape, touch = use_touch, no_offensive = no_offensive }
     local plugin = Replay.loadPlugin(plugin_dir, options)
     local other = compare_dir and Replay.loadPlugin(compare_dir, options)
     -- Only the plugin under test: --compare keeps its own constants.

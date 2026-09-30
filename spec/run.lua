@@ -20,6 +20,7 @@ local specs = {
     "stray_touches_spec",
     "dictionary_controller_spec",
     "blocked_words_spec",
+    "offensive_words_spec",
     "personal_dictionary_spec",
     "keyboard_ui_spec",
     "candidate_row_spec",

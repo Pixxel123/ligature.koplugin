@@ -1,0 +1,36 @@
+# Offensive words the keyboard ranks down (th), from the List
+# of Dirty, Naughty, Obscene and Otherwise Bad Words,
+# https://github.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words
+# (CC BY 4.0). Single words only, lower case. Rebuilt by
+# tools/build_offensive_lists.py.
+กระดอ
+กระหรี่
+กระเด้า
+กะปิ
+กู
+ขี้
+ควย
+จิ๋ม
+จู๋
+ดอกทอง
+ตอแหล
+ตูด
+น้ําแตก
+มึง
+รูตูด
+ล้างตู้เย็น
+สัด
+ส้นตีน
+หญิงชาติชั่ว
+หลั่ง
+หี
+ห่า
+หํา
+อมนกเขา
+เจี๊ยว
+เจ๊ก
+เย็ด
+เสือก
+เหี้ย
+แม่ง
+ไอ้ควาย

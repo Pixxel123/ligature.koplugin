@@ -1,0 +1,43 @@
+# Offensive words the keyboard ranks down (no), from the List
+# of Dirty, Naughty, Obscene and Otherwise Bad Words,
+# https://github.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words
+# (CC BY 4.0). Single words only, lower case. Rebuilt by
+# tools/build_offensive_lists.py.
+asshole
+dritt
+drittsekk
+faen
+fan
+fanken
+fitte
+forbanna
+forbannet
+forjævlig
+fuck
+føkk
+føkka
+føkkings
+helvete
+helvetet
+jævla
+jævlig
+kuk
+kukene
+kuker
+morraknuller
+morrapuler
+nigger
+pakkis
+pikk
+pokker
+ræva
+ræven
+satan
+shit
+sinnsykt
+skitt
+sotrør
+ståpikk
+ståpikkene
+ståpikker
+svartheiteste

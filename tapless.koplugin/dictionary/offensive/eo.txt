@@ -1,0 +1,42 @@
+# Offensive words the keyboard ranks down (eo), from the List
+# of Dirty, Naughty, Obscene and Otherwise Bad Words,
+# https://github.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words
+# (CC BY 4.0). Single words only, lower case. Rebuilt by
+# tools/build_offensive_lists.py.
+bugren
+bugri
+bugru
+diofek
+diofeka
+fek
+feken
+fekfikanto
+feklekulo
+fekulo
+fik
+fikado
+fikema
+fikfek
+fiki
+fikilo
+fikiĝi
+fikiĝu
+fikklaŭno
+fikota
+fiku
+forfiki
+forfikiĝu
+forfiku
+forfurzu
+forpisi
+forpisu
+furzulo
+kacen
+kaco
+kacsuĉulo
+kojono
+piĉen
+piĉo
+zamenfek
+ĉiesulino
+ĉiesulo

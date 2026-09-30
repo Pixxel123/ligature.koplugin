@@ -14,8 +14,9 @@ local DYNAMIC_CANDIDATE_LIMIT = 40
 local GEOMETRY_CANDIDATE_LIMIT = 12
 
 -- shape_channel: optional; finds words by the shape of the swipe.
+-- offensive_words: optional; ranks offensive words down (OffensiveWords).
 function RecognitionEngine:new(dictionary_store, scoring, geometry_reranker,
-        personal_dictionary, blocked_words, shape_channel)
+        personal_dictionary, blocked_words, shape_channel, offensive_words)
     return setmetatable({
         dictionary_store = assert(dictionary_store),
         scoring = assert(scoring),
@@ -23,10 +24,19 @@ function RecognitionEngine:new(dictionary_store, scoring, geometry_reranker,
         personal_dictionary = personal_dictionary,
         blocked_words = blocked_words,
         shape_channel = shape_channel,
+        offensive_words = offensive_words,
         -- What the shape channel did on the last swipe: whether it ran,
         -- the words only it found, and how each merged word was aligned.
         last_shape = { triggered = false, words = {}, metadata = {} },
     }, self)
+end
+
+-- What word loses in the ranking for being offensive, kept uses times; it
+-- is taken off the context bonus, so every ranking a word goes through
+-- carries it.
+function RecognitionEngine:_offensivePenalty(dictionary, word, uses)
+    local offensive = self.offensive_words
+    return offensive and offensive:penalty(dictionary, word, uses) or 0
 end
 
 function RecognitionEngine:pickCandidates(options)
@@ -55,11 +65,13 @@ function RecognitionEngine:pickCandidates(options)
                     or entry.lang == data_lang)
                     and not (blocked_words
                         and blocked_words:contains(dictionary, entry.word)) then
-                local context_bonus = options.context_bonus
-                    and options.context_bonus(
-                        trace_info and trace_info.previous_word, entry.word) or 0
                 local uses = options.word_uses
                     and options.word_uses(entry.word) or 0
+                local context_bonus = (options.context_bonus
+                    and options.context_bonus(
+                        trace_info and trace_info.previous_word, entry.word)
+                    or 0)
+                    - self:_offensivePenalty(dictionary, entry.word, uses)
                 local spatial_score, ranked_score, used_near =
                     self.scoring:scoreEntry(
                     signature,
@@ -200,12 +212,13 @@ function RecognitionEngine:pickCandidates(options)
             }) do
             local entry = found.entry
             if not final_seen[entry.word] then
-                local context_bonus = options.context_bonus
-                    and options.context_bonus(
-                        trace_info and trace_info.previous_word, entry.word)
-                    or 0
                 local uses = options.word_uses
                     and options.word_uses(entry.word) or 0
+                local context_bonus = (options.context_bonus
+                    and options.context_bonus(
+                        trace_info and trace_info.previous_word, entry.word)
+                    or 0)
+                    - self:_offensivePenalty(dictionary, entry.word, uses)
                 -- The channel chose the word by its ends, so either may be
                 -- a neighbouring key.
                 local spatial_score, ranked_score =
@@ -302,7 +315,8 @@ function RecognitionEngine:completeWord(options)
             word = word,
             signature = entry.signature,
             ranked_score = freq + bonus
-                + self.scoring:usageBonus(freq, uses),
+                + self.scoring:usageBonus(freq, uses)
+                - self:_offensivePenalty(dictionary, word, uses),
             personal = personal == true,
         }
     end

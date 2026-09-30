@@ -1,0 +1,63 @@
+# Offensive words the keyboard ranks down (es), from the List
+# of Dirty, Naughty, Obscene and Otherwise Bad Words,
+# https://github.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words
+# (CC BY 4.0). Single words only, lower case. Rebuilt by
+# tools/build_offensive_lists.py.
+asesinato
+asno
+bastardo
+bollera
+cabrón
+caca
+chupada
+chupapollas
+chupetón
+concha
+coprofagía
+coño
+culo
+drogas
+esperma
+follador
+follar
+gilipichis
+gilipollas
+heroína
+hijaputa
+hijoputa
+idiota
+imbécil
+infierno
+jilipollas
+kapullo
+lameculos
+maciza
+macizorra
+maldito
+mamada
+marica
+mariconazo
+maricón
+martillo
+mierda
+nazi
+orina
+pedo
+pendejo
+pervertido
+pezón
+pinche
+pis
+prostituta
+puta
+racista
+ramera
+semen
+sexo
+soplagaitas
+soplapollas
+sádico
+travesti
+trio
+verga
+vulva

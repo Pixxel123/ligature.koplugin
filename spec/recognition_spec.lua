@@ -73,7 +73,7 @@ end
 -- word_uses(word) says how often the user has kept a word; tune(scoring)
 -- may pin the constants the test depends on.
 local function recognize(words, signature, start, intents, turns, blocked,
-        word_uses, tune)
+        word_uses, tune, offensive)
     local layout = newLayout()
     local geometry = T.load("keyboard_geometry"):new(T.normalization)
     local scoring = T.load("scoring"):new(T.normalization)
@@ -82,7 +82,7 @@ local function recognize(words, signature, start, intents, turns, blocked,
     end
     local engine = T.load("recognition_engine"):new(newStore(words), scoring,
         T.load("geometry_reranker"):new(T.load("path_shape"):new()), nil,
-        blocked)
+        blocked, nil, offensive)
     local points, observations = { start }, {}
     for index = 1, #signature do
         if index > 1 then
@@ -376,6 +376,23 @@ it("places a word ending on a neighbouring key first once the lower " ..
     -- At the new cost, "the" scores 5: inside the gate, and common
     -- enough to outrank "thr".
     T.eq(order(nil), "the,thr")
+end)
+
+it("ranks an offensive word below a word the swipe fits as well, and "
+        .. "not once the user keeps it", function()
+    local words = { { "was", 6000 }, { "wqs", 3000 } }
+    local offensive = {
+        penalty = function(_, language, word, uses)
+            return (language == "en" and word == "was" and uses < 2)
+                and 3500 or 0
+        end,
+    }
+    local function first(uses)
+        return recognize(words, "wqas", { x = 150, y = 50 }, nil, nil, nil,
+            function() return uses end, nil, offensive)[1].word
+    end
+    T.eq(first(0), "wqs", "3500 rarer, was comes second")
+    T.eq(first(2), "was", "kept twice, it is the user's word")
 end)
 
 it("never suggests a blocked word", function()

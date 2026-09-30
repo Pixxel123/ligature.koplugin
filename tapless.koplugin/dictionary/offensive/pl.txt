@@ -1,0 +1,49 @@
+# Offensive words the keyboard ranks down (pl), from the List
+# of Dirty, Naughty, Obscene and Otherwise Bad Words,
+# https://github.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words
+# (CC BY 4.0). Single words only, lower case. Rebuilt by
+# tools/build_offensive_lists.py.
+burdel
+burdelmama
+chuj
+chujnia
+ciota
+cipa
+cyc
+debil
+dmuchać
+dupa
+dupek
+duperele
+dziwka
+fiut
+gówno
+huj
+jajco
+jajko
+jebany
+jebać
+kurwa
+kurwy
+kutafon
+kutas
+pieprzyć
+pierdolec
+pierdolić
+pierdolnięty
+pierdolnąć
+pierdoła
+pierdzieć
+pizda
+pojeb
+pojebany
+popierdolony
+ruchać
+rzygać
+skurwysyn
+sraczka
+srać
+suka
+syf
+wkurwiać
+zajebisty
