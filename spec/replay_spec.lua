@@ -15,6 +15,40 @@ end
 
 local plugin = Replay.loadPlugin(T.plugin_dir)
 
+it("learns where the finger lands from kept words with touch learning, "
+        .. "across sessions", function()
+    local touching = Replay.loadPlugin(T.plugin_dir, { touch = true })
+    T.truthy(touching.touch_model, "a touch offset model")
+    T.eq(plugin.touch_model, nil, "only when asked for")
+    local width = keys()[1].w
+    -- Clean swipes landing a fifth of a key left, as a thumb falling short.
+    local function shifted(word)
+        local attempt = attemptFor(word)
+        for _, event in ipairs(attempt.events) do
+            for _, field in ipairs({ "pos", "start", "end" }) do
+                if event[field] then
+                    event[field] = { event[field][1] - 0.2 * width,
+                        event[field][2] }
+                end
+            end
+        end
+        return attempt
+    end
+    for _, word in ipairs({ "water", "hello", "yes", "they", "house",
+            "people", "world", "little", "small", "great" }) do
+        local attempt = shifted(word)
+        Replay.run(touching, attempt)
+        Replay.learn(touching, attempt)
+    end
+    local x, _, words = touching.touch_model:offset("full-width")
+    T.eq(words, 10)
+    T.truthy(x < -0.1, "learned landing left of the keys: " .. x)
+    T.truthy(touching.touch_model:shift("full-width") > 0, "shifted right")
+    touching:resetLearning()
+    local _, _, after = touching.touch_model:offset("full-width")
+    T.eq(after, 10, "a new session keeps the hand's offset")
+end)
+
 it("replays a recorded swipe to the intended word", function()
     for _, word in ipairs({ "water", "hello" }) do
         local result = Replay.run(plugin, attemptFor(word))

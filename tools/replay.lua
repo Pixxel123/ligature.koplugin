@@ -4,7 +4,8 @@
 --
 -- luajit tools/replay.lua [--plugin DIR] [--compare DIR] [--personal DIR]
 --     [--context] [--context-settings FILE] [--usage]
---     [--usage-settings FILE] [--per-session] [--no-learning] [--no-pairs]
+--     [--usage-settings FILE] [--touch] [--per-session] [--no-learning]
+--     [--no-pairs]
 --     [--no-shape] [--min-length N] [--shape-trigger N] [--shape-weight N]
 --     [--shape-keep N] [--missing-cost N] [--misses] [--losses]
 --     [--keep-suspect] SESSION.jsonl...
@@ -23,6 +24,13 @@
 -- settings file (settings.reader.lua). A session is recorded with learning
 -- paused, so replay it with those counts and --no-learning to see what the
 -- keyboard did; leave --no-learning out to simulate learning as you go.
+--
+-- --touch learns where the finger lands (the touch offset) from the words
+-- kept, as the device does, from nothing, and shifts later swipes by it,
+-- apart for one-handed and full-width sessions. Unlike word pairs and
+-- word counts it carries on across sessions with --per-session: it is the
+-- user's hand, not their text. Plugins from before touch_offset.lua have
+-- none.
 local tools_dir = debug.getinfo(1, "S").source:match("^@(.*)/[^/]*$")
     or "."
 
@@ -56,6 +64,7 @@ local Replay = {}
 -- under.
 local CONTEXT_SETTING_KEY = "keyboard_swype_mvp_context_counts"
 local USAGE_SETTING_KEY = "tapless_word_usage"
+local TOUCH_SETTING_KEY = "tapless_touch_offset"
 
 local function deepCopy(value)
     if type(value) ~= "table" then
@@ -219,6 +228,15 @@ function Replay.loadPlugin(plugin_dir, options)
             personal_dictionary, nil, shape_channel),
     }
     plugin.context_model, plugin.usage_model = newLearning()
+    -- options.touch: plugin.touch_model, learning from nothing; not
+    -- started over by resetLearning.
+    local touch_file = options and options.touch
+        and io.open(path("touch_offset"), "r")
+    if touch_file then
+        touch_file:close()
+        plugin.touch_model = load("touch_offset"):new(
+            newSettings(TOUCH_SETTING_KEY), TOUCH_SETTING_KEY)
+    end
     -- options.frozen keeps the counts as seeded: the device pauses learning
     -- while a session is recorded.
     plugin.frozen = options and options.frozen or false
@@ -405,6 +423,17 @@ function Replay.run(plugin, attempt)
         _swypeScheduleBucketPrefetch = noop,
         _swypeDrawTraceSegment = noop,
         _swypeGetPreviousWord = function() return attempt.previous_word end,
+        -- The learned touch offset, as the device's keyboard gives it.
+        _swypeTouchShift = plugin.touch_model and function()
+            local model = plugin.touch_model
+            local dx, dy = model:shift(attempt.keyboard or "full-width")
+            if dx == 0 and dy == 0 then
+                return nil
+            end
+            local x, y = model:toPixels(dx, dy,
+                plugin.geometry:letterKeys(layout, profile))
+            return { x = x, y = y }
+        end or nil,
         _swypeFinalizeSignature = function(_, signature, trace_info)
             finalized = finalized
                 or { signature = signature, trace_info = trace_info }
@@ -450,6 +479,25 @@ function Replay.run(plugin, attempt)
     end
     local trace_info = finalized.trace_info
     local geometry = plugin.geometry
+    -- Where the swipe went, the shift taken off, for Replay.learn to teach
+    -- the touch offset once it knows the word kept.
+    if plugin.touch_model and trace_info.points
+            and #trace_info.points >= 2 then
+        local points = trace_info.points
+        local shift = trace_info.touch_shift or { x = 0, y = 0 }
+        plugin.last_touch = {
+            attempt = attempt,
+            profile = profile,
+            sample = {
+                mode = attempt.keyboard or "full-width",
+                start = { x = points[1].x - shift.x,
+                    y = points[1].y - shift.y },
+                lift = { x = points[#points].x - shift.x,
+                    y = points[#points].y - shift.y },
+                keys = geometry:letterKeys(layout, profile),
+            },
+        }
+    end
     local start = trace_info.points and trace_info.points[1]
     -- context_bonus, as on the device, adds the dictionary's word-pair
     -- table (unless --no-pairs; older plugins have none) to pairs learned
@@ -579,6 +627,12 @@ function Replay.learn(plugin, attempt)
     end
     if plugin.usage_model then
         plugin.usage_model:learn(word, uses)
+    end
+    local touch = plugin.last_touch
+    if plugin.touch_model and touch and touch.attempt == attempt then
+        local lowered = word:lower():gsub("’", "'")
+        plugin.touch_model:learnSample(touch.sample,
+            plugin.normalization:normalizeText(lowered, touch.profile), uses)
     end
 end
 
@@ -904,6 +958,7 @@ local function main(args)
     local use_context, context_settings = false, nil
     local use_usage, usage_settings, per_session = false, nil, false
     local frozen, no_pairs, no_shape = false, false, false
+    local use_touch = false
     local min_length, shape_overrides, missing_cost = 0, {}, nil
     local index = 1
     while index <= #args do
@@ -929,6 +984,8 @@ local function main(args)
             usage_settings = args[index]
         elseif value == "--per-session" then
             per_session = true
+        elseif value == "--touch" then
+            use_touch = true
         elseif value == "--no-learning" then
             frozen = true
         elseif value == "--no-pairs" then
@@ -1011,7 +1068,7 @@ local function main(args)
     local options = { personal_dir = personal_dir, context = use_context,
         context_counts = context_counts, usage = use_usage,
         usage_counts = usage_counts, frozen = frozen, no_pairs = no_pairs,
-        no_shape = no_shape }
+        no_shape = no_shape, touch = use_touch }
     local plugin = Replay.loadPlugin(plugin_dir, options)
     local other = compare_dir and Replay.loadPlugin(compare_dir, options)
     -- Only the plugin under test: --compare keeps its own constants.
