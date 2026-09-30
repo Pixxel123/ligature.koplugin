@@ -26,8 +26,11 @@ With --base, an existing package (the catalog's, built from wordfreq) keeps
 its words and their frequencies, which rank words as people type them better
 than news and encyclopedia counts do; Leipzig gives its words their
 capitals, and adds the words it lacks at their Leipzig frequency, up to
---size words. Without --base, the package is the --size most frequent
-Leipzig words.
+--size words. With --cap-added, no added word ranks above the base's least
+frequent word: a large list already holds the language's common words, and
+what it lacks is rare or left out on purpose ("Mr", "CSV" beat "me" and
+"can" in the recorded English sessions otherwise). Without --base, the
+package is the --size most frequent Leipzig words.
 
 With --known, a list of the words and inflected forms Wiktionary knows
 (lower case, one a line), a word Wiktionary does not know that the corpora
@@ -203,6 +206,9 @@ def main():
                                           "latin-extended-v1")
     parser.add_argument("--base", help="package whose words and "
                                        "frequencies to keep")
+    parser.add_argument("--cap-added", action="store_true",
+                        help="rank words added to --base no higher than its "
+                             "least frequent word")
     parser.add_argument("--known", help="words Wiktionary knows")
     parser.add_argument("--min-seen", type=int, default=3)
     parser.add_argument("--size", type=int, default=150000)
@@ -249,8 +255,12 @@ def main():
             rows.append(row)
         extra = sorted((item for key, item in leipzig.items()
                         if key not in seen), key=lambda item: -item[1])
+        lowest = min((int(row[2]) for row in rows), default=0)
         for spelling, count, sig in extra[:max(0, args.size - len(rows))]:
-            rows.append([sig, spelling, zipf(count, total), data_language])
+            freq = zipf(count, total)
+            if args.cap_added:
+                freq = str(min(int(freq), lowest))
+            rows.append([sig, spelling, freq, data_language])
         added = len(rows) - len(seen)
     else:
         kept = sorted(leipzig.values(), key=lambda item: -item[1])[:args.size]

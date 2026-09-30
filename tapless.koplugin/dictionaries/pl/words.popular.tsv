@@ -126,7 +126,6 @@ atakow	ataków	4200	pl
 adresem	adresem	4190	pl
 adwokat	adwokat	4190	pl
 aktualne	aktualne	4180	pl
-administracyjnego	administracyjnego	4176	pl
 australia	Australia	4170	pl
 aleksandra	Aleksandra	4160	pl
 abysmy	abyśmy	4160	pl
@@ -188,11 +187,9 @@ antenie	antenie	4040	pl
 aresztu	aresztu	4040	pl
 artystyczne	artystyczne	4040	pl
 army	Army	4030	pl
-administracyjne	administracyjne	4030	pl
 aplikacje	aplikację	4030	pl
 aresztowania	aresztowania	4030	pl
 aucie	aucie	4030	pl
-administracyjnych	administracyjnych	4024	pl
 aaa	AAA	4020	pl
 absolwentow	absolwentów	4020	pl
 action	action	4020	pl
@@ -230,7 +227,6 @@ afery	afery	3960	pl
 aktualizacji	aktualizacji	3960	pl
 absurd	absurd	3950	pl
 aktorem	aktorem	3950	pl
-atmosferycznych	atmosferycznych	3943	pl
 afganistanie	Afganistanie	3940	pl
 alternatywy	alternatywy	3940	pl
 artykulem	artykułem	3940	pl
@@ -244,7 +240,6 @@ adresu	adresu	3930	pl
 akceptacji	akceptacji	3930	pl
 ambasady	ambasady	3930	pl
 albert	Albert	3920	pl
-administracyjnej	administracyjnej	3914	pl
 abc	ABC	3910	pl
 afryka	Afryka	3910	pl
 aires	Aires	3910	pl
@@ -254,6 +249,11 @@ alexander	Alexander	3900	pl
 angel	Angel	3900	pl
 agenta	agenta	3900	pl
 akceptuje	akceptuje	3900	pl
+aktora	aktora	3900	pl
+aktualna	aktualna	3900	pl
+aborcja	aborcja	3890	pl
+absolwent	absolwent	3890	pl
+after	after	3890	pl
 bo	bo	6350	pl
 bardzo	bardzo	6290	pl
 bedzie	będzie	6290	pl
@@ -399,7 +399,6 @@ bac	bać	4350	pl
 budzi	budzi	4350	pl
 bloku	bloku	4340	pl
 brakowalo	brakowało	4340	pl
-bbc	BBC	4338	pl
 brytania	Brytania	4330	pl
 banki	banki	4330	pl
 beda	beda	4330	pl
@@ -409,9 +408,7 @@ bialo	biało	4320	pl
 bogiem	bogiem	4320	pl
 brakiem	brakiem	4320	pl
 burmistrz	burmistrz	4320	pl
-bmw	bmw	4315	pl
 bedacy	będący	4310	pl
-bp	bp	4303	pl
 berlinie	Berlinie	4300	pl
 butow	butów	4300	pl
 ba	ba	4290	pl
@@ -458,7 +455,6 @@ bialorus	Białoruś	4180	pl
 baze	bazę	4180	pl
 bogatych	bogatych	4180	pl
 bedacych	będących	4180	pl
-bedzie	bêdzie	4177	pl
 bibliotece	bibliotece	4170	pl
 belgii	Belgii	4160	pl
 bydgoszczy	Bydgoszczy	4160	pl
@@ -510,6 +506,10 @@ bierz	bierz	4070	pl
 bogata	bogata	4070	pl
 byscie	byście	4070	pl
 bezpieczna	bezpieczna	4060	pl
+biedne	biedne	4060	pl
+biegnie	biegnie	4060	pl
+bomba	bomba	4060	pl
+boy	boy	4060	pl
 co	co	6750	pl
 czy	czy	6550	pl
 chatgpt	ChatGPT	6300	pl
@@ -543,7 +543,6 @@ coraz	coraz	5350	pl
 czasem	czasem	5350	pl
 chca	chcą	5330	pl
 cale	całe	5260	pl
-cm	cm	5233	pl
 chwili	chwili	5230	pl
 ciagu	ciągu	5230	pl
 ciekawe	ciekawe	5220	pl
@@ -683,7 +682,6 @@ czuja	czują	4390	pl
 czytanie	czytanie	4390	pl
 checi	chęci	4380	pl
 chlopca	chłopca	4380	pl
-charakterystyczne	charakterystyczne	4372	pl
 center	center	4370	pl
 chory	chory	4370	pl
 chwila	chwilą	4370	pl
@@ -747,14 +745,10 @@ czwarty	czwarty	4240	pl
 czynniki	czynniki	4240	pl
 carlos	Carlos	4230	pl
 centralnego	centralnego	4230	pl
-charakterystyczna	charakterystyczną	4224	pl
 chora	chora	4220	pl
 ciekawych	ciekawych	4220	pl
 ciag	ciąg	4220	pl
 ciezki	ciężki	4220	pl
-cd	CD	4215	pl
-charakterystyczny	charakterystyczny	4214	pl
-cnn	CNN	4210	pl
 chile	Chile	4210	pl
 ciszy	ciszy	4210	pl
 czytalam	czytałam	4210	pl
@@ -766,6 +760,12 @@ czytajac	czytając	4190	pl
 chan	chan	4180	pl
 chleba	chleba	4180	pl
 chroni	chroni	4180	pl
+chlopakiem	chłopakiem	4180	pl
+czasopisma	czasopisma	4180	pl
+czulem	czułem	4180	pl
+czlowiekowi	człowiekowi	4180	pl
+cala	cala	4170	pl
+chodze	chodzę	4170	pl
 do	do	7110	pl
 dla	dla	6590	pl
 dobrze	dobrze	5920	pl
@@ -1106,7 +1106,6 @@ egipcie	Egipcie	4030	pl
 ekonomicznego	ekonomicznego	4030	pl
 eksploatacji	eksploatacji	4030	pl
 egzekucji	egzekucji	4020	pl
-elektronicznych	elektronicznych	4018	pl
 europe	Europę	4010	pl
 efektu	efektu	4010	pl
 efektow	efektów	4010	pl
@@ -1136,7 +1135,6 @@ east	East	3900	pl
 ekonomia	ekonomia	3900	pl
 elektryczny	elektryczny	3900	pl
 elit	elit	3900	pl
-erygowana	erygowana	3893	pl
 ellen	Ellen	3890	pl
 ethan	Ethan	3890	pl
 egzaminy	egzaminy	3890	pl
@@ -1160,7 +1158,6 @@ energia	energią	3840	pl
 epoce	epoce	3840	pl
 ewangelii	ewangelii	3840	pl
 ewakuacji	ewakuacji	3830	pl
-eparchii	eparchii	3829	pl
 elementu	elementu	3820	pl
 extra	extra	3820	pl
 elektroniczne	elektroniczne	3810	pl
@@ -1204,7 +1201,6 @@ emocjami	emocjami	3730	pl
 epizod	epizod	3730	pl
 ep	EP	3720	pl
 eyes	Eyes	3720	pl
-elektronicznego	elektronicznego	3713	pl
 europejczykow	Europejczyków	3710	pl
 eksperymentu	eksperymentu	3710	pl
 elektoratu	elektoratu	3710	pl
@@ -1269,7 +1265,6 @@ eliminacjach	eliminacjach	3580	pl
 energetycznego	energetycznego	3580	pl
 einstein	Einstein	3570	pl
 emmy	Emmy	3570	pl
-eurojackpot	Eurojackpot	3570	pl
 eco	eco	3570	pl
 egzaminie	egzaminie	3570	pl
 ekonomie	ekonomię	3570	pl
@@ -1278,6 +1273,11 @@ eliza	Eliza	3560	pl
 eurowizji	Eurowizji	3560	pl
 ekstremalnie	ekstremalnie	3560	pl
 eliminuje	eliminuje	3560	pl
+emerytalnego	emerytalnego	3560	pl
+ellie	Ellie	3550	pl
+ekologiczny	ekologiczny	3550	pl
+ekosystem	ekosystem	3550	pl
+entuzjazm	entuzjazm	3550	pl
 film	film	5500	pl
 fakt	fakt	5260	pl
 firmy	firmy	5200	pl
@@ -1291,7 +1291,6 @@ formie	formie	4900	pl
 faktycznie	faktycznie	4890	pl
 facet	facet	4840	pl
 filmow	filmów	4840	pl
-funkcjonariusze	funkcjonariusze	4839	pl
 filmie	filmie	4830	pl
 forum	forum	4800	pl
 firm	firm	4740	pl
@@ -1309,7 +1308,6 @@ fanow	fanów	4620	pl
 festiwal	festiwal	4610	pl
 forma	forma	4610	pl
 fragment	fragment	4600	pl
-funkcjonariuszy	funkcjonariuszy	4591	pl
 francuski	francuski	4580	pl
 fundacji	fundacji	4570	pl
 fakty	fakty	4560	pl
@@ -1317,7 +1315,6 @@ from	from	4550	pl
 firmie	firmie	4540	pl
 funkcje	funkcję	4490	pl
 fb	fb	4480	pl
-fc	FC	4474	pl
 forme	formę	4470	pl
 faktem	faktem	4460	pl
 facebook	facebook	4450	pl
@@ -1354,7 +1351,6 @@ fani	fani	4290	pl
 foto	foto	4280	pl
 francuskiej	francuskiej	4280	pl
 frank	frank	4280	pl
-fm	FM	4278	pl
 fi	fi	4270	pl
 final	finał	4270	pl
 finansowej	finansowej	4260	pl
@@ -1472,14 +1468,12 @@ force	Force	3850	pl
 feministki	feministki	3850	pl
 filtr	filtr	3850	pl
 flash	flash	3850	pl
-funkcjonariusza	funkcjonariusza	3849	pl
 franco	Franco	3840	pl
 faktach	faktach	3840	pl
 filmowa	filmowa	3840	pl
 firmach	firmach	3840	pl
 finlandia	Finlandia	3830	pl
 franka	franka	3830	pl
-frech	Fręch	3823	pl
 fire	Fire	3820	pl
 florydzie	Florydzie	3820	pl
 fake	fake	3820	pl
@@ -1510,7 +1504,6 @@ francje	Francję	3760	pl
 fa	fa	3760	pl
 firmom	firmom	3760	pl
 formach	formach	3760	pl
-fotograficznych	fotograficznych	3751	pl
 fabryk	fabryk	3750	pl
 fabule	fabułę	3750	pl
 fantastyczny	fantastyczny	3750	pl
@@ -1518,22 +1511,29 @@ federalnej	federalnej	3750	pl
 filtrow	filtrów	3750	pl
 frakcji	frakcji	3750	pl
 francusku	francusku	3750	pl
-fk	FK	3742	pl
 foundation	Foundation	3740	pl
 fantazji	fantazji	3740	pl
 fascynujace	fascynujące	3740	pl
 finansowane	finansowane	3740	pl
 funkcja	funkcją	3740	pl
-fur	für	3734	pl
 fred	Fred	3730	pl
 fenomen	fenomen	3730	pl
 figura	figura	3730	pl
 fotografa	fotografa	3730	pl
 froncie	froncie	3730	pl
-funkcjonariuszom	funkcjonariuszom	3726	pl
 four	Four	3720	pl
 fale	falę	3720	pl
 fiat	fiat	3720	pl
+future	future	3720	pl
+fabryke	fabrykę	3710	pl
+forest	Forest	3700	pl
+falszywy	fałszywy	3700	pl
+fryzjera	fryzjera	3700	pl
+friends	Friends	3680	pl
+fajki	fajki	3670	pl
+federalnego	federalnego	3670	pl
+fora	fora	3670	pl
+formuly	formuły	3670	pl
 go	go	6120	pl
 gdy	gdy	6060	pl
 gdzie	gdzie	6060	pl
@@ -1672,7 +1672,6 @@ grand	Grand	4210	pl
 gminie	gminie	4210	pl
 gorsza	gorsza	4210	pl
 gwalt	gwałt	4210	pl
-gks	GKS	4200	pl
 gdyni	Gdyni	4200	pl
 grafika	grafika	4200	pl
 grupach	grupach	4200	pl
@@ -1764,7 +1763,6 @@ gust	gust	3980	pl
 glowach	głowach	3980	pl
 goracy	gorący	3970	pl
 glownymi	głównymi	3970	pl
-gpw	GPW	3967	pl
 georgia	Georgia	3960	pl
 global	Global	3960	pl
 game	game	3960	pl
@@ -1790,6 +1788,8 @@ grobu	grobu	3940	pl
 gubernator	gubernator	3940	pl
 glosowali	głosowali	3940	pl
 glebiej	głębiej	3940	pl
+gazete	gazetę	3930	pl
+gniazdo	gniazdo	3930	pl
 historii	historii	5430	pl
 http	http	5230	pl
 historia	historia	5190	pl
@@ -1884,9 +1884,7 @@ handlowym	handlowym	3920	pl
 human	human	3910	pl
 hey	Hey	3900	pl
 historyczna	historyczną	3900	pl
-hms	HMS	3898	pl
 hala	hala	3880	pl
-humanistycznych	humanistycznych	3879	pl
 hahaha	hahaha	3870	pl
 harris	Harris	3860	pl
 howard	Howard	3860	pl
@@ -1905,8 +1903,6 @@ hiszpanskie	hiszpańskie	3800	pl
 houston	Houston	3790	pl
 her	her	3780	pl
 hymnu	hymnu	3770	pl
-humanum	Humanum	3763	pl
-habilitowal	habilitował	3763	pl
 han	Han	3760	pl
 harold	Harold	3760	pl
 hale	hale	3760	pl
@@ -1930,7 +1926,6 @@ holland	Holland	3690	pl
 handlowy	handlowy	3690	pl
 harmonii	harmonii	3690	pl
 hipokryzja	hipokryzja	3690	pl
-huti	Huti	3683	pl
 huh	Huh	3680	pl
 hiszpanska	hiszpańska	3680	pl
 honorowym	honorowym	3680	pl
@@ -1979,7 +1974,6 @@ herman	Herman	3550	pl
 holmes	Holmes	3550	pl
 holenderski	holenderski	3550	pl
 honda	honda	3550	pl
-hd	HD	3548	pl
 hejtu	hejtu	3540	pl
 horyzonty	horyzonty	3540	pl
 hawajach	Hawajach	3530	pl
@@ -1995,7 +1989,6 @@ hazard	hazard	3520	pl
 historyka	historyka	3520	pl
 hokej	hokej	3520	pl
 hold	hold	3520	pl
-hr	hr	3516	pl
 hotelem	hotelem	3510	pl
 hood	Hood	3500	pl
 hipoteza	hipoteza	3500	pl
@@ -2005,8 +1998,6 @@ halina	Halina	3490	pl
 him	him	3490	pl
 historyjki	historyjki	3490	pl
 hotelach	hotelach	3490	pl
-hpv	HPV	3472	pl
-hamasem	Hamasem	3472	pl
 hanka	Hanka	3470	pl
 hel	hel	3470	pl
 holocaustu	holocaustu	3470	pl
@@ -2028,10 +2019,8 @@ had	had	3430	pl
 helikoptery	helikoptery	3430	pl
 hipoteze	hipotezę	3430	pl
 hotelowym	hotelowym	3430	pl
-hurkacza	Hurkacza	3428	pl
 horizon	Horizon	3420	pl
 hity	hity	3420	pl
-horoskopie	horoskopie	3418	pl
 heather	Heather	3410	pl
 hilton	Hilton	3410	pl
 honey	Honey	3410	pl
@@ -2046,6 +2035,17 @@ hindusow	hindusów	3400	pl
 hrabiego	hrabiego	3400	pl
 hiszpanow	Hiszpanów	3390	pl
 hasztagiem	hasztagiem	3390	pl
+historyjka	historyjka	3390	pl
+hadze	Hadze	3380	pl
+holocaust	Holocaust	3380	pl
+holy	Holy	3380	pl
+herbu	herbu	3380	pl
+highway	highway	3380	pl
+hassan	Hassan	3370	pl
+hector	Hector	3370	pl
+hipotezy	hipotezy	3370	pl
+histerii	histerii	3370	pl
+holdzie	hołdzie	3370	pl
 ich	ich	6250	pl
 im	im	5800	pl
 innych	innych	5780	pl
@@ -2290,7 +2290,6 @@ intelektualnej	intelektualnej	3760	pl
 interwencja	interwencja	3760	pl
 istote	istotę	3760	pl
 iz	iz	3760	pl
-isw	ISW	3756	pl
 io	IO	3750	pl
 iq	IQ	3750	pl
 indyjski	indyjski	3750	pl
@@ -2302,6 +2301,7 @@ informacyjnego	informacyjnego	3730	pl
 izraelski	izraelski	3730	pl
 ida	Ida	3720	pl
 idiote	idiotę	3720	pl
+idz	idz	3720	pl
 jest	jest	7060	pl
 jak	jak	6880	pl
 juz	już	6440	pl
@@ -2483,7 +2483,6 @@ japonska	japońska	3950	pl
 jeff	Jeff	3940	pl
 jakbysmy	jakbyśmy	3940	pl
 jedynego	jedynego	3940	pl
-jagiellonskiego	Jagiellońskiego	3933	pl
 justin	Justin	3930	pl
 justyna	Justyna	3930	pl
 jednostke	jednostkę	3930	pl
@@ -2530,7 +2529,6 @@ jon	jon	3830	pl
 jadlem	jadłem	3820	pl
 jednostka	jednostką	3820	pl
 jezdze	jeżdżę	3820	pl
-jose	José	3810	pl
 jednostce	jednostce	3810	pl
 jedynej	jedynej	3810	pl
 juliana	Juliana	3800	pl
@@ -2541,7 +2539,6 @@ jemy	jemy	3800	pl
 jadrowej	jądrowej	3800	pl
 jelita	jelita	3780	pl
 jezykowej	językowej	3780	pl
-jaworka	Jaworka	3777	pl
 jakuba	Jakuba	3770	pl
 japonczycy	Japończycy	3770	pl
 jakimis	jakimiś	3770	pl
@@ -2558,6 +2555,9 @@ jadwiga	Jadwiga	3710	pl
 jedi	Jedi	3710	pl
 japonskim	japońskim	3710	pl
 jezior	jezior	3710	pl
+jadra	jądra	3710	pl
+jednoznaczne	jednoznaczne	3700	pl
+jezykami	językami	3700	pl
 kindle	Kindle	6400	pl
 ktore	które	6170	pl
 kiedy	kiedy	6140	pl
@@ -2713,7 +2713,6 @@ kilkanascie	kilkanaście	4510	pl
 klimat	klimat	4510	pl
 konkursie	konkursie	4510	pl
 krajem	krajem	4510	pl
-kilkudziesieciu	kilkudziesięciu	4501	pl
 kara	kara	4500	pl
 kontaktu	kontaktu	4500	pl
 kryzys	kryzys	4500	pl
@@ -2731,7 +2730,6 @@ ksiazce	książce	4470	pl
 ktory	ktory	4470	pl
 kare	karę	4460	pl
 kot	kot	4460	pl
-ks	ks	4459	pl
 kamery	kamery	4450	pl
 kolegow	kolegów	4450	pl
 konsekwencje	konsekwencje	4450	pl
@@ -2814,6 +2812,8 @@ kupilem	kupiłem	4300	pl
 kwoty	kwoty	4300	pl
 kasa	kasa	4290	pl
 katolickiego	katolickiego	4290	pl
+kaze	każe	4290	pl
+kilkoma	kilkoma	4290	pl
 lat	lat	6070	pl
 lub	lub	6030	pl
 ludzie	ludzie	6000	pl
@@ -2962,7 +2962,6 @@ lozko	łóżko	4250	pl
 lo	LO	4240	pl
 letniego	letniego	4240	pl
 line	line	4240	pl
-lks	ŁKS	4239	pl
 lublinie	Lublinie	4230	pl
 licencji	licencji	4230	pl
 lewicy	lewicy	4210	pl
@@ -3056,7 +3055,6 @@ listach	listach	4000	pl
 lisci	liści	4000	pl
 logiczne	logiczne	4000	pl
 loty	loty	4000	pl
-leyen	Leyen	3993	pl
 laptop	laptop	3990	pl
 lekcjach	lekcjach	3990	pl
 literaturze	literaturze	3990	pl
@@ -3070,6 +3068,8 @@ lancuch	łańcuch	3980	pl
 lez	łez	3980	pl
 lewym	lewym	3970	pl
 land	land	3960	pl
+lekcje	lekcję	3960	pl
+lewis	Lewis	3950	pl
 ma	ma	6470	pl
 mi	mi	6430	pl
 mnie	mnie	6430	pl
@@ -3211,9 +3211,7 @@ max	max	4720	pl
 malych	małych	4720	pl
 musiala	musiała	4720	pl
 mediach	mediach	4710	pl
-miedzynarodowych	międzynarodowych	4695	pl
 mozgu	mózgu	4690	pl
-miedzynarodowej	międzynarodowej	4685	pl
 materialow	materiałów	4680	pl
 miare	miarę	4680	pl
 mieszkancy	mieszkańcy	4680	pl
@@ -3270,7 +3268,6 @@ mialby	miałby	4500	pl
 misji	misji	4500	pl
 mistrz	mistrz	4500	pl
 mowila	mówiła	4500	pl
-miedzynarodowego	międzynarodowego	4499	pl
 marcin	Marcin	4490	pl
 miedzynarodowe	międzynarodowe	4490	pl
 musialem	musiałem	4490	pl
@@ -3326,6 +3323,9 @@ mowilem	mówiłem	4400	pl
 martin	Martin	4390	pl
 miales	miałeś	4390	pl
 miedzyczasie	międzyczasie	4390	pl
+mila	miła	4390	pl
+minelo	minęło	4380	pl
+mily	miły	4380	pl
 nie	nie	7370	pl
 na	na	7340	pl
 nawet	nawet	6130	pl
@@ -3427,13 +3427,11 @@ najwieksze	największe	4740	pl
 nastepnym	następnym	4740	pl
 nazwy	nazwy	4740	pl
 nigdzie	nigdzie	4730	pl
-najprawdopodobniej	najprawdopodobniej	4723	pl
 nowo	nowo	4720	pl
 nazwie	nazwie	4710	pl
 najwiekszych	największych	4700	pl
 najwiekszym	największym	4700	pl
 nauczyciel	nauczyciel	4700	pl
-najwazniejszych	najważniejszych	4695	pl
 nazwiska	nazwiska	4690	pl
 narodow	narodów	4680	pl
 news	News	4670	pl
@@ -3500,7 +3498,6 @@ nagranie	nagranie	4460	pl
 niemcow	Niemców	4450	pl
 naukowe	naukowe	4450	pl
 niebezpieczne	niebezpieczne	4450	pl
-ngc	NGC	4443	pl
 narodowych	narodowych	4440	pl
 noznej	nożnej	4430	pl
 nadzieja	nadzieja	4420	pl
@@ -3537,11 +3534,9 @@ naturalnych	naturalnych	4330	pl
 niekoniecznie	niekoniecznie	4330	pl
 niemieckim	niemieckim	4330	pl
 niskie	niskie	4330	pl
-niespodziewanie	niespodziewanie	4327	pl
 nastapi	nastąpi	4320	pl
 niezly	niezły	4320	pl
 nikim	nikim	4320	pl
-nieprawidlowosci	nieprawidłowości	4315	pl
 narkotykow	narkotyków	4310	pl
 niebie	niebie	4310	pl
 niegdys	niegdyś	4310	pl
@@ -3549,7 +3544,6 @@ niewielkie	niewielkie	4310	pl
 normalny	normalny	4310	pl
 niebieski	niebieski	4300	pl
 nos	nos	4300	pl
-nbp	NBP	4292	pl
 national	National	4290	pl
 najwyzszym	najwyższym	4290	pl
 nielegalne	nielegalne	4290	pl
@@ -3561,7 +3555,6 @@ nalezalo	należało	4280	pl
 niekiedy	niekiedy	4280	pl
 niski	niski	4280	pl
 numerem	numerem	4280	pl
-najpopularniejszych	najpopularniejszych	4270	pl
 narkotyki	narkotyki	4270	pl
 naukowcow	naukowców	4270	pl
 nienawidzi	nienawidzi	4270	pl
@@ -3579,9 +3572,16 @@ natura	natura	4250	pl
 nienawisc	nienawiść	4250	pl
 naturalnego	naturalnego	4240	pl
 niszczy	niszczy	4240	pl
-niebezpieczenstwo	niebezpieczeństwo	4235	pl
 nacisk	nacisk	4230	pl
 nadzoru	nadzoru	4230	pl
+najlepszej	najlepszej	4230	pl
+napiecia	napięcia	4230	pl
+nastroj	nastrój	4230	pl
+nauce	nauce	4230	pl
+numery	numery	4230	pl
+najwiekszej	największej	4220	pl
+niedziele	niedziele	4220	pl
+niespodzianka	niespodzianka	4220	pl
 od	od	6650	pl
 oraz	oraz	6300	pl
 openai	OpenAI	6200	pl
@@ -3682,7 +3682,6 @@ osiagnac	osiągnąć	4590	pl
 oba	oba	4580	pl
 odkad	odkąd	4580	pl
 ogromne	ogromne	4580	pl
-odpowiedzialnosci	odpowiedzialności	4577	pl
 obecnosc	obecność	4570	pl
 oczywiste	oczywiste	4570	pl
 odbyl	odbył	4570	pl
@@ -3759,7 +3758,6 @@ oboz	obóz	4400	pl
 odbylo	odbyło	4400	pl
 okazac	okazać	4400	pl
 osobiste	osobiste	4400	pl
-odpowiedzialnosc	odpowiedzialność	4392	pl
 obywatele	obywatele	4390	pl
 oporu	oporu	4390	pl
 opuscic	opuścić	4390	pl
@@ -3824,7 +3822,6 @@ ochrona	ochroną	4290	pl
 odpowiednich	odpowiednich	4290	pl
 odzyskac	odzyskać	4290	pl
 ogladania	oglądania	4290	pl
-okolicznosciach	okolicznościach	4282	pl
 obowiazku	obowiązku	4280	pl
 oczekuje	oczekuje	4280	pl
 odniesieniu	odniesieniu	4280	pl
@@ -3838,6 +3835,9 @@ obawy	obawy	4270	pl
 obecnym	obecnym	4270	pl
 objawy	objawy	4270	pl
 obozie	obozie	4270	pl
+obroncy	obrońcy	4270	pl
+obywatel	obywatel	4270	pl
+odbywaja	odbywają	4270	pl
 po	po	6650	pl
 przez	przez	6530	pl
 pod	pod	6110	pl
@@ -4035,7 +4035,6 @@ powiedz	powiedz	4790	pl
 pro	pro	4790	pl
 prof	prof	4790	pl
 przykro	przykro	4790	pl
-przedstawiciele	przedstawiciele	4788	pl
 pojawia	pojawia	4780	pl
 politycznych	politycznych	4780	pl
 potrzebne	potrzebne	4780	pl
@@ -4094,6 +4093,7 @@ pochodzenia	pochodzenia	4700	pl
 policje	policję	4700	pl
 portalu	portalu	4700	pl
 potrafie	potrafię	4700	pl
+pozostalych	pozostałych	4700	pl
 queen	queen	3880	pl
 quo	quo	3830	pl
 que	que	3690	pl
@@ -4102,7 +4102,6 @@ qui	qui	3410	pl
 queensland	Queensland	3370	pl
 quinn	Quinn	3350	pl
 quality	quality	3320	pl
-qr	QR	3311	pl
 quasi	quasi	3280	pl
 quiz	quiz	3280	pl
 quest	Quest	3180	pl
@@ -4163,6 +4162,7 @@ quinta	Quinta	2160	pl
 quiche	quiche	2130	pl
 quayle	Quayle	2120	pl
 quintet	Quintet	2110	pl
+qr	QR	2080	pl
 roku	roku	6220	pl
 rowniez	również	5940	pl
 raz	raz	5820	pl
@@ -4220,7 +4220,6 @@ rozwiazania	rozwiązania	4760	pl
 rzadko	rzadko	4760	pl
 rosja	Rosja	4740	pl
 regionu	regionu	4730	pl
-rp	RP	4728	pl
 rada	rada	4720	pl
 rozmawiac	rozmawiać	4720	pl
 religii	religii	4710	pl
@@ -4236,7 +4235,6 @@ roznica	różnica	4680	pl
 rodzin	rodzin	4670	pl
 reki	ręki	4670	pl
 rzeki	rzeki	4660	pl
-rzeczypospolitej	Rzeczypospolitej	4641	pl
 raka	raka	4640	pl
 red	red	4640	pl
 relacji	relacji	4640	pl
@@ -4409,8 +4407,6 @@ ropy	ropy	4180	pl
 rose	Rose	4170	pl
 redakcji	redakcji	4170	pl
 reku	ręku	4170	pl
-romanowskiego	Romanowskiego	4168	pl
-rmf	RMF	4167	pl
 robin	Robin	4160	pl
 ramie	ramię	4160	pl
 republice	republice	4160	pl
@@ -4419,6 +4415,10 @@ robiac	robiąc	4160	pl
 robotnikow	robotników	4160	pl
 rocznik	rocznik	4160	pl
 rodzinnym	rodzinnym	4160	pl
+rowne	równe	4160	pl
+rejonu	rejonu	4150	pl
+rolnikow	rolników	4150	pl
+rozmawial	rozmawiał	4150	pl
 sie	się	7300	pl
 sa	są	6480	pl
 sobie	sobie	6260	pl
@@ -4471,7 +4471,6 @@ stan	stan	5150	pl
 stanu	stanu	5150	pl
 szkoda	szkoda	5150	pl
 serio	serio	5140	pl
-sprawiedliwosci	sprawiedliwości	5140	pl
 stycznia	stycznia	5140	pl
 smierc	śmierć	5140	pl
 sami	sami	5120	pl
@@ -4479,7 +4478,6 @@ sieci	sieci	5120	pl
 spraw	spraw	5120	pl
 stac	stać	5110	pl
 systemu	systemu	5100	pl
-sie	siê	5085	pl
 sierpnia	sierpnia	5080	pl
 stylu	stylu	5080	pl
 sily	siły	5060	pl
@@ -4499,7 +4497,6 @@ sporo	sporo	4990	pl
 stal	stał	4990	pl
 serce	serce	4980	pl
 spoleczenstwa	społeczeństwa	4980	pl
-spolecznosciowych	społecznościowych	4980	pl
 studia	studia	4980	pl
 stad	stąd	4970	pl
 sztuki	sztuki	4970	pl
@@ -4657,7 +4654,6 @@ skutek	skutek	4590	pl
 sprzedaz	sprzedaż	4590	pl
 stali	stali	4590	pl
 stop	stop	4590	pl
-sw	św	4585	pl
 sekund	sekund	4580	pl
 sercu	sercu	4580	pl
 serwis	serwis	4580	pl
@@ -4675,6 +4671,10 @@ swietna	świetna	4580	pl
 sklep	sklep	4570	pl
 smutne	smutne	4570	pl
 spod	spod	4570	pl
+sprzet	sprzęt	4570	pl
+sprobowac	spróbować	4570	pl
+stany	stany	4570	pl
+straty	straty	4570	pl
 to	to	7290	pl
 tak	tak	6700	pl
 tym	tym	6560	pl
@@ -4751,7 +4751,6 @@ tygodni	tygodni	4810	pl
 technologii	technologii	4800	pl
 twoich	twoich	4790	pl
 twoja	twoją	4790	pl
-tvp	TVP	4787	pl
 telefonu	telefonu	4780	pl
 tygodnia	tygodnia	4750	pl
 tysiace	tysiące	4740	pl
@@ -4794,7 +4793,6 @@ tekstow	tekstów	4510	pl
 tytulem	tytułem	4510	pl
 tzn	tzn	4510	pl
 temacie	temacie	4500	pl
-tvn	TVN	4494	pl
 teoria	teoria	4490	pl
 this	this	4490	pl
 trzecia	trzecia	4490	pl
@@ -4843,7 +4841,6 @@ tlumaczyc	tłumaczyć	4370	pl
 telefony	telefony	4360	pl
 tozsamosci	tożsamości	4360	pl
 typowy	typowy	4360	pl
-tv	TV	4356	pl
 taylor	Taylor	4350	pl
 terenach	terenach	4350	pl
 trudny	trudny	4350	pl
@@ -4924,13 +4921,16 @@ tworczosci	twórczości	4210	pl
 taty	taty	4200	pl
 tradycyjnych	tradycyjnych	4200	pl
 trafila	trafiła	4200	pl
-tk	TK	4194	pl
 teorie	teorię	4190	pl
 towarzyszy	towarzyszy	4190	pl
 tesknie	tęsknię	4190	pl
 tlo	tło	4190	pl
 tablicy	tablicy	4180	pl
 taniej	taniej	4180	pl
+technologie	technologie	4180	pl
+trzema	trzema	4180	pl
+tweetow	tweetów	4170	pl
+tworzeniu	tworzeniu	4170	pl
 udzial	udział	5400	pl
 usa	USA	5370	pl
 uwage	uwagę	5340	pl
@@ -5047,7 +5047,6 @@ ulubione	ulubione	4300	pl
 urodzin	urodzin	4300	pl
 uzytkownicy	użytkownicy	4300	pl
 uzywam	używam	4300	pl
-ugc	UGC	4297	pl
 urodzila	urodziła	4290	pl
 uzywanie	używanie	4290	pl
 udac	udać	4280	pl
@@ -5187,6 +5186,7 @@ ukrywac	ukrywać	3990	pl
 uslyszalam	usłyszałam	3990	pl
 uznane	uznane	3990	pl
 uczynil	uczynił	3980	pl
+ustalenia	ustalenia	3980	pl
 video	video	4720	pl
 vi	VI	4430	pl
 van	van	4360	pl
@@ -5204,7 +5204,6 @@ vancouver	Vancouver	3780	pl
 villa	villa	3770	pl
 voice	Voice	3750	pl
 vice	vice	3750	pl
-vs	vs	3711	pl
 vip	VIP	3710	pl
 vide	vide	3710	pl
 val	Val	3700	pl
@@ -5234,10 +5233,8 @@ victora	Victora	3380	pl
 violet	Violet	3380	pl
 virgin	virgin	3380	pl
 ville	ville	3370	pl
-vr	VR	3362	pl
 vale	Vale	3360	pl
 volkswagen	volkswagen	3350	pl
-vw	vw	3350	pl
 vis	vis	3340	pl
 vito	Vito	3330	pl
 var	var	3330	pl
@@ -5443,6 +5440,9 @@ vivienne	Vivienne	2440	pl
 vecchio	vecchio	2440	pl
 ventures	ventures	2440	pl
 valery	Valery	2430	pl
+veritatis	Veritatis	2430	pl
+verso	verso	2430	pl
+vlog	vlog	2430	pl
 wiec	więc	6070	pl
 wiem	wiem	6030	pl
 wszystko	wszystko	6020	pl
@@ -5699,9 +5699,7 @@ wroci	wróci	4540	pl
 wschodzie	wschodzie	4540	pl
 wiedzieli	wiedzieli	4530	pl
 wracam	wracam	4530	pl
-xx	XX	5267	pl
 xd	xd	5210	pl
-xv	XV	4555	pl
 xix	XIX	4510	pl
 xxi	XXI	4460	pl
 xvi	XVI	4350	pl
@@ -5713,9 +5711,7 @@ xiii	XIII	3860	pl
 xiv	XIV	3850	pl
 xbox	Xbox	3670	pl
 xxii	XXII	3490	pl
-xxx	xxx	3485	pl
 xiaomi	Xiaomi	3480	pl
-xtb	XTB	3344	pl
 xxiii	XXIII	3340	pl
 xavier	Xavier	3240	pl
 xu	Xu	3090	pl
@@ -5772,6 +5768,10 @@ xian	xian	2130	pl
 xavierem	Xavierem	2120	pl
 xboksie	xboksie	2090	pl
 xlix	XLIX	2080	pl
+xtb	XTB	2080	pl
+xv	XV	2080	pl
+xx	XX	2080	pl
+xxx	xxx	2080	pl
 you	you	5070	pl
 youtube	YouTube	4650	pl
 york	York	4430	pl
@@ -5794,7 +5794,6 @@ yyy	yyy	3480	pl
 youth	Youth	3470	pl
 yourself	yourself	3320	pl
 yuri	yuri	3320	pl
-yaman	Yaman	3318	pl
 yan	yan	3260	pl
 yong	yong	3260	pl
 yahoo	Yahoo	3240	pl
@@ -5885,6 +5884,7 @@ yukio	Yukio	2130	pl
 youtuberem	youtuberem	2110	pl
 yue	yue	2110	pl
 yatesa	Yatesa	2100	pl
+yaman	Yaman	2080	pl
 yuko	Yuko	2080	pl
 ze	że	7050	pl
 za	za	6670	pl
@@ -6055,7 +6055,6 @@ zaleznosci	zależności	4600	pl
 zapewnic	zapewnić	4600	pl
 zydow	Żydów	4600	pl
 zycze	życzę	4600	pl
-zainteresowanie	zainteresowanie	4594	pl
 zachowac	zachować	4590	pl
 zeszlym	zeszłym	4590	pl
 znana	znana	4590	pl
@@ -6119,7 +6118,6 @@ zadnym	żadnym	4480	pl
 znalazlam	znalazłam	4470	pl
 zobaczysz	zobaczysz	4470	pl
 zostawic	zostawić	4470	pl
-zainteresowania	zainteresowania	4468	pl
 zakresu	zakresu	4460	pl
 zastanawia	zastanawia	4460	pl
 zginelo	zginęło	4460	pl
@@ -6142,3 +6140,5 @@ zyjemy	żyjemy	4440	pl
 zadowolony	zadowolony	4430	pl
 zespole	zespole	4430	pl
 zwyciestwa	zwycięstwa	4430	pl
+zlozyc	złożyć	4430	pl
+zabil	zabił	4420	pl
