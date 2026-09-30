@@ -203,13 +203,4 @@ function TouchOffset.sample(mode, points, keys, on_letter)
     }
 end
 
--- Whether anything has been learned, for any keyboard.
-function TouchOffset:learned()
-    return next(self:_state()) ~= nil
-end
-
-function TouchOffset:reset()
-    self.settings:delSetting(self.setting_key)
-end
-
 return TouchOffset

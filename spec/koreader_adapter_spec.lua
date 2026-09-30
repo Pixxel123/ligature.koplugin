@@ -419,8 +419,7 @@ end)
 -- An adapter whose touch offset model has learned a landing error of a
 -- fifth of a key left on the one-handed keyboard at the left of the
 -- screen, with keys 50 wide and 60 tall: a, s and d in a row.
-local function touchSetup(settings)
-    settings = settings or {}
+local function touchSetup()
     local values = { touch = { ["one-handed left"] = { x = -0.2, y = 0,
         words = 20 } } }
     local model = T.load("touch_offset"):new({
@@ -430,7 +429,7 @@ local function touchSetup(settings)
     local VirtualKeyboard = newKeyboardClass({})
     T.load("koreader_adapter"):new{
         settings = {
-            nilOrTrue = function(_, name) return settings[name] ~= false end,
+            nilOrTrue = function() return true end,
         },
         touch_model = model,
         keyboard_geometry = T.load("keyboard_geometry"):new(T.normalization),
@@ -458,13 +457,6 @@ it("shifts a swipe back by the offset learned on this side's one-handed "
         "x " .. shift.x)
     T.eq(shift.y, 0)
     T.eq(keys.s.x, 75, "the letter keys it was worked out for")
-end)
-
-it("neither shifts nor learns with touch learning switched off", function()
-    local keyboard = touchSetup{ tapless_touch_learning = false }
-    T.eq(keyboard:_swypeTouchShift(), nil)
-    T.eq(keyboard:_swypeTouchSample({ points = { { x = 1, y = 1 },
-        { x = 2, y = 2 } }, touch_keys = {} }), nil)
 end)
 
 it("keeps where a swipe went to learn from, over the keys of its shift",

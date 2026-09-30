@@ -827,11 +827,9 @@ function KoreaderAdapter:install(VirtualKeyboard)
         return adapter.input_controller:wordUses(word)
     end
 
-    -- Learning where the finger lands (the touch offset), unless switched
-    -- off in the menu.
+    -- Learning where the finger lands (the touch offset).
     local function touchLearning()
         return adapter.touch_model
-            and adapter.settings:nilOrTrue("tapless_touch_learning")
     end
 
     -- The keyboard, for the touch offset (see TouchOffset.mode), with its
