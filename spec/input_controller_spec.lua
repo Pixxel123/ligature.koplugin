@@ -70,6 +70,47 @@ it("leaves a slide from a number key that crossed no other letter to KOReader",
     T.eq(state.recorded, nil, "no leftover swipe state")
 end)
 
+-- A keyboard with a on the left half (x < 100) and s on the right, and
+-- the number key 1 above a (y < 0).
+local function tapKeyboard(state)
+    local keyboard = newKeyboard(state)
+    local function keyFor(letter)
+        return { key = letter, dimen = { w = 100, h = 80 },
+            onTapSelect = function() state.tapped = letter end }
+    end
+    keyboard._swypeKeyAt = function(_, pos)
+        if not pos then return end
+        if pos.y < 0 then return nil, keyFor("1") end
+        local letter = pos.x < 100 and "a" or "s"
+        return letter, keyFor(letter)
+    end
+    return keyboard
+end
+
+it("types a tap on the key the finger touched, not shifted by the "
+        .. "touch offset", function()
+    local state = {}
+    newController():finalizeSignature(tapKeyboard(state), "s", {
+        letter_points = { { x = 120, y = 10 } },
+        touch_shift = { x = 40, y = 0 },
+        released = true,
+    })
+    T.eq(state.tapped, "a", "the finger was on a, at 80")
+end)
+
+it("leaves a slide from a number key to KOReader though the touch offset "
+        .. "moved it onto a letter", function()
+    local state = {}
+    local handled = newController():finalizeSignature(tapKeyboard(state),
+        "a", {
+            letter_points = { { x = 50, y = 10 } },
+            touch_shift = { x = 0, y = 20 },
+            released = true,
+        })
+    T.eq(handled, false)
+    T.eq(state.tapped, nil)
+end)
+
 it("ignores a one-letter trace finalized by the idle timer", function()
     local state = {}
     newController():finalizeSignature(newKeyboard(state), "a", {

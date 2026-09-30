@@ -623,8 +623,20 @@ function InputController:insertBestAndShowCandidates(
     return true
 end
 
+-- Where the finger touched for the swipe point, the learned touch offset
+-- taken back off. The offset is learned from swipes, and is not for taps,
+-- nor for telling a number key from the letter below it.
+local function fingerPoint(trace_info, point)
+    local shift = trace_info and trace_info.touch_shift
+    if not point or not shift then
+        return point
+    end
+    return { x = point.x - shift.x, y = point.y - shift.y }
+end
+
 function InputController:tapTraceKey(keyboard, trace_info)
-    local point = trace_info.letter_points and trace_info.letter_points[1]
+    local point = fingerPoint(trace_info,
+        trace_info.letter_points and trace_info.letter_points[1])
     local _, key = keyboard:_swypeKeyAt(point)
     if not key or not key.onTapSelect then
         return false
@@ -677,8 +689,8 @@ function InputController:finalizeSignature(keyboard, signature, trace_info)
             -- letter below, yet may cross no other letter. That is a tap or
             -- a flick on the number key itself, and KOReader knows what
             -- it types, alternate characters included.
-            local first = trace_info.letter_points
-                and trace_info.letter_points[1]
+            local first = fingerPoint(trace_info, trace_info.letter_points
+                and trace_info.letter_points[1])
             if first and not keyboard:_swypeKeyAt(first) then
                 return false
             end

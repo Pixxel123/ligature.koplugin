@@ -485,13 +485,17 @@ function Replay.run(plugin, attempt)
             and #trace_info.points >= 2 then
         local points = trace_info.points
         local shift = trace_info.touch_shift or { x = 0, y = 0 }
+        local start = { x = points[1].x - shift.x, y = points[1].y - shift.y }
+        -- As on the device: a start off the letter keys is left out.
+        if not geometry:keyAt(layout, start, profile) then
+            start = nil
+        end
         plugin.last_touch = {
             attempt = attempt,
             profile = profile,
             sample = {
                 mode = attempt.keyboard or "full-width",
-                start = { x = points[1].x - shift.x,
-                    y = points[1].y - shift.y },
+                start = start,
                 lift = { x = points[#points].x - shift.x,
                     y = points[#points].y - shift.y },
                 keys = geometry:letterKeys(layout, profile),

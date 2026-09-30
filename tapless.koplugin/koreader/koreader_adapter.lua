@@ -859,7 +859,10 @@ function KoreaderAdapter:install(VirtualKeyboard)
 
     -- Where a finished swipe began and lifted off, as the finger went
     -- (the shift taken back off), with the keys it was read against: what
-    -- the touch offset learns from once its word is kept.
+    -- the touch offset learns from once its word is kept. A swipe begun
+    -- off the letter keys, on the number row say, which counts as the
+    -- letter below, says nothing about where the finger lands on letters:
+    -- its start is left out.
     function VirtualKeyboard:_swypeTouchSample(trace_info)
         local points = trace_info and trace_info.points
         if not touchLearning() or not points or #points < 2 then
@@ -867,9 +870,13 @@ function KoreaderAdapter:install(VirtualKeyboard)
         end
         local shift = trace_info.touch_shift or { x = 0, y = 0 }
         local first, last = points[1], points[#points]
+        local start = { x = first.x - shift.x, y = first.y - shift.y }
+        if not self:_swypeKeyAt(start) then
+            start = nil
+        end
         return {
             mode = self:_swypeTouchMode(),
-            start = { x = first.x - shift.x, y = first.y - shift.y },
+            start = start,
             lift = { x = last.x - shift.x, y = last.y - shift.y },
             keys = adapter.keyboard_geometry:letterKeys(self.layout,
                 self.swype_mvp_normalization_profile),

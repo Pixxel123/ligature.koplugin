@@ -449,7 +449,7 @@ local function touchSetup(settings)
     return setmetatable({ layout = { row } }, VirtualKeyboard)
 end
 
-it("shifts a swipe back by most of the learned touch offset, in pixels",
+it("shifts a swipe back by the learned touch offset, in pixels",
         function()
     local keyboard = touchSetup()
     local shift = keyboard:_swypeTouchShift()
@@ -477,4 +477,14 @@ it("keeps where a swipe went, the shift taken off, to learn from",
     T.eq(sample.lift.x, 102.5)
     T.eq(sample.lift.y, 540)
     T.eq(sample.keys.s.x, 75)
+end)
+
+it("learns nothing from where a swipe began off the letter keys, as on "
+        .. "the number row", function()
+    local keyboard = touchSetup()
+    local sample = keyboard:_swypeTouchSample({
+        points = { { x = 30, y = 450 }, { x = 110, y = 540 } },
+    })
+    T.eq(sample.start, nil, "began above the letters")
+    T.eq(sample.lift.x, 110)
 end)

@@ -126,6 +126,15 @@ it("turns a shift in key units into pixels at the keys' size", function()
     near(y, -6)
 end)
 
+it("reads a damaged setting as nothing learned", function()
+    local model = newModel({ touch = { ["one-handed"] = { x = "left",
+        words = {} }, ["full-width"] = 3 } })
+    T.eq(model:shift("one-handed"), 0)
+    local _, _, words = model:offset("full-width")
+    T.eq(words, 0)
+    T.truthy(model:learn("one-handed", { { x = -0.2, y = 0 } }, 1))
+end)
+
 it("saves what it learns, and forgets it on reset", function()
     local model, settings = newModel()
     learnWords(model, "one-handed", 3, -0.2, 0)

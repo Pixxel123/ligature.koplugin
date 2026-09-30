@@ -1,8 +1,8 @@
 -- Where the user's finger lands against the keys it means, learned from
 -- the words they keep. A thumb reaching across a one-handed keyboard lands
 -- short of the keys further away, so swipes start and end off the word's
--- first and last keys the same way again and again; the learned offset
--- shifts later swipes back by most of it before their keys are read.
+-- first and last keys the same way again and again; later swipes are
+-- shifted back to allow for it before their keys are read.
 --
 -- Offsets are in key widths (x) and heights (y), so they hold when the
 -- keyboard is resized, and kept apart for the one-handed and full-width
@@ -52,7 +52,8 @@ function TouchOffset:offset(mode)
     if type(learned) ~= "table" then
         return 0, 0, 0
     end
-    return learned.x or 0, learned.y or 0, learned.words or 0
+    return tonumber(learned.x) or 0, tonumber(learned.y) or 0,
+        tonumber(learned.words) or 0
 end
 
 local function clamp(value, limit)
