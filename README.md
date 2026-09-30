@@ -434,7 +434,7 @@ every letter, only when you pause, to keep e-ink refreshes down. If you
 carry on typing past what the row was made for, a stale suggestion can't
 be picked by mistake. The offer to add an unknown word to your personal
 words still shows when nothing matches. It can be turned off under
-`Tools → Tapless → Suggest words while typing`.
+`Tools → Tapless → Suggest words`.
 
 The most common 256 words for each first letter are always searched.
 From three letters in, if they don't fill the row, the rest of the
@@ -622,7 +622,7 @@ old language's lists.
 
 These are under `Tools → Tapless`. This one is on by default:
 
-- **Suggest words while typing**: pause while tapping out a word and the
+- **Suggest words**: pause while tapping out a word and the
   suggestion row offers words that finish it.
 
 These are off by default:
@@ -632,14 +632,15 @@ These are off by default:
 - **Double space types a period**: a second space right after a word, or a
   space right after a swiped word, becomes ". ". Not used on input method
   layouts (Chinese, Japanese, Korean, Vietnamese).
-- **One-handed keyboard**: narrows the keys to one side of the screen,
+- **One-handed keyboard → Use one-handed keyboard**: narrows the keys to one side of the screen,
   with the page visible beside them. At the end of the suggestion row is
   ◨. Tap or hold it to open a menu of leave, move and resize, or swipe
   towards an option to run it. In resize mode the keys fade; drag a top
   corner to change width and height, a bottom corner to change width, or
   inside to move them, then tap Done. Portrait and landscape remember
   their own place and size. The top suggestion is in bold, here and at
-  full width.
+  full width. **Background blur**, next to it, covers the space beside the
+  keys with fine diagonal lines instead of the page; it is on by default.
 
 Tap the globe key (🌐) for the keyboard layout menu. Hold it and lift to
 switch one-handed mode on or off.

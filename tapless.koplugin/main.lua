@@ -1,3 +1,6 @@
+local ConfirmBox = require("ui/widget/confirmbox")
+local InfoMessage = require("ui/widget/infomessage")
+local UIManager = require("ui/uimanager")
 local WidgetContainer = require("ui/widget/container/widgetcontainer")
 local logger = require("logger")
 
@@ -223,7 +226,7 @@ function Tapless:addToMainMenu(menu_items)
                 end,
             },
             {
-                text = "Suggest words while typing",
+                text = "Suggest words",
                 help_text = "When you pause while tapping out a word, the "
                     .. "suggestion row offers words that finish it. Tap one "
                     .. "to use it.",
@@ -237,35 +240,52 @@ function Tapless:addToMainMenu(menu_items)
                 end,
             },
             {
-                text = "Learn how I swipe",
-                help_text = "Learns, from the words you keep, where your "
-                    .. "finger lands against the keys you mean, and allows "
-                    .. "for it when reading swipes. A thumb tends to land "
-                    .. "short of keys further away, most of all on the "
-                    .. "one-handed keyboard. Learned apart for the "
-                    .. "one-handed and full-width keyboard; it starts "
-                    .. "after a few words and settles within a few dozen.",
-                checked_func = function()
-                    return G_reader_settings:nilOrTrue(
-                        "tapless_touch_learning")
-                end,
-                callback = function()
-                    G_reader_settings:flipNilOrTrue(
-                        "tapless_touch_learning")
-                end,
-            },
-            {
-                text = "Forget how I swipe",
-                help_text = "Clears what Tapless has learned about where "
-                    .. "your finger lands, so it learns again from the "
-                    .. "next words you swipe.",
-                keep_menu_open = true,
-                enabled_func = function()
-                    return touchOffset():learned()
-                end,
-                callback = function()
-                    touchOffset():reset()
-                end,
+                text = "Swipe learning",
+                sub_item_table = {
+                    {
+                        text = "Learn how I swipe",
+                        help_text = "Learns, from the words you keep, where "
+                            .. "your finger lands against the keys you "
+                            .. "mean, and allows for it when reading "
+                            .. "swipes. A thumb tends to land short of keys "
+                            .. "further away, most of all on the one-handed "
+                            .. "keyboard. Learned apart for the one-handed "
+                            .. "and full-width keyboard; it starts after a "
+                            .. "few words and settles within a few dozen.",
+                        checked_func = function()
+                            return G_reader_settings:nilOrTrue(
+                                "tapless_touch_learning")
+                        end,
+                        callback = function()
+                            G_reader_settings:flipNilOrTrue(
+                                "tapless_touch_learning")
+                        end,
+                    },
+                    {
+                        text = "Forget swipe",
+                        help_text = "Clears what Tapless has learned about "
+                            .. "where your finger lands, so it learns again "
+                            .. "from the next words you swipe.",
+                        keep_menu_open = true,
+                        callback = function()
+                            if not touchOffset():learned() then
+                                UIManager:show(InfoMessage:new{
+                                    text = "Nothing has been learned yet.",
+                                })
+                                return
+                            end
+                            UIManager:show(ConfirmBox:new{
+                                text = "Forget how you swipe?\n\nTapless "
+                                    .. "will learn again from the next "
+                                    .. "words you swipe.",
+                                ok_text = "Forget",
+                                ok_callback = function()
+                                    touchOffset():reset()
+                                end,
+                            })
+                        end,
+                    },
+                },
             },
             {
                 text = "Rank offensive words down",
@@ -286,35 +306,42 @@ function Tapless:addToMainMenu(menu_items)
             },
             {
                 text = "One-handed keyboard",
-                help_text = "Narrows the keys to one side of the screen, "
-                    .. "with the page beside them. A ◨ handle at the "
-                    .. "end of the suggestion row opens a menu of leave, "
-                    .. "move and resize. Tap it, hold it, or swipe "
-                    .. "towards an option. Hold the globe key and lift to "
-                    .. "switch it on or off while typing. Portrait and "
-                    .. "landscape are remembered separately.",
-                checked_func = function()
-                    return OneHanded:new(G_reader_settings)
-                        :state(screenInfo()).enabled
-                end,
-                callback = function()
-                    OneHanded:new(G_reader_settings):toggle(screenInfo())
-                end,
-            },
-            {
-                text = "Hatch beside one-handed keys",
-                help_text = "Fills the space between the one-handed keys "
-                    .. "and the screen edge with fine diagonal lines, "
-                    .. "instead of showing the page there. Tapping it "
-                    .. "still closes the keyboard.",
-                checked_func = function()
-                    return G_reader_settings:nilOrTrue(
-                        "tapless_one_handed_hatch")
-                end,
-                callback = function()
-                    G_reader_settings:flipNilOrTrue(
-                        "tapless_one_handed_hatch")
-                end,
+                sub_item_table = {
+                    {
+                        text = "Use one-handed keyboard",
+                        help_text = "Narrows the keys to one side of the "
+                            .. "screen, with the page beside them. A ◨ "
+                            .. "handle at the end of the suggestion row "
+                            .. "opens a menu of leave, move and resize. Tap "
+                            .. "it, hold it, or swipe towards an option. "
+                            .. "Hold the globe key and lift to switch it on "
+                            .. "or off while typing. Portrait and landscape "
+                            .. "are remembered separately.",
+                        checked_func = function()
+                            return OneHanded:new(G_reader_settings)
+                                :state(screenInfo()).enabled
+                        end,
+                        callback = function()
+                            OneHanded:new(G_reader_settings)
+                                :toggle(screenInfo())
+                        end,
+                    },
+                    {
+                        text = "Background blur",
+                        help_text = "Covers the space between the one-handed "
+                            .. "keys and the screen edge with fine diagonal "
+                            .. "lines, instead of showing the page there. "
+                            .. "Tapping it still closes the keyboard.",
+                        checked_func = function()
+                            return G_reader_settings:nilOrTrue(
+                                "tapless_one_handed_hatch")
+                        end,
+                        callback = function()
+                            G_reader_settings:flipNilOrTrue(
+                                "tapless_one_handed_hatch")
+                        end,
+                    },
+                },
             },
         },
     }
