@@ -5,7 +5,8 @@
 --   koreader/     hooks into KOReader's keyboard and touch handling
 --   input/        turning touches and key presses into typed text
 --   recognition/  finding the words a swipe or tapped letters could be
---   learning/     the words and word pairs the user keeps
+--   learning/     the words and word pairs the user keeps, and where
+--                 their finger lands against the keys
 --   dictionary/   reading, installing and managing word lists
 --   ui/           drawing the suggestion row, the swipe trail and the
 --                 one-handed keyboard's layout
@@ -36,6 +37,7 @@ return {
 
     context_model = "learning/context_model.lua",
     usage_model = "learning/usage_model.lua",
+    touch_offset = "learning/touch_offset.lua",
 
     dictionary_store = "dictionary/dictionary_store.lua",
     dictionary_index = "dictionary/dictionary_index.lua",

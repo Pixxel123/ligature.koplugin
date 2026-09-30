@@ -25,6 +25,7 @@ local specs = {
     "candidate_row_spec",
     "dictionary_registry_spec",
     "usage_model_spec",
+    "touch_offset_spec",
     "word_pairs_spec",
     "tap_completions_spec",
     "path_shape_spec",
