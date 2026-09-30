@@ -138,3 +138,35 @@ it("still begins a swipe on a letter where it lands", function()
     controller:onPanRelease(keyboard, pan(start, { x = 250, y = 250 }))
     T.eq(keyboard.finalized[1].signature, "wed")
 end)
+
+it("reads a swipe's keys shifted by the learned touch offset, and draws "
+        .. "it where the finger went", function()
+    local keyboard = newKeyboard(newLayout())
+    local drawn = {}
+    function keyboard:_swypeDrawTraceSegment(_, point)
+        drawn[#drawn + 1] = point.x
+    end
+    function keyboard:_swypeTouchShift() return { x = 70, y = 0 } end
+    local controller = newController()
+    local start = { x = 40, y = 150 }
+    controller:onPan(keyboard, pan(start, { x = 140, y = 150 }))
+    controller:onPanRelease(keyboard, pan(start, { x = 140, y = 250 }))
+    local finalized = keyboard.finalized[1]
+    T.eq(finalized.signature, "wed", "q w s read 70 px to the right")
+    T.eq(finalized.trace_info.points[1].x, 110)
+    T.eq(finalized.trace_info.touch_shift.x, 70)
+    T.eq(drawn[1], 40, "the trail starts under the finger")
+    T.eq(drawn[#drawn], 140)
+    T.eq(keyboard.swype_mvp_touch_shift, nil, "forgotten after the swipe")
+end)
+
+it("reads a swipe as it went when no touch offset is learned", function()
+    local keyboard = newKeyboard(newLayout())
+    function keyboard:_swypeTouchShift() return nil end
+    local controller = newController()
+    local start = { x = 40, y = 150 }
+    controller:onPan(keyboard, pan(start, { x = 140, y = 150 }))
+    controller:onPanRelease(keyboard, pan(start, { x = 140, y = 250 }))
+    T.eq(keyboard.finalized[1].signature, "qws")
+    T.eq(keyboard.finalized[1].trace_info.touch_shift, nil)
+end)

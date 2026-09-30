@@ -20,7 +20,25 @@ function GestureController:reset(keyboard, keep_prefetch)
     keyboard.swype_mvp_trace_generation =
         (keyboard.swype_mvp_trace_generation or 0) + 1
     keyboard.swype_mvp_trace = nil
+    keyboard.swype_mvp_touch_shift = nil
     keyboard.swype_mvp_last_point_time = nil
+end
+
+-- The learned touch offset for a new swipe, as { x, y } pixels to add to
+-- its points; nil when there is none.
+local function touchShift(keyboard)
+    local shift = keyboard._swypeTouchShift and keyboard:_swypeTouchShift()
+    if shift and (shift.x ~= 0 or shift.y ~= 0) then
+        return shift
+    end
+end
+
+-- point as the finger drew it, before the touch offset was added.
+local function unshifted(point, shift)
+    if not point or not shift then
+        return point
+    end
+    return { x = point.x - shift.x, y = point.y - shift.y }
 end
 
 function GestureController:scheduleFinalize(keyboard)
@@ -50,17 +68,30 @@ function GestureController:addPoint(keyboard, pos)
         self:reset(keyboard)
     end
     keyboard.swype_mvp_last_point_time = now
-    local letter, key
-    if keyboard.swype_mvp_trace then
-        letter, key = keyboard:_swypeKeyAt(pos)
-    else
+    local starting = not keyboard.swype_mvp_trace
+    if starting then
         keyboard.swype_mvp_trace = self.trace_collector:newTrace()
+        keyboard.swype_mvp_touch_shift = touchShift(keyboard)
+    end
+    -- Keys are read, and the trace kept, where the finger meant to be:
+    -- shifted by the learned touch offset. The trail is drawn unshifted,
+    -- under the finger.
+    local shift = keyboard.swype_mvp_touch_shift
+    if shift then
+        pos = self.geometry:new{ x = pos.x + shift.x, y = pos.y + shift.y,
+            w = 1, h = 1 }
+    end
+    local letter, key
+    if starting then
         letter, key = keyboard:_swypeStartKeyAt(pos)
+    else
+        letter, key = keyboard:_swypeKeyAt(pos)
     end
     local result = self.trace_collector:addPoint(
         keyboard.swype_mvp_trace, pos, letter, key and key.dimen, now)
     if result and result.point_added then
-        keyboard:_swypeDrawTraceSegment(result.previous_point, result.point)
+        keyboard:_swypeDrawTraceSegment(unshifted(result.previous_point, shift),
+            unshifted(result.point, shift))
     end
     if not letter then
         self:scheduleFinalize(keyboard)
@@ -99,6 +130,9 @@ function GestureController:finalizeTrace(keyboard, released)
         observations = snapshot.observations,
         previous_word = keyboard:_swypeGetPreviousWord(),
         released = released,
+        -- What was added to the points; taking it off gives where the
+        -- finger went, which is what the touch offset learns from.
+        touch_shift = keyboard.swype_mvp_touch_shift,
     }
     self:reset(keyboard, true)
     local finalized = keyboard:_swypeFinalizeSignature(

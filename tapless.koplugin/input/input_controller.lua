@@ -17,14 +17,16 @@ InputController.WARM_WORK_MS = 3
 -- word swiped and left in the text counts for one.
 InputController.PICK_USES = 2
 
--- usage_model, which counts the words the user keeps, is optional.
+-- usage_model, which counts the words the user keeps, and touch_model,
+-- which learns where their finger lands against the keys, are optional.
 function InputController:new(context_model, normalization, logger, text_case,
         personal_dictionary, dictionary_store, ui_manager, settings,
-        blocked_words, time_api, usage_model)
+        blocked_words, time_api, usage_model, touch_model)
     return setmetatable({
         blocked_words = blocked_words,
         time = time_api,
         usage_model = usage_model,
+        touch_model = touch_model,
         settings = assert(settings),
         context_model = assert(context_model),
         normalization = assert(normalization),
@@ -443,6 +445,21 @@ function InputController:commitPendingContext(keyboard)
     if self.usage_model then
         self.usage_model:commit(pending)
     end
+    self:_learnTouch(keyboard, pending, pending and pending.word, 1)
+end
+
+-- Teaches the touch offset model where the finger landed on the swipe
+-- that typed pending, now that word is kept in its place, once.
+function InputController:_learnTouch(keyboard, pending, word, weight)
+    if not (self.touch_model and pending and pending.touch and word)
+            or pending.touch_committed then
+        return
+    end
+    pending.touch_committed = true
+    local lowered = Utf8Proc.lowercase_dumb(word):gsub("’", "'")
+    self.touch_model:learnSample(pending.touch,
+        self.normalization:normalizeText(lowered,
+            keyboard.swype_mvp_normalization_profile), weight)
 end
 
 function InputController:saveContext()
@@ -504,6 +521,8 @@ function InputController:selectCandidate(keyboard, candidate, uses)
         self.usage_model:learn(candidate.word, uses or self.PICK_USES)
         selection.pending.usage_committed = true
     end
+    self:_learnTouch(keyboard, selection.pending, candidate.word,
+        uses or self.PICK_USES)
     keyboard.inputbox:addChars(selection.replacement)
     self:_markPendingSpace(keyboard)
     self:clearCandidateState(keyboard)
@@ -571,8 +590,11 @@ function InputController:_gluedToPreviousWord(keyboard)
         or last:match("^%d$") ~= nil
 end
 
+-- trace_info, when given, is the swipe's: where it began and lifted off is
+-- kept with the inserted word, for learning the touch offset once the
+-- word is kept.
 function InputController:insertBestAndShowCandidates(
-        keyboard, signature, candidates, previous_word)
+        keyboard, signature, candidates, previous_word, trace_info)
     if not candidates or #candidates == 0 then
         self.logger.dbg("swype mvp no confident candidate", signature)
         keyboard.swype_mvp_session:recordNoCandidate(signature)
@@ -584,6 +606,11 @@ function InputController:insertBestAndShowCandidates(
     keyboard.swype_mvp_tapped_word = nil
     local inserted = keyboard.swype_mvp_session:recordInsert(
         signature, candidates, previous_word)
+    local pending = keyboard.swype_mvp_session:getLastInsert()
+    if pending and trace_info and self.touch_model
+            and keyboard._swypeTouchSample then
+        pending.touch = keyboard:_swypeTouchSample(trace_info)
+    end
     self.logger.dbg("swype mvp best", signature, "=>", candidates[1].word)
     local pending_space = self:_takePendingSpace(keyboard)
     if pending_space or self:_gluedToPreviousWord(keyboard) then
@@ -671,7 +698,7 @@ function InputController:finalizeSignature(keyboard, signature, trace_info)
         signature, 4, trace_info)
     self:insertBestAndShowCandidates(
         keyboard, signature, candidates,
-        trace_info and trace_info.previous_word)
+        trace_info and trace_info.previous_word, trace_info)
     return true
 end
 
