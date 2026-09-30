@@ -70,6 +70,39 @@ it("leaves a slide from a number key that crossed no other letter to KOReader",
     T.eq(state.recorded, nil, "no leftover swipe state")
 end)
 
+it("recognizes a swipe as read shifted by the touch offset, and keeps "
+        .. "where the finger went to learn from", function()
+    local state = {}
+    local keyboard = newKeyboard(state)
+    local picked, kept
+    keyboard.swype_mvp_session = {
+        recordInsert = function() return "wed" end,
+        getLastInsert = function() return {} end,
+    }
+    keyboard.inputbox = { addChars = function() end }
+    function keyboard:_swypePickCandidates(signature, _, trace_info)
+        picked = { signature = signature, trace_info = trace_info }
+        return { { word = "wed" } }
+    end
+    function keyboard:_swypeTouchSample(trace_info)
+        kept = trace_info
+    end
+    local controller = newController()
+    controller.touch_model = {}
+    controller.applyCandidateCase = function() end
+    controller._takePendingSpace = function() end
+    controller._gluedToPreviousWord = function() end
+    controller._markPendingSpace = function() end
+    controller.releaseOneShotShift = function() end
+    local shifted = { points = {} }
+    local trace_info = { points = {}, released = true,
+        recognition = { signature = "wed", trace_info = shifted } }
+    controller:finalizeSignature(keyboard, "qws", trace_info)
+    T.eq(picked.signature, "wed")
+    T.eq(picked.trace_info, shifted)
+    T.eq(kept, trace_info, "the finger's own trace")
+end)
+
 it("ignores a one-letter trace finalized by the idle timer", function()
     local state = {}
     newController():finalizeSignature(newKeyboard(state), "a", {
@@ -538,6 +571,82 @@ it("keeps learning words optional", function()
     controller.context_model.save = function() end
     controller:saveContext()
     T.eq(keyboard.inputbox:text(), "hollow")
+end)
+
+-- A controller with a touch offset model that records what it is taught,
+-- and a keyboard whose swipes carry a touch sample.
+local function touchSetup()
+    local taught = {}
+    local controller = newController()
+    controller.context_model.learn = function() end
+    -- Whole words, as the plugin's normalization spells them on the keys.
+    controller.normalization = setmetatable({
+        normalizeText = function(_, text) return (text:gsub("%A", "")) end,
+    }, { __index = T.normalization })
+    controller.touch_model = {
+        learnSample = function(_, sample, letters, weight)
+            taught[#taught + 1] = { sample = sample, letters = letters,
+                weight = weight }
+        end,
+    }
+    local keyboard = newTypingKeyboard()
+    keyboard._swypeReset = function() end
+    local sample = { mode = "one-handed" }
+    function keyboard:_swypeTouchSample(trace_info)
+        return trace_info and trace_info.touch_sample
+    end
+    local function swipeTraced(...)
+        controller.applyCandidateCase = function() end
+        local candidates = {}
+        for index, word in ipairs({ ... }) do
+            candidates[index] = { word = word }
+        end
+        controller:insertBestAndShowCandidates(keyboard, "x", candidates,
+            nil, { touch_sample = sample })
+    end
+    return controller, keyboard, taught, sample, swipeTraced
+end
+
+it("learns where the finger landed from a swiped word once it is kept",
+        function()
+    local controller, keyboard, taught, sample, swipeTraced = touchSetup()
+    swipeTraced("Hello", "hollow")
+    T.eq(#taught, 0, "not until it is kept")
+    controller:commitPendingContext(keyboard)
+    controller:commitPendingContext(keyboard)
+    T.eq(#taught, 1)
+    T.eq(taught[1].sample, sample)
+    T.eq(taught[1].letters, "hello", "the word as the keys spell it")
+    T.eq(taught[1].weight, 1)
+end)
+
+it("learns where the finger landed from a picked word, twice over, and "
+        .. "only once", function()
+    local controller, keyboard, taught, _, swipeTraced = touchSetup()
+    swipeTraced("hello", "hollow")
+    controller:selectCandidate(keyboard, { word = "hollow" })
+    controller:commitPendingContext(keyboard)
+    T.eq(#taught, 1)
+    T.eq(taught[1].letters, "hollow")
+    T.eq(taught[1].weight, 2)
+end)
+
+it("learns nothing about touch from the word put in for a blocked one",
+        function()
+    local controller, keyboard, taught, _, swipeTraced = touchSetup()
+    controller.blocked_words = { add = function() return true end }
+    swipeTraced("hello", "hollow")
+    T.truthy(controller:blockCandidate(keyboard, { word = "hello" }))
+    controller:commitPendingContext(keyboard)
+    T.eq(#taught, 0, "the user never chose hollow")
+end)
+
+it("learns nothing about touch from a swiped word deleted again", function()
+    local controller, keyboard, taught, _, swipeTraced = touchSetup()
+    swipeTraced("hello")
+    controller:delChar(keyboard)
+    controller:commitPendingContext(keyboard)
+    T.eq(#taught, 0)
 end)
 
 it("deletes the words a slide from backspace picked in one step",

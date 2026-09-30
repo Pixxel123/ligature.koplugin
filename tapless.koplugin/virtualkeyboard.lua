@@ -64,11 +64,14 @@ local ContextModel = loadModule("context_model")
     :new(G_reader_settings, "keyboard_swype_mvp_context_counts")
 local UsageModel = loadModule("usage_model")
     :new(G_reader_settings, "tapless_word_usage")
+local TouchOffsetModule = loadModule("touch_offset")
+local TouchOffset = TouchOffsetModule:new(G_reader_settings,
+    TouchOffsetModule.SETTING_KEY)
 local TextCase = loadModule("text_case"):new(Normalization)
 local InputController = loadModule("input_controller")
     :new(ContextModel, Normalization, logger, TextCase,
         PersonalDictionary, DictionaryStore, UIManager, G_reader_settings,
-        BlockedWords, time, UsageModel)
+        BlockedWords, time, UsageModel, TouchOffset)
 local DictionaryController = loadModule("dictionary_controller")
     :new{
         plugin_dir = plugin_dir,
@@ -189,6 +192,7 @@ return loadModule("koreader_adapter"):new{
     dictionary_store = DictionaryStore,
     dictionary_controller = DictionaryController,
     input_controller = InputController,
+    touch_model = TouchOffset,
     keyboard_geometry = KeyboardGeometry,
     keyboard_ui = KeyboardUI,
     candidate_row = CandidateRow,

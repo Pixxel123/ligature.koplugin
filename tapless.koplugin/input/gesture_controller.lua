@@ -87,6 +87,46 @@ function GestureController:addKeyCenter(keyboard, key)
     end
 end
 
+-- The swipe of points read again with each point moved by shift (pixels,
+-- the learned touch offset): its letters and trace as recognition should
+-- see them, { signature, trace_info }, or nil when that leaves fewer than
+-- two letters. A start the shift takes off every key stays where the
+-- finger touched, so the first letter is not lost.
+function GestureController:_shiftedTrace(keyboard, points, shift, trace_info)
+    local trace = self.trace_collector:newTrace()
+    for index, point in ipairs(points) do
+        local pos = { x = math.floor(point.x + shift.x + 0.5),
+            y = math.floor(point.y + shift.y + 0.5) }
+        local letter, key
+        if index == 1 then
+            letter, key = keyboard:_swypeStartKeyAt(pos)
+            if not letter then
+                pos = { x = point.x, y = point.y }
+                letter, key = keyboard:_swypeStartKeyAt(pos)
+            end
+        else
+            letter, key = keyboard:_swypeKeyAt(pos)
+        end
+        self.trace_collector:addPoint(trace, pos, letter, key and key.dimen,
+            point.time)
+    end
+    local snapshot = self.trace_collector:snapshot(trace)
+    if #snapshot.signature < 2 then
+        return nil
+    end
+    return {
+        signature = snapshot.signature,
+        trace_info = {
+            letter_points = snapshot.letter_points,
+            endpoint_pos = snapshot.endpoint_pos,
+            points = snapshot.points,
+            observations = snapshot.observations,
+            previous_word = trace_info.previous_word,
+            released = trace_info.released,
+        },
+    }
+end
+
 function GestureController:finalizeTrace(keyboard, released)
     if not keyboard.swype_mvp_trace then
         return false
@@ -100,6 +140,18 @@ function GestureController:finalizeTrace(keyboard, released)
         previous_word = keyboard:_swypeGetPreviousWord(),
         released = released,
     }
+    -- The trace stays as the finger went: taps, slips and number-row
+    -- starts are told apart on it. Only recognition reads the swipe
+    -- shifted by the learned touch offset, from trace_info.recognition;
+    -- trace_info.touch_keys are the letter keys it was worked out for.
+    if #snapshot.signature >= 2 and keyboard._swypeTouchShift then
+        local shift, keys = keyboard:_swypeTouchShift()
+        trace_info.touch_keys = keys
+        if shift then
+            trace_info.recognition = self:_shiftedTrace(keyboard,
+                snapshot.points, shift, trace_info)
+        end
+    end
     self:reset(keyboard, true)
     local finalized = keyboard:_swypeFinalizeSignature(
         snapshot.signature, trace_info)

@@ -827,6 +827,48 @@ function KoreaderAdapter:install(VirtualKeyboard)
         return adapter.input_controller:wordUses(word)
     end
 
+    -- Learning where the finger lands (the touch offset), unless switched
+    -- off in the menu.
+    local function touchLearning()
+        return adapter.touch_model
+            and adapter.settings:nilOrTrue("tapless_touch_learning")
+    end
+
+    -- The keyboard, for the touch offset (see TouchOffset.mode), with its
+    -- letter keys.
+    function VirtualKeyboard:_swypeTouchMode(keys)
+        local screen = self:_swypeScreen()
+        return adapter.touch_model.mode(
+            adapter.one_handed:state(screen).enabled, keys, screen.w)
+    end
+
+    -- For a finished swipe: the shift, in pixels, that recognition should
+    -- read it with (nil when there is none), and the letter keys it was
+    -- worked out for, nil too when touch learning is off.
+    function VirtualKeyboard:_swypeTouchShift()
+        if not touchLearning() then
+            return nil
+        end
+        local keys = adapter.keyboard_geometry:letterKeys(self.layout,
+            self.swype_mvp_normalization_profile)
+        return adapter.touch_model:pixelShift(self:_swypeTouchMode(keys),
+            keys), keys
+    end
+
+    -- What a finished swipe teaches the touch offset once its word is
+    -- kept (see TouchOffset.sample), over the letter keys its shift was
+    -- worked out for.
+    function VirtualKeyboard:_swypeTouchSample(trace_info)
+        local keys = trace_info and trace_info.touch_keys
+        if not touchLearning() or not keys then
+            return nil
+        end
+        return adapter.touch_model.sample(self:_swypeTouchMode(keys),
+            trace_info.points, keys, function(point)
+                return self:_swypeKeyAt(point) ~= nil
+            end)
+    end
+
     function VirtualKeyboard:_swypeCommitPendingContext()
         adapter.input_controller:commitPendingContext(self)
     end
