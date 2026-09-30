@@ -126,6 +126,41 @@ it("turns a shift in key units into pixels at the keys' size", function()
     near(y, -6)
 end)
 
+it("tells the full-width keyboard from the one-handed one on either side",
+        function()
+    local left = { a = { x = 40 }, l = { x = 300 } }
+    local right = { a = { x = 700 }, l = { x = 960 } }
+    T.eq(TouchOffset.mode(false, left, 1000), "full-width")
+    T.eq(TouchOffset.mode(true, left, 1000), "one-handed left")
+    T.eq(TouchOffset.mode(true, right, 1000), "one-handed right")
+end)
+
+it("gives the shift in pixels, or nothing to shift", function()
+    local model = newModel()
+    local keys = { a = { x = 25, y = 30, w = 50, h = 60 } }
+    T.eq(model:pixelShift("full-width", keys), nil)
+    learnWords(model, "full-width", 10, -0.2, 0)
+    local shift = model:pixelShift("full-width", keys)
+    near(shift.x, 0.2 * model.STRENGTH * 50)
+    near(shift.y, 0)
+end)
+
+it("takes a swipe's first and last points to learn from, leaving out a "
+        .. "start off the letter keys", function()
+    local points = { { x = 1, y = 2 }, { x = 3, y = 4 }, { x = 5, y = 6 } }
+    local keys = {}
+    local sample = TouchOffset.sample("full-width", points, keys)
+    T.eq(sample.mode, "full-width")
+    T.eq(sample.start.x, 1)
+    T.eq(sample.lift.y, 6)
+    T.eq(sample.keys, keys)
+    local off = TouchOffset.sample("full-width", points, keys,
+        function() return false end)
+    T.eq(off.start, nil)
+    T.eq(off.lift.x, 5)
+    T.eq(TouchOffset.sample("full-width", { points[1] }, keys), nil)
+end)
+
 it("reads a damaged setting as nothing learned", function()
     local model = newModel({ touch = { ["one-handed"] = { x = "left",
         words = {} }, ["full-width"] = 3 } })
@@ -142,7 +177,9 @@ it("saves what it learns, and forgets it on reset", function()
     local again = TouchOffset:new(settings, "touch")
     local _, _, words = again:offset("one-handed")
     T.eq(words, 3)
+    T.truthy(again:learned())
     again:reset()
+    T.eq(model:learned(), false)
     _, _, words = model:offset("one-handed")
     T.eq(words, 0)
 end)

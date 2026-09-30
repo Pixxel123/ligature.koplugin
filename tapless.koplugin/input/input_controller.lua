@@ -547,7 +547,10 @@ function InputController:blockCandidate(keyboard, candidate)
     local last_insert = session:getLastInsert()
     if last_insert and last_insert.word == candidate.word then
         if remaining[1] then
-            -- The user did not choose the replacement, only refused the word.
+            -- The user did not choose the replacement, only refused the
+            -- word: it is counted once, and teaches the touch offset
+            -- nothing.
+            last_insert.touch_committed = true
             self:selectCandidate(keyboard, remaining[1], 1)
         else
             self:rejectLastInsert(keyboard)
@@ -623,20 +626,8 @@ function InputController:insertBestAndShowCandidates(
     return true
 end
 
--- Where the finger touched for the swipe point, the learned touch offset
--- taken back off. The offset is learned from swipes, and is not for taps,
--- nor for telling a number key from the letter below it.
-local function fingerPoint(trace_info, point)
-    local shift = trace_info and trace_info.touch_shift
-    if not point or not shift then
-        return point
-    end
-    return { x = point.x - shift.x, y = point.y - shift.y }
-end
-
 function InputController:tapTraceKey(keyboard, trace_info)
-    local point = fingerPoint(trace_info,
-        trace_info.letter_points and trace_info.letter_points[1])
+    local point = trace_info.letter_points and trace_info.letter_points[1]
     local _, key = keyboard:_swypeKeyAt(point)
     if not key or not key.onTapSelect then
         return false
@@ -689,8 +680,8 @@ function InputController:finalizeSignature(keyboard, signature, trace_info)
             -- letter below, yet may cross no other letter. That is a tap or
             -- a flick on the number key itself, and KOReader knows what
             -- it types, alternate characters included.
-            local first = fingerPoint(trace_info, trace_info.letter_points
-                and trace_info.letter_points[1])
+            local first = trace_info.letter_points
+                and trace_info.letter_points[1]
             if first and not keyboard:_swypeKeyAt(first) then
                 return false
             end
@@ -706,8 +697,14 @@ function InputController:finalizeSignature(keyboard, signature, trace_info)
             and self:tapTraceKey(keyboard, trace_info) then
         return true
     end
-    local candidates = keyboard:_swypePickCandidates(
-        signature, 4, trace_info)
+    -- Recognition reads the swipe shifted by the learned touch offset,
+    -- when there is one (see GestureController:finalizeTrace).
+    local recognition = trace_info and trace_info.recognition
+    if recognition then
+        signature = recognition.signature
+    end
+    local candidates = keyboard:_swypePickCandidates(signature, 4,
+        recognition and recognition.trace_info or trace_info)
     self:insertBestAndShowCandidates(
         keyboard, signature, candidates,
         trace_info and trace_info.previous_word, trace_info)

@@ -9,6 +9,12 @@ local replacement_path = plugin_dir .. "/virtualkeyboard.lua"
 local Screen = require("device").screen
 local modules = dofile(plugin_dir .. "/modules.lua")
 local OneHanded = dofile(plugin_dir .. "/" .. modules.one_handed)
+local TouchOffset = dofile(plugin_dir .. "/" .. modules.touch_offset)
+
+-- What the keyboard has learned about where the finger lands.
+local function touchOffset()
+    return TouchOffset:new(G_reader_settings, TouchOffset.SETTING_KEY)
+end
 
 local function screenInfo()
     return {
@@ -255,11 +261,10 @@ function Tapless:addToMainMenu(menu_items)
                     .. "next words you swipe.",
                 keep_menu_open = true,
                 enabled_func = function()
-                    return G_reader_settings:readSetting(
-                        "tapless_touch_offset") ~= nil
+                    return touchOffset():learned()
                 end,
                 callback = function()
-                    G_reader_settings:delSetting("tapless_touch_offset")
+                    touchOffset():reset()
                 end,
             },
             {

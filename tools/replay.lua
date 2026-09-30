@@ -64,7 +64,6 @@ local Replay = {}
 -- under.
 local CONTEXT_SETTING_KEY = "keyboard_swype_mvp_context_counts"
 local USAGE_SETTING_KEY = "tapless_word_usage"
-local TOUCH_SETTING_KEY = "tapless_touch_offset"
 
 local function deepCopy(value)
     if type(value) ~= "table" then
@@ -234,8 +233,9 @@ function Replay.loadPlugin(plugin_dir, options)
         and io.open(path("touch_offset"), "r")
     if touch_file then
         touch_file:close()
-        plugin.touch_model = load("touch_offset"):new(
-            newSettings(TOUCH_SETTING_KEY), TOUCH_SETTING_KEY)
+        local TouchOffset = load("touch_offset")
+        plugin.touch_model = TouchOffset:new(
+            newSettings(TouchOffset.SETTING_KEY), TouchOffset.SETTING_KEY)
     end
     -- options.frozen keeps the counts as seeded: the device pauses learning
     -- while a session is recorded.
@@ -405,6 +405,12 @@ function Replay.run(plugin, attempt)
             ms = function(n) return n * 1000 end },
         { new = function(_, fields) return fields end })
     local finalized
+    -- The keyboard the swipe was made on, for the touch offset, as the
+    -- device tells it.
+    local function touchMode(keys)
+        return plugin.touch_model.mode(attempt.keyboard == "one-handed", keys,
+            attempt.screen_width)
+    end
     local keyboard = {
         isSwypeMvpEnabled = function() return true end,
         _swypeKeyAt = function(_, pos)
@@ -425,14 +431,8 @@ function Replay.run(plugin, attempt)
         _swypeGetPreviousWord = function() return attempt.previous_word end,
         -- The learned touch offset, as the device's keyboard gives it.
         _swypeTouchShift = plugin.touch_model and function()
-            local model = plugin.touch_model
-            local dx, dy = model:shift(attempt.keyboard or "full-width")
-            if dx == 0 and dy == 0 then
-                return nil
-            end
-            local x, y = model:toPixels(dx, dy,
-                plugin.geometry:letterKeys(layout, profile))
-            return { x = x, y = y }
+            local keys = plugin.geometry:letterKeys(layout, profile)
+            return plugin.touch_model:pixelShift(touchMode(keys), keys), keys
         end or nil,
         _swypeFinalizeSignature = function(_, signature, trace_info)
             finalized = finalized
@@ -479,28 +479,25 @@ function Replay.run(plugin, attempt)
     end
     local trace_info = finalized.trace_info
     local geometry = plugin.geometry
-    -- Where the swipe went, the shift taken off, for Replay.learn to teach
-    -- the touch offset once it knows the word kept.
-    if plugin.touch_model and trace_info.points
-            and #trace_info.points >= 2 then
-        local points = trace_info.points
-        local shift = trace_info.touch_shift or { x = 0, y = 0 }
-        local start = { x = points[1].x - shift.x, y = points[1].y - shift.y }
-        -- As on the device: a start off the letter keys is left out.
-        if not geometry:keyAt(layout, start, profile) then
-            start = nil
-        end
+    -- What the swipe teaches the touch offset, for Replay.learn once it
+    -- knows the word kept, as the device's keyboard takes it.
+    local keys = trace_info.touch_keys
+    if plugin.touch_model and keys then
         plugin.last_touch = {
             attempt = attempt,
             profile = profile,
-            sample = {
-                mode = attempt.keyboard or "full-width",
-                start = start,
-                lift = { x = points[#points].x - shift.x,
-                    y = points[#points].y - shift.y },
-                keys = geometry:letterKeys(layout, profile),
-            },
+            sample = plugin.touch_model.sample(touchMode(keys),
+                trace_info.points, keys, function(point)
+                    return geometry:keyAt(layout, point, profile) ~= nil
+                end),
         }
+    end
+    -- Recognition reads the swipe shifted by the touch offset, as the
+    -- device's InputController:finalizeSignature has it.
+    local recognition = trace_info.recognition
+    if recognition then
+        signature = recognition.signature
+        trace_info = recognition.trace_info
     end
     local start = trace_info.points and trace_info.points[1]
     -- context_bonus, as on the device, adds the dictionary's word-pair
@@ -888,6 +885,7 @@ function Replay.readSessions(paths, json, options)
             end
             if record and record.type == "attempt" and record.target then
                 record.mode = mode
+                record.screen_width = screen_width
                 record.session = session
                 if record.id then
                     by_id[record.id] = record

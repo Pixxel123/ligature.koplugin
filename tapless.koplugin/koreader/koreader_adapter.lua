@@ -834,53 +834,39 @@ function KoreaderAdapter:install(VirtualKeyboard)
             and adapter.settings:nilOrTrue("tapless_touch_learning")
     end
 
-    -- The touch offset is learned apart for each keyboard mode.
-    function VirtualKeyboard:_swypeTouchMode()
-        return adapter.one_handed:state(self:_swypeScreen()).enabled
-            and "one-handed" or "full-width"
+    -- The keyboard, for the touch offset (see TouchOffset.mode), with its
+    -- letter keys.
+    function VirtualKeyboard:_swypeTouchMode(keys)
+        local screen = self:_swypeScreen()
+        return adapter.touch_model.mode(
+            adapter.one_handed:state(screen).enabled, keys, screen.w)
     end
 
-    -- What to add to a new swipe's points, in pixels, for the touch
-    -- offset learned on this keyboard; nil when there is none.
+    -- For a finished swipe: the shift, in pixels, that recognition should
+    -- read it with (nil when there is none), and the letter keys it was
+    -- worked out for, nil too when touch learning is off.
     function VirtualKeyboard:_swypeTouchShift()
         if not touchLearning() then
             return nil
         end
-        local model = adapter.touch_model
-        local dx, dy = model:shift(self:_swypeTouchMode())
-        if dx == 0 and dy == 0 then
-            return nil
-        end
-        local x, y = model:toPixels(dx, dy,
-            adapter.keyboard_geometry:letterKeys(self.layout,
-                self.swype_mvp_normalization_profile))
-        return { x = x, y = y }
+        local keys = adapter.keyboard_geometry:letterKeys(self.layout,
+            self.swype_mvp_normalization_profile)
+        return adapter.touch_model:pixelShift(self:_swypeTouchMode(keys),
+            keys), keys
     end
 
-    -- Where a finished swipe began and lifted off, as the finger went
-    -- (the shift taken back off), with the keys it was read against: what
-    -- the touch offset learns from once its word is kept. A swipe begun
-    -- off the letter keys, on the number row say, which counts as the
-    -- letter below, says nothing about where the finger lands on letters:
-    -- its start is left out.
+    -- What a finished swipe teaches the touch offset once its word is
+    -- kept (see TouchOffset.sample), over the letter keys its shift was
+    -- worked out for.
     function VirtualKeyboard:_swypeTouchSample(trace_info)
-        local points = trace_info and trace_info.points
-        if not touchLearning() or not points or #points < 2 then
+        local keys = trace_info and trace_info.touch_keys
+        if not touchLearning() or not keys then
             return nil
         end
-        local shift = trace_info.touch_shift or { x = 0, y = 0 }
-        local first, last = points[1], points[#points]
-        local start = { x = first.x - shift.x, y = first.y - shift.y }
-        if not self:_swypeKeyAt(start) then
-            start = nil
-        end
-        return {
-            mode = self:_swypeTouchMode(),
-            start = start,
-            lift = { x = last.x - shift.x, y = last.y - shift.y },
-            keys = adapter.keyboard_geometry:letterKeys(self.layout,
-                self.swype_mvp_normalization_profile),
-        }
+        return adapter.touch_model.sample(self:_swypeTouchMode(keys),
+            trace_info.points, keys, function(point)
+                return self:_swypeKeyAt(point) ~= nil
+            end)
     end
 
     function VirtualKeyboard:_swypeCommitPendingContext()

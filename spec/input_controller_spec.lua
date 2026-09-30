@@ -70,45 +70,37 @@ it("leaves a slide from a number key that crossed no other letter to KOReader",
     T.eq(state.recorded, nil, "no leftover swipe state")
 end)
 
--- A keyboard with a on the left half (x < 100) and s on the right, and
--- the number key 1 above a (y < 0).
-local function tapKeyboard(state)
+it("recognizes a swipe as read shifted by the touch offset, and keeps "
+        .. "where the finger went to learn from", function()
+    local state = {}
     local keyboard = newKeyboard(state)
-    local function keyFor(letter)
-        return { key = letter, dimen = { w = 100, h = 80 },
-            onTapSelect = function() state.tapped = letter end }
+    local picked, kept
+    keyboard.swype_mvp_session = {
+        recordInsert = function() return "wed" end,
+        getLastInsert = function() return {} end,
+    }
+    keyboard.inputbox = { addChars = function() end }
+    function keyboard:_swypePickCandidates(signature, _, trace_info)
+        picked = { signature = signature, trace_info = trace_info }
+        return { { word = "wed" } }
     end
-    keyboard._swypeKeyAt = function(_, pos)
-        if not pos then return end
-        if pos.y < 0 then return nil, keyFor("1") end
-        local letter = pos.x < 100 and "a" or "s"
-        return letter, keyFor(letter)
+    function keyboard:_swypeTouchSample(trace_info)
+        kept = trace_info
     end
-    return keyboard
-end
-
-it("types a tap on the key the finger touched, not shifted by the "
-        .. "touch offset", function()
-    local state = {}
-    newController():finalizeSignature(tapKeyboard(state), "s", {
-        letter_points = { { x = 120, y = 10 } },
-        touch_shift = { x = 40, y = 0 },
-        released = true,
-    })
-    T.eq(state.tapped, "a", "the finger was on a, at 80")
-end)
-
-it("leaves a slide from a number key to KOReader though the touch offset "
-        .. "moved it onto a letter", function()
-    local state = {}
-    local handled = newController():finalizeSignature(tapKeyboard(state),
-        "a", {
-            letter_points = { { x = 50, y = 10 } },
-            touch_shift = { x = 0, y = 20 },
-            released = true,
-        })
-    T.eq(handled, false)
-    T.eq(state.tapped, nil)
+    local controller = newController()
+    controller.touch_model = {}
+    controller.applyCandidateCase = function() end
+    controller._takePendingSpace = function() end
+    controller._gluedToPreviousWord = function() end
+    controller._markPendingSpace = function() end
+    controller.releaseOneShotShift = function() end
+    local shifted = { points = {} }
+    local trace_info = { points = {}, released = true,
+        recognition = { signature = "wed", trace_info = shifted } }
+    controller:finalizeSignature(keyboard, "qws", trace_info)
+    T.eq(picked.signature, "wed")
+    T.eq(picked.trace_info, shifted)
+    T.eq(kept, trace_info, "the finger's own trace")
 end)
 
 it("ignores a one-letter trace finalized by the idle timer", function()
@@ -637,6 +629,16 @@ it("learns where the finger landed from a picked word, twice over, and "
     T.eq(#taught, 1)
     T.eq(taught[1].letters, "hollow")
     T.eq(taught[1].weight, 2)
+end)
+
+it("learns nothing about touch from the word put in for a blocked one",
+        function()
+    local controller, keyboard, taught, _, swipeTraced = touchSetup()
+    controller.blocked_words = { add = function() return true end }
+    swipeTraced("hello", "hollow")
+    T.truthy(controller:blockCandidate(keyboard, { word = "hello" }))
+    controller:commitPendingContext(keyboard)
+    T.eq(#taught, 0, "the user never chose hollow")
 end)
 
 it("learns nothing about touch from a swiped word deleted again", function()
