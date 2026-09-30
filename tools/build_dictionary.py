@@ -32,6 +32,7 @@ import collections
 import math
 import os
 import sys
+import unicodedata
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -59,7 +60,8 @@ def read_profile(name):
 
 def signature(word, table):
     """The letters a swipe spells, as Normalization:normalizeText has them
-    for the lower-cased word; None if a letter is not in the profile."""
+    for the lower-cased word: a Latin letter the profile does not map ("ß",
+    "æ") is left out, as there; None for a word with any other script."""
     letters = []
     for char in word.lower():
         if char in ("'", "’"):
@@ -67,7 +69,7 @@ def signature(word, table):
         mapped = table.get(char, char)
         if "a" <= mapped <= "z" and len(mapped) == 1:
             letters.append(mapped)
-        else:
+        elif not unicodedata.name(char, "").startswith("LATIN"):
             return None
     return "".join(letters) or None
 
