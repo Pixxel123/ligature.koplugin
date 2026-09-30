@@ -52,8 +52,7 @@ local normalization = setmetatable({
 
 -- A controller and keyboard typing into a fake text box. Completions come
 -- from WORDS, in order; learning and timers are recorded.
-local function setup(options)
-    options = options or {}
+local function setup()
     local state = { timers = {}, pairs = {}, uses = {}, refreshes = 0,
         asked = {} }
     local ui_manager = {
@@ -109,9 +108,7 @@ local function setup(options)
     }
     local settings = {
         isTrue = function() return false end,
-        nilOrTrue = function(_, name)
-            return not (options.off and name == "tapless_tap_completions")
-        end,
+        nilOrTrue = function() return true end,
     }
     local controller = InputController:new(context_model, normalization,
         { dbg = noop, warn = noop }, text_case, personal, store, ui_manager,
@@ -323,13 +320,6 @@ it("leaves input method layouts alone", function()
     state.type("l", "l", "o", " ")
     state.pause()
     T.eq(state.uses.hello, nil, "not learned")
-end)
-
-it("offers no completions with the option off", function()
-    local _, _, state = setup({ off = true })
-    state.type("t", "h")
-    state.pause()
-    T.eq(state.row(), "")
 end)
 
 -- Word lists wa, wb and wc still to read, each taking two slices.

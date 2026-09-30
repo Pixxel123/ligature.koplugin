@@ -3,9 +3,6 @@ InputController.__index = InputController
 local Utf8Proc = require("ffi/utf8proc")
 
 InputController.DOUBLE_SPACE_SETTING = "tapless_double_space_period"
--- Suggest words that complete a word being tapped out. On unless turned
--- off.
-InputController.COMPLETION_SETTING = "tapless_tap_completions"
 -- The word lists completions need are read a slice at a time: this many
 -- entries or milliseconds per slice, a slice every WARM_STEP_DELAY
 -- seconds, so typing never waits for them.
@@ -235,7 +232,6 @@ end
 -- tapped are still being composed into other characters.
 function InputController:_completionsEnabled(keyboard)
     return not keyboard.uwrap_func
-        and self.settings:nilOrTrue(self.COMPLETION_SETTING)
 end
 
 -- The word the cursor ends, as typed, apostrophes included ("don't",

@@ -433,8 +433,7 @@ next word gets its space like after a swipe. The row isn't redrawn on
 every letter, only when you pause, to keep e-ink refreshes down. If you
 carry on typing past what the row was made for, a stale suggestion can't
 be picked by mistake. The offer to add an unknown word to your personal
-words still shows when nothing matches. It can be turned off under
-`Tools → Tapless → Suggest words`.
+words still shows when nothing matches.
 
 The most common 256 words for each first letter are always searched.
 From three letters in, if they don't fill the row, the rest of the
@@ -620,12 +619,7 @@ old language's lists.
 
 ## Options
 
-These are under `Tools → Tapless`. This one is on by default:
-
-- **Suggest words**: pause while tapping out a word and the
-  suggestion row offers words that finish it.
-
-These are off by default:
+These are under `Tools → Tapless`. These are off by default:
 
 - **Slide on space to move cursor**: slide left or right along the space
   bar to move the text cursor. Holding space still switches language.

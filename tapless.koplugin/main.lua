@@ -226,20 +226,6 @@ function Tapless:addToMainMenu(menu_items)
                 end,
             },
             {
-                text = "Suggest words",
-                help_text = "When you pause while tapping out a word, the "
-                    .. "suggestion row offers words that finish it. Tap one "
-                    .. "to use it.",
-                checked_func = function()
-                    return G_reader_settings:nilOrTrue(
-                        "tapless_tap_completions")
-                end,
-                callback = function()
-                    G_reader_settings:flipNilOrTrue(
-                        "tapless_tap_completions")
-                end,
-            },
-            {
                 text = "Swipe learning",
                 sub_item_table = {
                     {
