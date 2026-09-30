@@ -16,3 +16,16 @@ are the work of its contributors and are licensed under the Creative
 Commons Attribution 2.0 France licence (CC BY 2.0 FR,
 https://creativecommons.org/licenses/by/2.0/fr/). The table holds counts
 derived from them, not the sentences themselves.
+
+Capitals and added words (words.buckets.tsv, words.popular.tsv)
+
+Counted from the eng_news_2024_1M, eng-com_web-public_2018_1M, eng_wikipedia_2016_1M corpora of the Leipzig Corpora
+Collection (https://wortschatz.uni-leipzig.de), licensed under
+the Creative Commons Attribution 4.0 International licence
+(CC BY 4.0, https://creativecommons.org/licenses/by/4.0/), by
+tools/build_dictionary.py: its words, their frequencies and
+spellings, not its sentences.
+
+Words that neither Wiktionary (https://www.wiktionary.org, via
+https://kaikki.org) nor the corpora above know were left out;
+no Wiktionary text is included.

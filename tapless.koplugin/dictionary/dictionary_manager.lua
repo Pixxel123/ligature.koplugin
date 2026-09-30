@@ -23,8 +23,8 @@ local source = debug.getinfo(1, "S").source
 local module_dir = source:match("^@(.+)/dictionary_manager%.lua$") or "."
 local DictionaryRegistry = dofile(module_dir .. "/dictionary_registry.lua")
 
-local CATALOG_URL = "https://azac.github.io/tapless.dictionaries/catalog.json"
-local RELEASE_BASE_URL = "https://github.com/azac/tapless.dictionaries/releases/download/v"
+local CATALOG_URL = "https://pixxel123.github.io/tapless.dictionaries/catalog.json"
+local RELEASE_BASE_URL = "https://github.com/Pixxel123/tapless.dictionaries/releases/download/v"
 local MAX_PACKAGE_BYTES = 16 * 1024 * 1024
 local MAX_UNCOMPRESSED_BYTES = 20 * 1024 * 1024
 local MAX_CATALOG_BYTES = 256 * 1024
@@ -817,6 +817,16 @@ function Manager:showMenu()
                     end,
                 },
             })
+            -- The catalog has another version of an installed dictionary.
+            if package and package.version ~= info.version then
+                table.insert(buttons, {
+                    {
+                        text = "Update " .. name .. " to "
+                            .. package.version,
+                        callback = function() self:_download(package) end,
+                    },
+                })
+            end
         elseif package then
             table.insert(buttons, {
                 {
