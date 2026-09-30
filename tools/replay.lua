@@ -148,7 +148,9 @@ function Replay.loadPlugin(plugin_dir, options)
             end
             return {
                 id = id,
-                data_language = info.data_language or id,
+                -- As DictionaryRegistry has it: "pt-br" words are "pt".
+                data_language = info.data_language or info.source_language
+                    or id,
                 normalization_profile = info.normalization_profile,
                 files = files,
             }
