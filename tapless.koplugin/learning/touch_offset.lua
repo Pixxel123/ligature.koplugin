@@ -12,11 +12,15 @@
 local TouchOffset = {
     -- Words learned before any shift: a few words say little.
     MIN_WORDS = 8,
-    -- The shift is this share of the learned offset. Replaying the
-    -- recorded one-handed sessions with the offset learned from the
-    -- others, 0.75 fixed 58 swipes and broke 26; the full offset broke
-    -- more (68 fixed, 36 broken), half fixed fewer (46, 18).
-    STRENGTH = 0.75,
+    -- The shift is this share of the learned offset. More than all of it:
+    -- the kept words it learns from are the ones recognition chose, whose
+    -- keys lie nearer where the finger landed than the words meant, so
+    -- the offset learned is smaller than the true one (0.07 of a key
+    -- against 0.12 on the recorded one-handed sessions). Replaying every
+    -- recorded session in order, learning as the device does, 1.25 fixed
+    -- 53 one-handed swipes and broke 15, and 32 and 15 full-width; 0.75
+    -- fixed fewer (35, 14; 21, 7), 1.75 broke more (57, 27; 40, 24).
+    STRENGTH = 1.25,
     -- The largest shift, in key sizes, whatever was learned.
     CAP = 0.4,
     -- A landing error beyond this, in key sizes, is taken as a swipe

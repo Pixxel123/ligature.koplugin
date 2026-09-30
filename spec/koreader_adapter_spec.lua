@@ -453,7 +453,8 @@ it("shifts a swipe back by most of the learned touch offset, in pixels",
         function()
     local keyboard = touchSetup()
     local shift = keyboard:_swypeTouchShift()
-    T.truthy(math.abs(shift.x - 0.2 * 0.75 * 50) < 1e-9, "x " .. shift.x)
+    local strength = T.load("touch_offset").STRENGTH
+    T.truthy(math.abs(shift.x - 0.2 * strength * 50) < 1e-9, "x " .. shift.x)
     T.eq(shift.y, 0)
 end)
 
