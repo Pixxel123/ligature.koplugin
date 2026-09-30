@@ -827,6 +827,55 @@ function KoreaderAdapter:install(VirtualKeyboard)
         return adapter.input_controller:wordUses(word)
     end
 
+    -- Learning where the finger lands (the touch offset), unless switched
+    -- off in the menu.
+    local function touchLearning()
+        return adapter.touch_model
+            and adapter.settings:nilOrTrue("tapless_touch_learning")
+    end
+
+    -- The touch offset is learned apart for each keyboard mode.
+    function VirtualKeyboard:_swypeTouchMode()
+        return adapter.one_handed:state(self:_swypeScreen()).enabled
+            and "one-handed" or "full-width"
+    end
+
+    -- What to add to a new swipe's points, in pixels, for the touch
+    -- offset learned on this keyboard; nil when there is none.
+    function VirtualKeyboard:_swypeTouchShift()
+        if not touchLearning() then
+            return nil
+        end
+        local model = adapter.touch_model
+        local dx, dy = model:shift(self:_swypeTouchMode())
+        if dx == 0 and dy == 0 then
+            return nil
+        end
+        local x, y = model:toPixels(dx, dy,
+            adapter.keyboard_geometry:letterKeys(self.layout,
+                self.swype_mvp_normalization_profile))
+        return { x = x, y = y }
+    end
+
+    -- Where a finished swipe began and lifted off, as the finger went
+    -- (the shift taken back off), with the keys it was read against: what
+    -- the touch offset learns from once its word is kept.
+    function VirtualKeyboard:_swypeTouchSample(trace_info)
+        local points = trace_info and trace_info.points
+        if not touchLearning() or not points or #points < 2 then
+            return nil
+        end
+        local shift = trace_info.touch_shift or { x = 0, y = 0 }
+        local first, last = points[1], points[#points]
+        return {
+            mode = self:_swypeTouchMode(),
+            start = { x = first.x - shift.x, y = first.y - shift.y },
+            lift = { x = last.x - shift.x, y = last.y - shift.y },
+            keys = adapter.keyboard_geometry:letterKeys(self.layout,
+                self.swype_mvp_normalization_profile),
+        }
+    end
+
     function VirtualKeyboard:_swypeCommitPendingContext()
         adapter.input_controller:commitPendingContext(self)
     end

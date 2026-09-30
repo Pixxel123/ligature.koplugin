@@ -231,6 +231,38 @@ function Tapless:addToMainMenu(menu_items)
                 end,
             },
             {
+                text = "Learn how I swipe",
+                help_text = "Learns, from the words you keep, where your "
+                    .. "finger lands against the keys you mean, and allows "
+                    .. "for it when reading swipes. A thumb tends to land "
+                    .. "short of keys further away, most of all on the "
+                    .. "one-handed keyboard. Learned apart for the "
+                    .. "one-handed and full-width keyboard; it starts "
+                    .. "after a few words and settles within a few dozen.",
+                checked_func = function()
+                    return G_reader_settings:nilOrTrue(
+                        "tapless_touch_learning")
+                end,
+                callback = function()
+                    G_reader_settings:flipNilOrTrue(
+                        "tapless_touch_learning")
+                end,
+            },
+            {
+                text = "Forget how I swipe",
+                help_text = "Clears what Tapless has learned about where "
+                    .. "your finger lands, so it learns again from the "
+                    .. "next words you swipe.",
+                keep_menu_open = true,
+                enabled_func = function()
+                    return G_reader_settings:readSetting(
+                        "tapless_touch_offset") ~= nil
+                end,
+                callback = function()
+                    G_reader_settings:delSetting("tapless_touch_offset")
+                end,
+            },
+            {
                 text = "One-handed keyboard",
                 help_text = "Narrows the keys to one side of the screen, "
                     .. "with the page beside them. A ◨ handle at the "

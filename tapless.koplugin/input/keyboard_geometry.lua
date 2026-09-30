@@ -140,26 +140,40 @@ function KeyboardGeometry:startLetters(layout, pos, exact_first, profile)
         self.START_REACH)
 end
 
-function KeyboardGeometry:keyCenters(layout, profile)
-    local centers = {}
+-- Each letter's key, as the letter it types (normalized) to its centre
+-- and size: { x, y, w, h }. The first key typing a letter counts.
+function KeyboardGeometry:letterKeys(layout, profile)
+    local keys = {}
     if not layout then
-        return centers
+        return keys
     end
     for _, row in ipairs(layout) do
         for _, key in ipairs(row) do
             if key.dimen and not key.is_swype_candidate then
                 local normalized = self.normalization:normalizeText(
                     key.key or key.label, profile)
-                local byte = #normalized == 1 and string.byte(normalized)
-                if byte and not centers[byte] then
-                    centers[byte] = {
+                if #normalized == 1 and not keys[normalized] then
+                    keys[normalized] = {
                         x = key.dimen.x + key.dimen.w / 2,
                         y = key.dimen.y + key.dimen.h / 2,
-                        size = math.max(key.dimen.w, key.dimen.h),
+                        w = key.dimen.w,
+                        h = key.dimen.h,
                     }
                 end
             end
         end
+    end
+    return keys
+end
+
+function KeyboardGeometry:keyCenters(layout, profile)
+    local centers = {}
+    for letter, key in pairs(self:letterKeys(layout, profile)) do
+        centers[string.byte(letter)] = {
+            x = key.x,
+            y = key.y,
+            size = math.max(key.w, key.h),
+        }
     end
     return centers
 end

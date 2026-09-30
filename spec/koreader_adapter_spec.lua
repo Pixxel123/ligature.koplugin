@@ -415,3 +415,65 @@ it("measures a suggestion in the keys' font", function()
     T.eq(calls.freed, 1)
     T.eq(keyboard:_swypeLabelPad(), 18, "1.5 mm at 300 dpi")
 end)
+
+-- An adapter whose touch offset model has learned a landing error of a
+-- fifth of a key left on the one-handed keyboard, with keys 50 wide and
+-- 60 tall: a, s and d in a row.
+local function touchSetup(settings)
+    settings = settings or {}
+    local values = { touch = { ["one-handed"] = { x = -0.2, y = 0,
+        words = 20 } } }
+    local model = T.load("touch_offset"):new({
+        readSetting = function(_, key) return values[key] end,
+        saveSetting = function(_, key, value) values[key] = value end,
+    }, "touch")
+    local VirtualKeyboard = newKeyboardClass({})
+    T.load("koreader_adapter"):new{
+        settings = {
+            nilOrTrue = function(_, name) return settings[name] ~= false end,
+        },
+        touch_model = model,
+        keyboard_geometry = T.load("keyboard_geometry"):new(T.normalization),
+        one_handed = { state = function() return { enabled = true } end },
+        screen = {
+            getWidth = function() return 600 end,
+            getHeight = function() return 800 end,
+            getDPI = function() return 300 end,
+        },
+    }:install(VirtualKeyboard)
+    local row = {}
+    for index, letter in ipairs({ "a", "s", "d" }) do
+        row[index] = { key = letter, dimen = { x = (index - 1) * 50,
+            y = 500, w = 50, h = 60 } }
+    end
+    return setmetatable({ layout = { row } }, VirtualKeyboard)
+end
+
+it("shifts a swipe back by most of the learned touch offset, in pixels",
+        function()
+    local keyboard = touchSetup()
+    local shift = keyboard:_swypeTouchShift()
+    T.truthy(math.abs(shift.x - 0.2 * 0.75 * 50) < 1e-9, "x " .. shift.x)
+    T.eq(shift.y, 0)
+end)
+
+it("neither shifts nor learns with touch learning switched off", function()
+    local keyboard = touchSetup{ tapless_touch_learning = false }
+    T.eq(keyboard:_swypeTouchShift(), nil)
+    T.eq(keyboard:_swypeTouchSample({ points = { { x = 1, y = 1 },
+        { x = 2, y = 2 } } }), nil)
+end)
+
+it("keeps where a swipe went, the shift taken off, to learn from",
+        function()
+    local keyboard = touchSetup()
+    local sample = keyboard:_swypeTouchSample({
+        points = { { x = 30, y = 530 }, { x = 110, y = 540 } },
+        touch_shift = { x = 7.5, y = 0 },
+    })
+    T.eq(sample.mode, "one-handed")
+    T.eq(sample.start.x, 22.5)
+    T.eq(sample.lift.x, 102.5)
+    T.eq(sample.lift.y, 540)
+    T.eq(sample.keys.s.x, 75)
+end)
