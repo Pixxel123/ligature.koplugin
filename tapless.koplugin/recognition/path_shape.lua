@@ -135,25 +135,19 @@ local function layoutKey(key_centers)
     return table.concat(parts, ";")
 end
 
--- Keeps the ideal paths while the keys stay where they were; a new table
--- with the same positions (each swipe gets one) counts as the same layout.
-function PathShape:_useLayout(key_centers)
-    if rawequal(key_centers, self.centers) then
-        return
-    end
-    self.centers = key_centers
-    local layout = layoutKey(key_centers)
-    if layout ~= self.layout then
-        self.layout = layout
-        self.words, self.older, self.size = {}, {}, 0
-    end
-end
-
 -- The layout key_centers belong to, switched to: a string that changes
--- only when the keys move, so other paths worked out for the layout can
--- be kept as long as it stays the same.
+-- only when the keys move, so paths worked out for the layout can be kept
+-- as long as it stays the same. A new table with the same positions (each
+-- swipe gets one) counts as the same layout.
 function PathShape:useLayout(key_centers)
-    self:_useLayout(key_centers)
+    if not rawequal(key_centers, self.centers) then
+        self.centers = key_centers
+        local layout = layoutKey(key_centers)
+        if layout ~= self.layout then
+            self.layout = layout
+            self.words, self.older, self.size = {}, {}, 0
+        end
+    end
     return self.layout
 end
 
@@ -188,9 +182,9 @@ function PathShape.measure(signature, key_centers)
     return length, size_total / count
 end
 
--- Most words considered are rejected by the length-ratio cut before their
--- shape is ever compared, so only the length and key size are worked out
--- here; the points are never turned into a table at all.
+-- A word's ideal path, kept by signature for the layout in use: the
+-- length and key size are worked out here; the samples a score needs
+-- are resampled lazily, in ensureSamples, the first time one is scored.
 local function build(signature, key_centers)
     local length, scale = PathShape.measure(signature, key_centers)
     if not length then
@@ -205,9 +199,9 @@ end
 
 -- The word's ideal path, { length, scale, ... }, or nil when one of its
 -- letters has no key. signature: its letters, doubled ones collapsed.
--- Resampling waits for the first score, so a length check is cheap.
+-- Kept per layout, for the reranker, which scores every ideal it builds.
 function PathShape:ideal(signature, key_centers)
-    self:_useLayout(key_centers)
+    self:useLayout(key_centers)
     local kept = self.words[signature]
     if kept == nil then
         kept = self.older[signature]
@@ -224,10 +218,8 @@ function PathShape:ideal(signature, key_centers)
 end
 
 -- Fills in ideal.samples, resampled from its signature's key centres
--- under the layout now in use (self.centers), if not already there. A
--- candidate's samples are worth building only once it has passed the
--- length-ratio cut, and are then kept for any later swipe that reaches
--- the same word.
+-- under the layout now in use (self.centers), if not already there, and
+-- keeps them for any later swipe that reaches the same word.
 function PathShape:ensureSamples(ideal)
     if not ideal.samples then
         ideal.samples = resampleSignature(ideal.signature, self.centers,
