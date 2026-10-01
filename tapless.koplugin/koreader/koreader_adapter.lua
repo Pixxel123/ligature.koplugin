@@ -59,7 +59,6 @@ function KoreaderAdapter:install(VirtualKeyboard)
         adapter.key_adapter:ensureInstalled()
         self:free()
         self.layout = {}
-        self.swype_mvp_handle = nil
         local row_count = #self.KEYS + 1
         local screen = self:_swypeScreen()
         -- One-handed, the keys block has its own place and size; while
@@ -103,7 +102,7 @@ function KoreaderAdapter:install(VirtualKeyboard)
         }
         local handle = area and self:_swypeHandle(base_key_width,
             base_key_height, block, screen)
-        self.swype_mvp_handle = handle or nil
+        self.swype_mvp_handle = handle
         local row_options = {
             width = keys_width,
             height = base_key_height,
@@ -329,7 +328,6 @@ function KoreaderAdapter:install(VirtualKeyboard)
         -- The callback swap from _swypeWireGlobeKey: while the popup is
         -- built, the centre key reads handle.callback as its own, so it
         -- leaves; afterwards it is tap again.
-        local tap
         local function open()
             -- Without KOReader's popup class, only the swipes work.
             if not adapter.virtual_key_popup then
@@ -349,13 +347,12 @@ function KoreaderAdapter:install(VirtualKeyboard)
                 return closed(widget)
             end
             keyboard:_swypePlainPopup(popup, handle)
-            handle.callback = tap
+            handle.callback = open
             -- KOReader sets this when it nudges the popup off an edge, to
             -- skip the first lift; ours never opens under the finger.
             handle.ignore_key_release = nil
         end
-        tap = open
-        handle.callback = tap
+        handle.callback = open
         handle.hold_callback = open
         handle.hold_cb_is_popup = true
         -- A slanting swipe up counts as its side. Any other direction
@@ -790,10 +787,8 @@ function KoreaderAdapter:install(VirtualKeyboard)
         local priority_lasts
         if trace and trace.points and #trace.points > 0
                 and trace.letters and #trace.letters > 0 then
-            priority_lasts = adapter.keyboard_geometry:endpointLetters(
-                self.layout, trace.points[#trace.points],
-                trace.letters[#trace.letters],
-                self.swype_mvp_normalization_profile)
+            priority_lasts = self:_swypeEndpointLetters(
+                trace.points[#trace.points], trace.letters[#trace.letters])
         end
         self.swype_mvp_prefetch_controller:schedule(
             trace, self.swype_mvp_dictionary or "en", priority_lasts)
