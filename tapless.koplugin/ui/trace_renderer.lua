@@ -10,13 +10,18 @@ local TraceRenderer = {
     WIDTH_MM = 0.75,
     -- The share of pixels drawn: 1 is solid, 0.75 dark grey, 0.5 grey.
     DITHER = 0.5,
-    -- The refresh that clears the trail when the finger lifts. A2 leaves
-    -- faint traces that "ui" doesn't wipe, so they build up over a long
-    -- spell of typing; partial is REAGL on Kindles, made to clear them
-    -- without flashing. "[partial]" is the same refresh but isn't counted
-    -- towards the flash KOReader makes every so many "partial"s, which
-    -- flashed the keyboard every few words.
-    CLEAR_REFRESH = "[partial]",
+    -- The refresh that clears the trail when the finger lifts: quick, so
+    -- the next swipe isn't held up.
+    CLEAR_REFRESH = "ui",
+    -- A2 leaves faint traces that "ui" doesn't wipe, so they build up over
+    -- a long spell of typing. Once swiping pauses for CLEANUP_DELAY
+    -- seconds, everywhere the trails went since the last clean-up gets one
+    -- partial refresh, REAGL on Kindles, made to clear them without
+    -- flashing. Doing that at every lift held up the screen and lost the
+    -- next swipe. "[partial]" isn't counted towards the flash KOReader
+    -- makes every so many "partial"s.
+    CLEANUP_REFRESH = "[partial]",
+    CLEANUP_DELAY = 1.5,
 }
 TraceRenderer.__index = TraceRenderer
 
@@ -134,6 +139,8 @@ function TraceRenderer:drawSegment(trace, previous, current)
     if not trace or not current then
         return
     end
+    -- Swiping again: a clean-up due now waits for the next pause.
+    self.cleanup_generation = (self.cleanup_generation or 0) + 1
     trace.drawn_pixels = trace.drawn_pixels or {}
     local before = trace.render_before
     trace.render_before = previous
@@ -177,7 +184,35 @@ function TraceRenderer:clear(trace, refresh_type)
     trace.render_before = nil
     if region then
         self.ui_manager:setDirty(nil, refresh_type or self.CLEAR_REFRESH, region)
+        self:_scheduleCleanup(region)
     end
+end
+
+-- Adds region to the area the next clean-up refreshes, and schedules the
+-- clean-up for when swiping has paused.
+function TraceRenderer:_scheduleCleanup(region)
+    local area = self.cleanup_area
+    if area then
+        local x0 = math.min(area.x, region.x)
+        local y0 = math.min(area.y, region.y)
+        local x1 = math.max(area.x + area.w, region.x + region.w)
+        local y1 = math.max(area.y + area.h, region.y + region.h)
+        area.x, area.y, area.w, area.h = x0, y0, x1 - x0, y1 - y0
+    else
+        self.cleanup_area = self.geometry:new{
+            x = region.x, y = region.y, w = region.w, h = region.h,
+        }
+    end
+    self.cleanup_generation = (self.cleanup_generation or 0) + 1
+    local generation = self.cleanup_generation
+    self.ui_manager:scheduleIn(self.CLEANUP_DELAY, function()
+        if self.cleanup_generation ~= generation or not self.cleanup_area then
+            return
+        end
+        local cleanup = self.cleanup_area
+        self.cleanup_area = nil
+        self.ui_manager:setDirty(nil, self.CLEANUP_REFRESH, cleanup)
+    end)
 end
 
 return TraceRenderer

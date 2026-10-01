@@ -19,9 +19,13 @@ local function setup(dpi, dither)
             end,
         },
     }
+    calls.scheduled = {}
     local renderer = T.load("trace_renderer"):new(screen, {
         setDirty = function(_, _, mode, region)
             calls.dirty[#calls.dirty + 1] = { mode = mode, region = region }
+        end,
+        scheduleIn = function(_, delay, fn)
+            calls.scheduled[#calls.scheduled + 1] = { delay = delay, run = fn }
         end,
     }, { new = function(_, o) return o end })
     renderer.DITHER = dither or 1
@@ -86,8 +90,45 @@ it("clears exactly what it drew, crossings included", function()
     renderer:clear(trace)
     T.eq(black(calls), 0, "all white again")
     T.eq(trace.render_before, nil)
-    T.eq(calls.dirty[#calls.dirty].mode, "[partial]",
-        "REAGL on Kindles, to clear A2 traces, not counted towards a flash")
+    T.eq(calls.dirty[#calls.dirty].mode, "ui", "quick, so the next swipe isn't held up")
+end)
+
+-- A swipe from x0 to x1 at height y, lifted.
+local function stroke(renderer, x0, x1, y)
+    local trace = {}
+    renderer:drawSegment(trace, nil, { x = x0, y = y })
+    renderer:drawSegment(trace, { x = x0, y = y }, { x = x1, y = y })
+    renderer:clear(trace)
+end
+
+it("cleans up A2's traces with one REAGL refresh once swiping pauses, "
+        .. "covering every trail since the last clean-up", function()
+    local renderer, calls = setup(300)
+    stroke(renderer, 100, 300, 200)
+    stroke(renderer, 400, 600, 500)
+    local dirty = #calls.dirty
+    T.eq(#calls.scheduled, 2)
+    T.eq(calls.scheduled[2].delay, renderer.CLEANUP_DELAY)
+    calls.scheduled[1].run()
+    T.eq(#calls.dirty, dirty, "the first was overtaken by the second swipe")
+    calls.scheduled[2].run()
+    local cleanup = calls.dirty[#calls.dirty]
+    T.eq(cleanup.mode, "[partial]", "REAGL, not counted towards a flash")
+    T.truthy(cleanup.region.x <= 96 and cleanup.region.x + cleanup.region.w >= 604
+        and cleanup.region.y <= 196 and cleanup.region.y + cleanup.region.h >= 504,
+        "both trails")
+    calls.scheduled[2].run()
+    T.eq(#calls.dirty, dirty + 1, "once")
+end)
+
+it("doesn't clean up in the middle of a swipe", function()
+    local renderer, calls = setup(300)
+    stroke(renderer, 100, 300, 200)
+    local dirty = #calls.dirty
+    renderer:drawSegment({}, nil, { x = 500, y = 500 })
+    calls.scheduled[1].run()
+    T.eq(#calls.dirty, dirty + 1, "only the new swipe's piece, no clean-up")
+    T.eq(calls.dirty[#calls.dirty].mode, "a2")
 end)
 
 it("draws a grey trail by dithering: half the pixels, by default", function()
