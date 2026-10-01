@@ -28,6 +28,7 @@ local specs = {
     "usage_model_spec",
     "touch_offset_spec",
     "gesture_reference_spec",
+    "trace_renderer_spec",
     "word_pairs_spec",
     "tap_completions_spec",
     "path_shape_spec",
