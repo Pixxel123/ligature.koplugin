@@ -487,11 +487,21 @@ function KoreaderAdapter:install(VirtualKeyboard)
         self:_swypeRebuild()
     end
 
+    -- The keys frame may have moved or changed width or height, so the
+    -- whole bottom band repaints, not just its own (possibly stale) dimen.
+    local function setBottomDirty(keyboard, old_height, refresh_type)
+        local tallest = math.max(old_height, keyboard.height)
+        adapter.ui_manager:setDirty("all", refresh_type, adapter.geometry:new{
+            x = 0,
+            y = adapter.screen:getHeight() - tallest,
+            w = keyboard.width,
+            h = tallest,
+        })
+    end
+
     -- Rebuilds the keys from the saved state. A new height goes through the
     -- dialog, which builds a new keyboard from the saved settings, so this
-    -- one is not touched after that. Otherwise, the keys frame may have
-    -- moved or changed width, so the whole bottom band repaints, not just
-    -- its own (possibly stale) dimen.
+    -- one is not touched after that.
     function VirtualKeyboard:_swypeRebuild()
         local old_height = self.height
         self:_swypeReset()
@@ -502,13 +512,7 @@ function KoreaderAdapter:install(VirtualKeyboard)
             parent:onKeyboardHeightChanged()
             return
         end
-        local tallest = math.max(old_height, self.height)
-        adapter.ui_manager:setDirty("all", "flashui", adapter.geometry:new{
-            x = 0,
-            y = adapter.screen:getHeight() - tallest,
-            w = self.width,
-            h = tallest,
-        })
+        setBottomDirty(self, old_height, "flashui")
     end
 
     -- Resize mode starts from the saved block at its actual height, which
@@ -572,21 +576,14 @@ function KoreaderAdapter:install(VirtualKeyboard)
         end
     end
 
-    -- Rebuilds the faded keys at the draft. A shorter keyboard uncovers
-    -- part of the dialog, so everything over the taller height repaints.
+    -- Rebuilds the faded keys at the draft.
     function VirtualKeyboard:_swypeRedrawResize()
         if not self.swype_mvp_resize then
             return
         end
         local old_height = self.height
         self:addKeys()
-        local tallest = math.max(old_height, self.height)
-        adapter.ui_manager:setDirty("all", "ui", adapter.geometry:new{
-            x = 0,
-            y = adapter.screen:getHeight() - tallest,
-            w = self.width,
-            h = tallest,
-        })
+        setBottomDirty(self, old_height, "ui")
     end
 
     function VirtualKeyboard:_swypeResizePan(ges)
