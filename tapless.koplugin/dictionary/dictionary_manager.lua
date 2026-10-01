@@ -168,14 +168,9 @@ local function validatePackageRecord(package)
         id = package.id,
         name = package.name,
         version = package.version,
-        source_language = package.source_language,
-        data_language = package.data_language,
-        keyboard_layout = package.keyboard_layout,
-        rows = tonumber(package.rows),
         archive = package.archive,
         size = math.floor(package.size),
         sha256 = package.sha256:lower(),
-        notes = type(package.notes) == "string" and package.notes or "",
         download_url = type(package.download_url) == "string" and package.download_url or nil,
     }
 end
@@ -194,11 +189,7 @@ local function validateCatalog(data)
     if not next(packages) then
         return nil, "Catalog contains no valid packages"
     end
-    return {
-        format = 1,
-        dictionary_version = data.dictionary_version,
-        packages = packages,
-    }
+    return { packages = packages }
 end
 
 local function localRoot()

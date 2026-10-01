@@ -38,11 +38,6 @@ local function isSafeLanguage(value)
         and value:match("^[a-z][a-z0-9-]*$") ~= nil
 end
 
-local function isSafeKeyboardLayout(value)
-    return type(value) == "string"
-        and value:match("^[A-Za-z0-9_]+$") ~= nil
-end
-
 local function readFile(path, max_bytes)
     local file = io.open(path, "rb")
     if not file then
@@ -105,8 +100,6 @@ function Registry:_readDescriptor(path, id, bundled)
         and manifest.source_language or language
     local data_language = isSafeLanguage(manifest.data_language)
         and manifest.data_language or source_language
-    local keyboard_layout = isSafeKeyboardLayout(manifest.keyboard_layout)
-        and manifest.keyboard_layout or nil
     local normalization_profile = isSafeLanguage(manifest.normalization_profile)
         and manifest.normalization_profile or DEFAULT_NORMALIZATION_PROFILE
 
@@ -125,17 +118,11 @@ function Registry:_readDescriptor(path, id, bundled)
         name = manifest.name or id,
         short_label = manifest.short_label,
         version = manifest.version or "?",
-        format = tonumber(manifest.format or manifest.package_format) or 1,
-        rows = tonumber(manifest.rows),
-        language = language,
-        source_language = source_language,
         data_language = data_language,
-        keyboard_layout = keyboard_layout,
         normalization_profile = normalization_profile,
         path = path,
         bundled = bundled == true,
         files = files,
-        manifest = manifest,
     }
 end
 
