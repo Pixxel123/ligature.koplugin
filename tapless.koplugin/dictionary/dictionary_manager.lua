@@ -337,10 +337,6 @@ function Manager:_notify(text)
 end
 
 function Manager:_select(id)
-    if not self.language_controller then
-        return
-    end
-
     self:_closeMenu()
     if not self.language_controller:selectDictionary(id, self.keyboard) then
         self:_notify("Cannot select dictionary " .. id .. ".")
@@ -349,10 +345,6 @@ function Manager:_select(id)
 end
 
 function Manager:_setEnabled(id, enabled)
-    if not self.language_controller then
-        return
-    end
-
     local ok, err = self.language_controller:setEnabled(
         id, enabled, self.keyboard)
     if not ok then
@@ -390,28 +382,17 @@ function Manager:_uninstall(id, name)
         text = "Uninstall dictionary " .. (name or id) .. "?" .. warning,
         ok_text = "Uninstall",
         ok_callback = function()
-            if self.language_controller then
-                if not self.language_controller:prepareRemoval(
-                        id, replacement, self.keyboard) then
-                    self:_notify(
-                        "Cannot switch dictionaries before uninstalling.")
-                    return
-                end
-            elseif self.keyboard
-                    and self.keyboard.swype_mvp_dictionary == id then
-                if not self.keyboard:_swypeSetDictionary(replacement) then
-                    self:_notify(
-                        "Cannot switch dictionaries before uninstalling.")
-                    return
-                end
+            if not self.language_controller:prepareRemoval(
+                    id, replacement, self.keyboard) then
+                self:_notify(
+                    "Cannot switch dictionaries before uninstalling.")
+                return
             end
 
             local removed = removeTree(path)
             DictionaryRegistry:invalidate()
             if removed then
-                if self.language_controller then
-                    self.language_controller:onDictionaryRemoved(id)
-                end
+                self.language_controller:onDictionaryRemoved(id)
                 self:_notify("Uninstalled dictionary: " .. (name or id))
             else
                 self:_notify("Failed to uninstall dictionary: " .. (name or id))
@@ -422,12 +403,7 @@ function Manager:_uninstall(id, name)
 end
 
 function Manager:_personalContext()
-    if self.language_controller then
-        return self.language_controller:personalContext(self.keyboard)
-    end
-    local keyboard = self.keyboard
-    return keyboard and (keyboard.swype_mvp_dictionary or "en") or "en",
-        keyboard and keyboard.swype_mvp_normalization_profile or nil
+    return self.language_controller:personalContext(self.keyboard)
 end
 
 function Manager:_removePersonalWord(word)
@@ -504,11 +480,6 @@ end
 
 function Manager:showPersonalWords()
     self:_closeMenu()
-    if not self.personal_dictionary then
-        self:_notify("Personal words are unavailable.")
-        self:showMenu()
-        return
-    end
     local language, profile = self:_personalContext()
     local words = self.personal_dictionary:list(language, profile)
     local buttons = {}
@@ -765,36 +736,31 @@ function Manager:showMenu()
     end)
     local buttons = {}
     local action_width = Screen:scaleBySize(105)
-    if self.personal_dictionary then
-        local language, profile = self:_personalContext()
-        local personal_count = #self.personal_dictionary:list(language, profile)
-        table.insert(buttons, {
-            {
-                text = "Personal words (" .. personal_count .. ")",
-                callback = function() self:showPersonalWords() end,
-            },
-        })
-    end
-    if self.blocked_words then
-        local language = self:_personalContext()
-        local blocked_count = #self.blocked_words:list(language)
-        table.insert(buttons, {
-            {
-                text = "Blocked words (" .. blocked_count .. ")",
-                callback = function() self:showBlockedWords() end,
-            },
-        })
-    end
+    local personal_language, personal_profile = self:_personalContext()
+    local personal_count =
+        #self.personal_dictionary:list(personal_language, personal_profile)
+    table.insert(buttons, {
+        {
+            text = "Personal words (" .. personal_count .. ")",
+            callback = function() self:showPersonalWords() end,
+        },
+    })
+    local blocked_language = self:_personalContext()
+    local blocked_count = #self.blocked_words:list(blocked_language)
+    table.insert(buttons, {
+        {
+            text = "Blocked words (" .. blocked_count .. ")",
+            callback = function() self:showBlockedWords() end,
+        },
+    })
     for _, id in ipairs(ordered) do
         local info = installed[id]
         local package = packages[id]
         local name = package and package.name or (info and info.name or id)
         if info then
-            local active = self.language_controller
-                and self.language_controller:activeDictionary(self.keyboard)
-                    == id
-            local enabled = not self.language_controller
-                or self.language_controller:isEnabled(id)
+            local active =
+                self.language_controller:activeDictionary(self.keyboard) == id
+            local enabled = self.language_controller:isEnabled(id)
             table.insert(buttons, {
                 {
                     text = active and "✓ " .. name or name,
