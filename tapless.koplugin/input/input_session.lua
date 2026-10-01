@@ -5,8 +5,10 @@ function InputSession:new()
     return setmetatable({
         candidates = nil,
         last_insert = nil,
-        -- The signature of the last swipe that typed nothing; backspace
-        -- right after it only clears this, instead of deleting a character.
+        -- The most recently recognized swipe's signature. recordNoCandidate
+        -- keeps it through clear(), so after a swipe with no candidate it
+        -- is the only state left; backspace right after then clears it
+        -- instead of deleting a character.
         failed_signature = nil,
         personal_offer = nil,
         completion = nil,
