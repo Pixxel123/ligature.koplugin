@@ -464,9 +464,9 @@ function InputController:saveContext()
     end
 end
 
-function InputController:clearCandidateState(keyboard, keep_debug)
+function InputController:clearCandidateState(keyboard)
     self:_cancelPersonalOfferTimer(keyboard)
-    keyboard.swype_mvp_session:clear(keep_debug)
+    keyboard.swype_mvp_session:clear()
 end
 
 function InputController:clearCandidateRow(keyboard, refresh_type)

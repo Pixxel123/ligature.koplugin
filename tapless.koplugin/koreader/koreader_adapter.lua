@@ -1037,8 +1037,8 @@ function KoreaderAdapter:install(VirtualKeyboard)
     end
 
 
-    function VirtualKeyboard:_swypeClearCandidateState(keep_debug)
-        adapter.input_controller:clearCandidateState(self, keep_debug)
+    function VirtualKeyboard:_swypeClearCandidateState()
+        adapter.input_controller:clearCandidateState(self)
     end
 
     function VirtualKeyboard:_swypeClearCandidateRow(refresh_type)
