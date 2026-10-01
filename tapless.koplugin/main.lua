@@ -82,7 +82,7 @@ function Tapless:addToMainMenu(menu_items)
     local plugin = self
 
     menu_items.tapless_settings = {
-        text = "Tapless",
+        text = "Ligature",
         sorting_hint = "tools",
         sub_item_table = {
             {

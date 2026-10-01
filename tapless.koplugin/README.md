@@ -1,7 +1,8 @@
-# Tapless for KOReader
+# Ligature for KOReader
 
-Swipe typing for the KOReader.
+Swipe typing for KOReader.
 
 ## Installation
 
-Extract into the `plugins` directory. Restart KOReader.
+Copy this `tapless.koplugin` folder into KOReader's `plugins` folder and
+restart KOReader.

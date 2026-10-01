@@ -21,7 +21,7 @@ if you have it, and your settings and learned words carry over.
 
 The first time the keyboard opens, it asks which languages you type in.
 The next time, it shows a page with every gesture. That page is also under
-`Tools → Tapless → Gesture reference`.
+`Tools → Ligature → Gesture reference`.
 
 ## Gestures
 
@@ -694,7 +694,7 @@ than 3 seconds, so it mostly comes at the end of a sentence.
 <details>
 <summary><b>Suggestion row details</b></summary>
 
-Blocked words are listed under `Tools → Tapless → Manage dictionaries →
+Blocked words are listed under `Tools → Ligature → Manage dictionaries →
 Blocked words` and can be unblocked there. Adding a word to your personal
 words unblocks it. Blocking the word a swipe just typed replaces it with
 the next suggestion.
@@ -718,7 +718,7 @@ looked up, for swipes and completions alike.
 <details>
 <summary><b>One-handed details</b></summary>
 
-Switch it on under `Tools → Tapless → One-handed keyboard → Use
+Switch it on under `Tools → Ligature → One-handed keyboard → Use
 one-handed keyboard`, or hold the globe key 🌐 and lift.
 
 Swipe up from ◨ to leave, outwards to move the keys to the other side, or
@@ -751,7 +751,7 @@ keyboard.
 <summary><b>Languages and size details</b></summary>
 
 - Languages can be enabled, disabled, downloaded and removed under
-  `Tools → Tapless → Manage dictionaries`. At least one has to stay
+  `Tools → Ligature → Manage dictionaries`. At least one has to stay
   enabled, and the last one can't be removed. Bundled dictionaries can be
   removed too.
 - The downloadable dictionaries are Czech, Danish, Dutch, English, French,
@@ -784,7 +784,7 @@ language's lists.
 
 ## Options
 
-Under `Tools → Tapless`:
+Under `Tools → Ligature`:
 
 | Option | Default | What it does |
 |---|---|---|

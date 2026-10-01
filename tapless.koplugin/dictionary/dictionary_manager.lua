@@ -463,7 +463,7 @@ function Manager:showBlockedWords()
     self:_closeMenu()
     local language = self:_personalContext()
     self:_showWordList(
-        "Tapless: Blocked words (" .. string.upper(language) .. ")",
+        "Ligature: Blocked words (" .. string.upper(language) .. ")",
         self.blocked_words:list(language),
         "No blocked words. Hold a suggestion to block it.",
         "Unblock",
@@ -480,7 +480,7 @@ function Manager:showPersonalWords()
     self:_closeMenu()
     local language, profile = self:_personalContext()
     self:_showWordList(
-        "Tapless: Personal words (" .. string.upper(language) .. ")",
+        "Ligature: Personal words (" .. string.upper(language) .. ")",
         self.personal_dictionary:list(language, profile),
         "No personal words",
         "Remove",
@@ -775,7 +775,7 @@ function Manager:showMenu()
         },
     })
     self.menu = ButtonDialog:new{
-        title = "Tapless: Dictionaries",
+        title = "Ligature: Dictionaries",
         width_factor = 0.95,
         rows_per_page = 8,
         buttons = buttons,
@@ -829,7 +829,7 @@ function Manager:_showLanguageSetupMenu()
     })
 
     self.language_setup_menu = ButtonDialog:new{
-        title = "Tapless: Choose languages",
+        title = "Ligature: Choose languages",
         width_factor = 0.9,
         rows_per_page = 8,
         buttons = buttons,

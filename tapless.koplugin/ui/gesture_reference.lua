@@ -1,7 +1,7 @@
 -- The gesture reference: one page listing every Tapless gesture, drawn
 -- ahead of time as an image (images/gesture_reference.png). It shows
 -- once by itself, the first time the keyboard opens after language setup,
--- and any time from Tools → Tapless → Gesture reference. A tap anywhere,
+-- and any time from Tools → Ligature → Gesture reference. A tap anywhere,
 -- or Back, closes it. It takes every other gesture and key press too, so
 -- none reaches the keyboard or text box underneath.
 local GestureReference = {
