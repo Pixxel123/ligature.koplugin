@@ -9,16 +9,16 @@ local StrayTouches = {}
 -- whether touches currently go to a keyboard that takes swipes.
 function StrayTouches.install(options)
     local GestureDetector = assert(options.gesture_detector)
-    if GestureDetector._tapless_stray_touches then
+    if GestureDetector._ligature_stray_touches then
         return true
     end
     local findUpvalue = assert(options.find_upvalue)
     local Contact = findUpvalue(GestureDetector.newContact, "Contact")
     if type(Contact) ~= "table" or type(Contact.panState) ~= "function" then
-        options.logger.warn("Tapless: cannot ignore stray touches")
+        options.logger.warn("Ligature: cannot ignore stray touches")
         return false
     end
-    GestureDetector._tapless_stray_touches = true
+    GestureDetector._ligature_stray_touches = true
     local swiping = assert(options.swiping)
 
     local function ignoredState(contact)

@@ -58,7 +58,7 @@ local function createWithHandle(handle)
     local built = {}
     local VirtualKey = {}
     function VirtualKey:new(options)
-        built[#built + 1] = { tapless_bold = options.tapless_bold }
+        built[#built + 1] = { ligature_bold = options.ligature_bold }
         return options
     end
     local gap = { gap = true }
@@ -80,10 +80,10 @@ end
 
 it("bolds only the top suggestion", function()
     local _, built = createWithHandle()
-    T.eq(built[1].tapless_bold, true)
-    T.eq(built[2].tapless_bold, nil)
-    T.eq(built[3].tapless_bold, nil)
-    T.eq(built[4].tapless_bold, nil)
+    T.eq(built[1].ligature_bold, true)
+    T.eq(built[2].ligature_bold, nil)
+    T.eq(built[3].ligature_bold, nil)
+    T.eq(built[4].ligature_bold, nil)
 end)
 
 it("puts a left handle first, then a gap, and narrows the slots",

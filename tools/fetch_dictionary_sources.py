@@ -25,7 +25,7 @@ TABLE_TAGS = {"table-tags", "inflection-template", "class", "romanization"}
 
 
 def fetch(url):
-    request = urllib.request.Request(url, headers={"User-Agent": "tapless"})
+    request = urllib.request.Request(url, headers={"User-Agent": "ligature"})
     return urllib.request.urlopen(request, timeout=3600)
 
 

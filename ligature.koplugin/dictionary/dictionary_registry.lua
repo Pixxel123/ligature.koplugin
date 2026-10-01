@@ -1,4 +1,4 @@
--- Central registry for bundled and downloaded Tapless dictionary packages.
+-- Central registry for bundled and downloaded Ligature dictionary packages.
 
 local DataStorage = require("datastorage")
 local lfs = require("libs/libkoreader-lfs")

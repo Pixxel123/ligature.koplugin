@@ -30,14 +30,14 @@ local function loadModule(name)
 end
 local VirtualKeyboard = require("ui/widget/virtualkeyboard")
 
-if VirtualKeyboard._tapless_adapter_installed then
+if VirtualKeyboard._ligature_adapter_installed then
     return VirtualKeyboard
 end
 
 local findUpvalue = loadModule("find_upvalue")
 
 local VirtualKey = assert(findUpvalue(VirtualKeyboard.addKeys, "VirtualKey"),
-    "Tapless: incompatible KOReader VirtualKeyboard.addKeys")
+    "Ligature: incompatible KOReader VirtualKeyboard.addKeys")
 local CandidateRow = loadModule("candidate_row")
 local DictionaryRegistry = loadModule("dictionary_registry")
 local DictionaryManager = loadModule("dictionary_manager")
@@ -63,7 +63,7 @@ local TraceRenderer = loadModule("trace_renderer")
 local ContextModel = loadModule("context_model")
     :new(G_reader_settings, "keyboard_swype_mvp_context_counts")
 local UsageModel = loadModule("usage_model")
-    :new(G_reader_settings, "tapless_word_usage")
+    :new(G_reader_settings, "ligature_word_usage")
 local TouchOffsetModule = loadModule("touch_offset")
 local TouchOffset = TouchOffsetModule:new(G_reader_settings,
     TouchOffsetModule.SETTING_KEY)
@@ -83,8 +83,8 @@ local DictionaryController = loadModule("dictionary_controller")
         settings = G_reader_settings,
         logger = logger,
         setting_key = "keyboard_swype_mvp_dictionary",
-        enabled_setting_key = "tapless_enabled_dictionaries",
-        setup_setting_key = "tapless_language_setup_complete",
+        enabled_setting_key = "ligature_enabled_dictionaries",
+        setup_setting_key = "ligature_language_setup_complete",
         default_profile = Normalization.DEFAULT_PROFILE,
     }
 
@@ -95,7 +95,7 @@ DictionaryManager.blocked_words = BlockedWords
 local WordDelete = loadModule("word_delete")
 local KeyAdapter = loadModule("key_adapter")
     :new(Normalization, GestureRange, G_reader_settings, WordDelete)
--- Look this up before Tapless wraps VirtualKey.init.
+-- Look this up before Ligature wraps VirtualKey.init.
 local VirtualKeyPopup = findUpvalue(VirtualKey.init, "VirtualKeyPopup")
 KeyAdapter:install(VirtualKey)
 
@@ -180,7 +180,7 @@ local ShapeChannel = loadModule("shape_channel"):new(DictionaryStore,
 local TextHighlight = loadModule("text_highlight"):new(UIManager, Geom)
 local OffensiveWords = loadModule("offensive_words")
     :new(plugin_dir .. "/dictionary/offensive", function()
-        return G_reader_settings:nilOrTrue("tapless_rank_down_offensive")
+        return G_reader_settings:nilOrTrue("ligature_rank_down_offensive")
     end)
 local RecognitionEngine = loadModule("recognition_engine")
     :new(DictionaryStore, Scoring, GeometryReranker, PersonalDictionary,
@@ -202,14 +202,14 @@ local GestureReference = loadModule("gesture_reference"):new{
 }
 
 -- For the main menu's Gesture reference entry.
-function VirtualKeyboard.taplessOpenGestureReference()
+function VirtualKeyboard.ligatureOpenGestureReference()
     GestureReference:open()
 end
 
 -- Expose dictionary management to the plugin's permanent main-menu entry.
 -- Passing nil as the keyboard deliberately clears any stale keyboard
 -- reference retained after a text dialog has closed.
-function VirtualKeyboard.taplessOpenDictionaryManager()
+function VirtualKeyboard.ligatureOpenDictionaryManager()
     DictionaryManager:open(nil, plugin_dir, PersonalDictionary)
 end
 

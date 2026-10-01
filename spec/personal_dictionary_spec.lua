@@ -1,7 +1,7 @@
 local T = require("helper")
 local it = T.it
 
-local ROOT = "/tmp/claude-1000/tapless-personal-spec"
+local ROOT = "/tmp/claude-1000/ligature-personal-spec"
 
 -- The dictionary is given its folder, so these only need to load.
 package.loaded["datastorage"] = package.loaded["datastorage"]
@@ -24,10 +24,10 @@ end
 it("adds, keeps and removes personal words", function()
     os.execute("rm -rf " .. ROOT)
     local dictionary = newDictionary()
-    T.truthy(dictionary:add("en", "Tapless"))
+    T.truthy(dictionary:add("en", "Ligature"))
     T.truthy(dictionary:add("en", "kobo"))
     local reloaded = newDictionary()
-    T.eq(table.concat(reloaded:list("en"), ","), "kobo,tapless")
+    T.eq(table.concat(reloaded:list("en"), ","), "kobo,ligature")
     T.truthy(reloaded:remove("en", "kobo"))
-    T.eq(table.concat(newDictionary():list("en"), ","), "tapless")
+    T.eq(table.concat(newDictionary():list("en"), ","), "ligature")
 end)

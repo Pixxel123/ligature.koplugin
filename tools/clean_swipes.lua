@@ -154,7 +154,7 @@ local function main(args)
         end
     end
     print(json.encode{ type = "start", mode = "words" })
-    for _, word in ipairs(CleanSwipes.words(tools_dir .. "/../tapless.koplugin",
+    for _, word in ipairs(CleanSwipes.words(tools_dir .. "/../ligature.koplugin",
             dictionary, from, count)) do
         print(json.encode(CleanSwipes.attempt(word, keys, dictionary)))
     end

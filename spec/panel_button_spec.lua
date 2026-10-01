@@ -59,7 +59,7 @@ it("runs its callback on a tap and takes the tap", function()
         name = "reset", text = "Reset", width = 10, height = 10,
         callback = function() tapped = tapped + 1 end,
     }
-    T.eq(button:onTaplessButtonTap(), true, "taken")
+    T.eq(button:onLigatureButtonTap(), true, "taken")
     T.eq(tapped, 1, "callback")
 end)
 
@@ -68,8 +68,8 @@ it("takes taps without a callback and listens only on itself", function()
         name = "move", icon = "/icons/move.svg", icon_size = 5,
         width = 10, height = 10,
     }
-    T.eq(button:onTaplessButtonTap(), true, "taken")
-    local range = button.ges_events.TaplessButtonTap[1]
+    T.eq(button:onLigatureButtonTap(), true, "taken")
+    local range = button.ges_events.LigatureButtonTap[1]
     T.eq(range.ges, "tap", "gesture")
     T.eq(range.range(), button.dimen, "range")
 end)

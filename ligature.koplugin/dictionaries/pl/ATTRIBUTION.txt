@@ -1,8 +1,8 @@
-Tapless dictionary data
-=======================
+Ligature dictionary data
+========================
 
-This package contains the indexed dictionary shipped in the
-current Tapless installation. The source project and data
+This package contains the indexed dictionary shipped with
+Tapless (https://github.com/azac/tapless.koplugin). The source project and data
 licensing information are documented in the included files.
 
 Capitals and added words (words.buckets.tsv, words.popular.tsv)

@@ -10,7 +10,7 @@ BlockedWords.__index = BlockedWords
 function BlockedWords:new(root, make_path)
     return setmetatable({
         root = root or (require("datastorage"):getDataDir()
-            .. "/tapless/blocked"),
+            .. "/ligature/blocked"),
         make_path = make_path or function(path)
             require("util").makePath(path)
         end,
@@ -53,7 +53,7 @@ end
 
 function BlockedWords:_save(language, words)
     return WordListFile.save(self:_path(language),
-        "# Tapless blocked words v1", words,
+        "# Ligature blocked words v1", words,
         function() self.make_path(self.root) end, "blocked words")
 end
 

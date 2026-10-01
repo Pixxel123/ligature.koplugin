@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run a Tapless swipe test session on a Kindle over SSH.
+"""Run a Ligature swipe test session on a Kindle over SSH.
 
 Installs a recorder as a KOReader user patch, prompts words to swipe on
 the device, follows the recording live, then removes everything and
@@ -20,7 +20,7 @@ import tempfile
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TOOLS = os.path.join(ROOT, "tools")
-PLUGIN = os.path.join(ROOT, "tapless.koplugin")
+PLUGIN = os.path.join(ROOT, "ligature.koplugin")
 WORD = re.compile(r"^[a-z]{2,10}$")
 # Long words, for testing how the keyboard finds them.
 LONG_WORD = re.compile(r"^[a-z]{8,14}$")
@@ -66,9 +66,9 @@ class Kindle:
         self.host = host
         self.port = str(port)
         self.koreader = koreader
-        self.dev = koreader + "/tapless-dev"
-        self.patch = koreader + "/patches/2-tapless-recorder.lua"
-        self.temp = tempfile.mkdtemp(prefix="tapless-ssh-")
+        self.dev = koreader + "/ligature-dev"
+        self.patch = koreader + "/patches/2-ligature-recorder.lua"
+        self.temp = tempfile.mkdtemp(prefix="ligature-ssh-")
         self.env = dict(os.environ)
         if not ask_password:
             askpass = os.path.join(self.temp, "askpass.sh")
@@ -172,7 +172,7 @@ def fetch_settings(kindle):
     them when it exits, and the keyboard learns nothing while a session is
     recorded, so these are the counts the session ran with. The file holds
     all of KOReader's settings: the caller removes it."""
-    handle, path = tempfile.mkstemp(prefix="tapless-settings-", suffix=".lua")
+    handle, path = tempfile.mkstemp(prefix="ligature-settings-", suffix=".lua")
     os.close(handle)
     if kindle.get(kindle.koreader + "/settings.reader.lua", path):
         os.chmod(path, 0o600)

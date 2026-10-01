@@ -66,7 +66,7 @@ it("leaves a slide from a number key that crossed no other letter to KOReader",
         released = true,
     })
     T.eq(handled, false)
-    T.eq(state.typed, nil, "typed by Tapless")
+    T.eq(state.typed, nil, "typed by Ligature")
     T.eq(state.recorded, nil, "no leftover swipe state")
 end)
 
@@ -197,7 +197,7 @@ local function typeKeys(controller, keyboard, ...)
     return keyboard.inputbox:text()
 end
 
-local ON = { tapless_double_space_period = true }
+local ON = { ligature_double_space_period = true }
 
 it("turns two typed spaces after a word into a period", function()
     local controller = newController(ON)

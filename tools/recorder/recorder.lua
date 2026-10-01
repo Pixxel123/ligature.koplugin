@@ -1,4 +1,4 @@
--- Session logic for Tapless swipe test sessions. The KOReader patch in
+-- Session logic for Ligature swipe test sessions. The KOReader patch in
 -- tools/recorder_patch.lua feeds it keyboard calls, a clock and a sink;
 -- nothing here touches KOReader.
 local Recorder = {}
@@ -68,7 +68,7 @@ function Recorder.parsePrompts(lines, mode)
     return prompts
 end
 
--- Prompts are lowercase words; Tapless may capitalise what it types.
+-- Prompts are lowercase words; Ligature may capitalise what it types.
 local function sameWord(word, target)
     return word ~= nil and target ~= nil and word:lower() == target:lower()
 end
@@ -116,7 +116,7 @@ local function point(pos)
     end
 end
 
--- Called before Tapless handles a gesture. kind: pan, pan_release, swipe
+-- Called before Ligature handles a gesture. kind: pan, pan_release, swipe
 -- or multiswipe; key: letter of the key a swipe was routed from.
 function Recorder:gesture(kind, ges, key)
     if self.finished or not ges then
@@ -144,7 +144,7 @@ function Recorder:gesture(kind, ges, key)
     }
 end
 
--- Tapless did not take the gesture: it is not part of a swipe.
+-- Ligature did not take the gesture: it is not part of a swipe.
 -- Every gesture KOReader dispatched, whichever widget took it, kept with
 -- the next attempt. top: the window it was sent to first.
 function Recorder:dispatched(ges, top)
@@ -181,7 +181,7 @@ function Recorder:candidates(list)
     self.candidate_list = copy
 end
 
--- Called after Tapless finished a trace. context: keys (list of key
+-- Called after Ligature finished a trace. context: keys (list of key
 -- rectangles) and dictionary.
 function Recorder:finalize(signature, trace_info, context)
     if self.finished then

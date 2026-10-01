@@ -1,7 +1,7 @@
 local T = require("helper")
 local it = T.it
 
-local root = "/tmp/claude-1000/tapless-blocked-spec"
+local root = "/tmp/claude-1000/ligature-blocked-spec"
 
 local function fresh()
     os.execute("rm -rf " .. root)

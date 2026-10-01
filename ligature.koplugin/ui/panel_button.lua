@@ -76,14 +76,14 @@ function PanelButton:create(options)
         frame,
     }
     button.ges_events = {
-        TaplessButtonTap = {
+        LigatureButtonTap = {
             self.gesture_range:new{
                 ges = "tap",
                 range = function() return button.dimen end,
             },
         },
     }
-    button.onTaplessButtonTap = function()
+    button.onLigatureButtonTap = function()
         if options.callback then
             options.callback()
         end

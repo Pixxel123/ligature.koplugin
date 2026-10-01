@@ -59,7 +59,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 import add_contractions as ac  # noqa: E402 (the package writing helpers)
 
-PROFILES = os.path.join(os.path.dirname(HERE), "tapless.koplugin",
+PROFILES = os.path.join(os.path.dirname(HERE), "ligature.koplugin",
                         "normalization_profiles.tsv")
 CAPITAL_SHARE = 0.95
 POPULAR_PER_FIRST = 256

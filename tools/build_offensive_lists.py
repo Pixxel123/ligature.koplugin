@@ -4,7 +4,7 @@
 Reads the "List of Dirty, Naughty, Obscene and Otherwise Bad Words"
 (https://github.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words,
 CC BY 4.0), one file per language code, and writes
-tapless.koplugin/dictionary/offensive/<code>.txt: its single words, lower
+ligature.koplugin/dictionary/offensive/<code>.txt: its single words, lower
 case as the dictionaries spell them, sorted, with the source in a comment.
 Phrases are left out: the keyboard types a word at a time.
 
@@ -18,7 +18,7 @@ import os
 import urllib.request
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-OUT = os.path.join(ROOT, "tapless.koplugin", "dictionary", "offensive")
+OUT = os.path.join(ROOT, "ligature.koplugin", "dictionary", "offensive")
 BASE = ("https://raw.githubusercontent.com/LDNOOBW/"
         "List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words/master/")
 LANGUAGES = ["ar", "cs", "da", "de", "en", "eo", "es", "fa", "fi", "fil",

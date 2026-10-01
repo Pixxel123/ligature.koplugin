@@ -65,7 +65,7 @@ function CandidateRow:create(options)
             height = options.height,
             is_swype_candidate = true,
             -- The top suggestion is bold.
-            tapless_bold = index == 1 or nil,
+            ligature_bold = index == 1 or nil,
         }
         -- KOReader shrinks labels to fit with 2 px to spare; keep the
         -- row's own padding instead.

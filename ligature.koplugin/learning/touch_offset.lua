@@ -10,7 +10,7 @@
 -- (see mode). They live in the settings as { [mode] = { x, y, words } }.
 local TouchOffset = {
     -- The settings key the device keeps the offsets under.
-    SETTING_KEY = "tapless_touch_offset",
+    SETTING_KEY = "ligature_touch_offset",
     -- Words learned before any shift: a few words say little.
     MIN_WORDS = 8,
     -- The shift is this share of the learned offset. More than all of it:

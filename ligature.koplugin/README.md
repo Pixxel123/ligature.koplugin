@@ -4,5 +4,5 @@ Swipe typing for KOReader.
 
 ## Installation
 
-Copy this `tapless.koplugin` folder into KOReader's `plugins` folder and
+Copy this `ligature.koplugin` folder into KOReader's `plugins` folder and
 restart KOReader.

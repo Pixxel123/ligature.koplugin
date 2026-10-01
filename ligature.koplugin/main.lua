@@ -24,41 +24,41 @@ end
 local ok, replacement = pcall(dofile, replacement_path)
 if ok and replacement then
     package.loaded[virtualkeyboard_module] = replacement
-    logger.info("Tapless: thin VirtualKeyboard adapter loaded")
+    logger.info("Ligature: thin VirtualKeyboard adapter loaded")
 
     -- InputText caches the keyboard class during its own module initialization.
-    -- Re-run that binding so an early-loaded InputText also uses Tapless.
+    -- Re-run that binding so an early-loaded InputText also uses Ligature.
     local InputText = require("ui/widget/inputtext")
     InputText.initInputEvents()
-    logger.info("Tapless: InputText keyboard binding refreshed")
+    logger.info("Ligature: InputText keyboard binding refreshed")
 else
-    logger.err("Tapless: failed to load VirtualKeyboard implementation", replacement)
+    logger.err("Ligature: failed to load VirtualKeyboard implementation", replacement)
 end
 
-local Tapless = WidgetContainer:extend{
-    name = "tapless",
+local Ligature = WidgetContainer:extend{
+    name = "ligature",
     is_doc_only = false,
 }
 
-function Tapless:init()
+function Ligature:init()
     if self.ui and self.ui.menu then
         self.ui.menu:registerToMainMenu(self)
     end
 end
 
-function Tapless:openDictionaryManager()
-    if replacement and replacement.taplessOpenDictionaryManager then
-        replacement.taplessOpenDictionaryManager()
+function Ligature:openDictionaryManager()
+    if replacement and replacement.ligatureOpenDictionaryManager then
+        replacement.ligatureOpenDictionaryManager()
     else
-        logger.err("Tapless: dictionary manager is unavailable")
+        logger.err("Ligature: dictionary manager is unavailable")
     end
 end
 
-function Tapless:openGestureReference()
-    if replacement and replacement.taplessOpenGestureReference then
-        replacement.taplessOpenGestureReference()
+function Ligature:openGestureReference()
+    if replacement and replacement.ligatureOpenGestureReference then
+        replacement.ligatureOpenGestureReference()
     else
-        logger.err("Tapless: gesture reference is unavailable")
+        logger.err("Ligature: gesture reference is unavailable")
     end
 end
 
@@ -78,10 +78,10 @@ local function choice(text, setting_key, value, default)
     }
 end
 
-function Tapless:addToMainMenu(menu_items)
+function Ligature:addToMainMenu(menu_items)
     local plugin = self
 
-    menu_items.tapless_settings = {
+    menu_items.ligature_settings = {
         text = "Ligature",
         sorting_hint = "tools",
         sub_item_table = {
@@ -108,30 +108,30 @@ function Tapless:addToMainMenu(menu_items)
                         radio = true,
                         checked_func = function()
                             return G_reader_settings:readSetting(
-                                "tapless_keyboard_size") == nil
+                                "ligature_keyboard_size") == nil
                         end,
                         callback = function()
                             G_reader_settings:delSetting(
-                                "tapless_keyboard_size")
+                                "ligature_keyboard_size")
                         end,
                     },
-                    choice("Extra compact", "tapless_keyboard_size",
+                    choice("Extra compact", "ligature_keyboard_size",
                         "extra_compact"),
-                    choice("Compact", "tapless_keyboard_size", "compact"),
-                    choice("Normal", "tapless_keyboard_size", "normal"),
-                    choice("Large", "tapless_keyboard_size", "large"),
+                    choice("Compact", "ligature_keyboard_size", "compact"),
+                    choice("Normal", "ligature_keyboard_size", "normal"),
+                    choice("Large", "ligature_keyboard_size", "large"),
                 },
             },
             {
                 text = "Keyboard text size",
                 sub_item_table = {
-                    choice("Auto", "tapless_keyboard_font_size", "auto",
+                    choice("Auto", "ligature_keyboard_font_size", "auto",
                         "auto"),
-                    choice("Small", "tapless_keyboard_font_size", 18,
+                    choice("Small", "ligature_keyboard_font_size", 18,
                         "auto"),
-                    choice("Normal", "tapless_keyboard_font_size", 22,
+                    choice("Normal", "ligature_keyboard_font_size", 22,
                         "auto"),
-                    choice("Large", "tapless_keyboard_font_size", 26,
+                    choice("Large", "ligature_keyboard_font_size", 26,
                         "auto"),
                 },
             },
@@ -141,10 +141,10 @@ function Tapless:addToMainMenu(menu_items)
                     .. "move the text cursor. Holding space still switches "
                     .. "language.",
                 checked_func = function()
-                    return G_reader_settings:isTrue("tapless_space_cursor")
+                    return G_reader_settings:isTrue("ligature_space_cursor")
                 end,
                 callback = function()
-                    G_reader_settings:flipNilOrFalse("tapless_space_cursor")
+                    G_reader_settings:flipNilOrFalse("ligature_space_cursor")
                 end,
             },
             {
@@ -154,11 +154,11 @@ function Tapless:addToMainMenu(menu_items)
                     .. "on Chinese, Japanese, Korean or Vietnamese layouts.",
                 checked_func = function()
                     return G_reader_settings:isTrue(
-                        "tapless_double_space_period")
+                        "ligature_double_space_period")
                 end,
                 callback = function()
                     G_reader_settings:flipNilOrFalse(
-                        "tapless_double_space_period")
+                        "ligature_double_space_period")
                 end,
             },
             {
@@ -171,11 +171,11 @@ function Tapless:addToMainMenu(menu_items)
                     .. "as always.",
                 checked_func = function()
                     return G_reader_settings:nilOrTrue(
-                        "tapless_rank_down_offensive")
+                        "ligature_rank_down_offensive")
                 end,
                 callback = function()
                     G_reader_settings:flipNilOrTrue(
-                        "tapless_rank_down_offensive")
+                        "ligature_rank_down_offensive")
                 end,
             },
             {
@@ -209,11 +209,11 @@ function Tapless:addToMainMenu(menu_items)
                             .. "Tapping it still closes the keyboard.",
                         checked_func = function()
                             return G_reader_settings:nilOrTrue(
-                                "tapless_one_handed_hatch")
+                                "ligature_one_handed_hatch")
                         end,
                         callback = function()
                             G_reader_settings:flipNilOrTrue(
-                                "tapless_one_handed_hatch")
+                                "ligature_one_handed_hatch")
                         end,
                     },
                 },
@@ -222,4 +222,4 @@ function Tapless:addToMainMenu(menu_items)
     }
 end
 
-return Tapless
+return Ligature

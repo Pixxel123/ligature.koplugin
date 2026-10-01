@@ -2,7 +2,7 @@ local InputController = {}
 InputController.__index = InputController
 local Utf8Proc = require("ffi/utf8proc")
 
-InputController.DOUBLE_SPACE_SETTING = "tapless_double_space_period"
+InputController.DOUBLE_SPACE_SETTING = "ligature_double_space_period"
 -- The word lists completions need are read a slice at a time: this many
 -- entries or milliseconds per slice, a slice every WARM_STEP_DELAY
 -- seconds, so typing never waits for them.
@@ -143,7 +143,7 @@ function InputController:addPersonalWord(keyboard)
         keyboard.swype_mvp_dictionary or "en", offer.word,
         keyboard.swype_mvp_normalization_profile)
     if not ok then
-        self.logger.warn("Tapless: cannot add personal word", err)
+        self.logger.warn("Ligature: cannot add personal word", err)
         return false
     end
     if self.blocked_words then
@@ -529,7 +529,7 @@ function InputController:blockCandidate(keyboard, candidate)
     local ok, err = self.blocked_words:add(
         keyboard.swype_mvp_dictionary or "en", candidate.word)
     if ok == nil then
-        self.logger.warn("Tapless: cannot block word", err)
+        self.logger.warn("Ligature: cannot block word", err)
         return false
     end
     local session = keyboard.swype_mvp_session

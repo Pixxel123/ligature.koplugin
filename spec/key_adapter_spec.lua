@@ -1,7 +1,7 @@
 local T = require("helper")
 local it = T.it
 
--- A stand-in for KOReader's VirtualKey with the methods Tapless wraps.
+-- A stand-in for KOReader's VirtualKey with the methods Ligature wraps.
 local function newVirtualKeyClass(calls)
     local VirtualKey = {}
     VirtualKey.__index = VirtualKey
@@ -45,10 +45,10 @@ local function newKeyboard(calls, enabled)
     return {
         isSwypeMvpEnabled = function() return enabled ~= false end,
         onSwypeWordSwipe = function()
-            calls.tapless_swipe = (calls.tapless_swipe or 0) + 1
+            calls.ligature_swipe = (calls.ligature_swipe or 0) + 1
         end,
         onSwypeWordPanRelease = function()
-            calls.tapless_pan_release = (calls.tapless_pan_release or 0) + 1
+            calls.ligature_pan_release = (calls.ligature_pan_release or 0) + 1
             return true
         end,
         _swypeReset = function() end,
@@ -86,16 +86,16 @@ local function setup(settings)
     return calls, VirtualKey, adapter
 end
 
-it("sends letter swipes to Tapless and other keys to KOReader", function()
+it("sends letter swipes to Ligature and other keys to KOReader", function()
     local calls, VirtualKey = setup()
     local keyboard = newKeyboard(calls)
     VirtualKey:new{ key = "a", keyboard = keyboard }:onSwipeKey({}, {})
     VirtualKey:new{ key = "\n", keyboard = keyboard }:onSwipeKey({}, {})
-    T.eq(calls.tapless_swipe, 1, "Tapless swipes")
+    T.eq(calls.ligature_swipe, 1, "Ligature swipes")
     T.eq(calls.stock_swipe, 1, "stock swipes")
 end)
 
--- A keyboard whose word swipe handlers report whether Tapless took the swipe.
+-- A keyboard whose word swipe handlers report whether Ligature took the swipe.
 -- starts_on_letter says whether a swipe that begins on the key under the
 -- finger counts as starting on a letter, as it does for a number key.
 local function newSwipeKeyboard(calls, starts_on_letter, takes)
@@ -105,11 +105,11 @@ local function newSwipeKeyboard(calls, starts_on_letter, takes)
         return starts_on_letter and "w" or nil
     end
     keyboard.onSwypeWordSwipe = function()
-        calls.tapless_swipe = (calls.tapless_swipe or 0) + 1
+        calls.ligature_swipe = (calls.ligature_swipe or 0) + 1
         return takes
     end
     keyboard.onSwypeWordMultiswipe = function()
-        calls.tapless_multiswipe = (calls.tapless_multiswipe or 0) + 1
+        calls.ligature_multiswipe = (calls.ligature_multiswipe or 0) + 1
         return takes
     end
     keyboard._swypeReset = function()
@@ -120,26 +120,26 @@ end
 
 local START = { x = 150, y = 90 }
 
-it("sends a swipe that starts on a letter's number key to Tapless", function()
+it("sends a swipe that starts on a letter's number key to Ligature", function()
     local calls, VirtualKey = setup()
     local keyboard = newSwipeKeyboard(calls, true, true)
     local key = VirtualKey:new{ key = "2", keyboard = keyboard }
     T.truthy(key:onSwipeKey({}, { pos = START }))
     T.truthy(key:onMultiswipeKey({}, { start_pos = START }))
-    T.eq(calls.tapless_swipe, 1, "Tapless swipes")
-    T.eq(calls.tapless_multiswipe, 1, "Tapless multiswipes")
+    T.eq(calls.ligature_swipe, 1, "Ligature swipes")
+    T.eq(calls.ligature_multiswipe, 1, "Ligature multiswipes")
     T.eq(calls.stock_swipe, nil, "stock swipes")
     T.eq(calls.start_looked_up, START, "where the swipe started")
 end)
 
-it("hands a number key's swipe back to KOReader when Tapless declines it",
+it("hands a number key's swipe back to KOReader when Ligature declines it",
         function()
     local calls, VirtualKey = setup()
     local keyboard = newSwipeKeyboard(calls, true, false)
     keyboard.swype_mvp_trace = {}
     VirtualKey:new{ key = "2", keyboard = keyboard }
         :onSwipeKey({}, { pos = START, direction = "southeast" })
-    T.eq(calls.tapless_swipe, 1, "Tapless tried the swipe")
+    T.eq(calls.ligature_swipe, 1, "Ligature tried the swipe")
     T.eq(calls.stock_swipe, 1, "stock swipes")
     T.eq(calls.reset, 1, "half-built trace dropped")
 end)
@@ -157,7 +157,7 @@ it("leaves swipes that do not start on a letter to KOReader", function()
         :onSwipeKey({}, { pos = START })
     VirtualKey:new{ key = "\n", keyboard = keyboard }:onSwipeKey({}, {})
     T.eq(calls.stock_swipe, 2, "stock swipes")
-    T.eq(calls.tapless_swipe, nil, "Tapless swipes")
+    T.eq(calls.ligature_swipe, nil, "Ligature swipes")
 end)
 
 it("leaves number key swipes to KOReader when word swipes are off",
@@ -168,7 +168,7 @@ it("leaves number key swipes to KOReader when word swipes are off",
     VirtualKey:new{ key = "2", keyboard = keyboard }
         :onSwipeKey({}, { pos = START })
     T.eq(calls.stock_swipe, 1, "stock swipes")
-    T.eq(calls.tapless_swipe, nil, "Tapless swipes")
+    T.eq(calls.ligature_swipe, nil, "Ligature swipes")
 end)
 
 it("disables alternate-character swipes on letter keys only", function()
@@ -193,23 +193,23 @@ it("finds the main and alt label widgets of a key with an alt label", function()
     T.eq(key.swype_mvp_alt_label_widget, key[1][1][1][2][1])
 end)
 
-it("uses the Tapless key font size only while building a key", function()
-    local calls, VirtualKey = setup{ tapless_keyboard_size = "large" }
+it("uses the Ligature key font size only while building a key", function()
+    local calls, VirtualKey = setup{ ligature_keyboard_size = "large" }
     local key = VirtualKey:new{ key = "a", keyboard = newKeyboard(calls) }
     T.eq(key.font_size, 26, "large keyboard font")
     T.eq(calls.settings:readSetting("keyboard_key_font_size", 22), 22,
         "global setting untouched afterwards")
 end)
 
-it("uses KOReader's key font size until a Tapless size is chosen",
+it("uses KOReader's key font size until a Ligature size is chosen",
         function()
     local calls, VirtualKey = setup{ keyboard_key_font_size = 30 }
     local key = VirtualKey:new{ key = "a", keyboard = newKeyboard(calls) }
     T.eq(key.font_size, 30)
     calls, VirtualKey = setup{ keyboard_key_font_size = 30,
-        tapless_keyboard_font_size = 18 }
+        ligature_keyboard_font_size = 18 }
     key = VirtualKey:new{ key = "a", keyboard = newKeyboard(calls) }
-    T.eq(key.font_size, 18, "a chosen Tapless font size wins")
+    T.eq(key.font_size, 18, "a chosen Ligature font size wins")
 end)
 
 it("uses KOReader's compact keyboard setting until a size is chosen",
@@ -219,9 +219,9 @@ it("uses KOReader's compact keyboard setting until a size is chosen",
     _, _, adapter = setup{ keyboard_key_compact = true }
     T.eq(adapter:keyHeight(), 48)
     _, _, adapter = setup{ keyboard_key_compact = true,
-        tapless_keyboard_size = "extra_compact" }
-    T.eq(adapter:keyHeight(), 40, "a chosen Tapless size wins")
-    _, _, adapter = setup{ tapless_keyboard_size = "large" }
+        ligature_keyboard_size = "extra_compact" }
+    T.eq(adapter:keyHeight(), 40, "a chosen Ligature size wins")
+    _, _, adapter = setup{ ligature_keyboard_size = "large" }
     T.eq(adapter:keyHeight(), 80)
 end)
 
@@ -236,12 +236,12 @@ it("takes letter swipes back from a patch that replaces onSwipeKey", function()
     adapter:ensureInstalled()
     VirtualKey:new{ key = "a", keyboard = keyboard }:onSwipeKey({}, {})
     VirtualKey:new{ key = "\n", keyboard = keyboard }:onSwipeKey({}, {})
-    T.eq(calls.tapless_swipe, 1, "letter swipe handled by Tapless")
+    T.eq(calls.ligature_swipe, 1, "letter swipe handled by Ligature")
     T.eq(calls.replacement, 1, "other key handled by the replacement")
     T.eq(calls.stock_swipe, nil, "stock not reached")
 end)
 
-it("runs Tapless once when a patch wraps the Tapless handler", function()
+it("runs Ligature once when a patch wraps the Ligature handler", function()
     local calls, VirtualKey, adapter = setup()
     local keyboard = newKeyboard(calls)
     local previous = VirtualKey.onPanReleaseKey
@@ -251,12 +251,12 @@ it("runs Tapless once when a patch wraps the Tapless handler", function()
     end
     adapter:ensureInstalled()
     VirtualKey:new{ key = "a", keyboard = keyboard }:onPanReleaseKey({}, {})
-    T.eq(calls.tapless_pan_release, 1, "Tapless pan release")
-    T.eq(calls.wrapper, nil, "Tapless handled it first")
+    T.eq(calls.ligature_pan_release, 1, "Ligature pan release")
+    T.eq(calls.wrapper, nil, "Ligature handled it first")
 
     keyboard = newKeyboard(calls, false)
     VirtualKey:new{ key = "a", keyboard = keyboard }:onPanReleaseKey({}, {})
-    T.eq(calls.tapless_pan_release, 1, "disabled Tapless is skipped")
+    T.eq(calls.ligature_pan_release, 1, "disabled Ligature is skipped")
     T.eq(calls.wrapper, 1, "wrapper reached")
     T.eq(calls.stock_pan_release, 1, "stock reached exactly once")
 end)
@@ -285,7 +285,7 @@ local function pan(start_x, x, start_y)
     }
 end
 
-local ON = { tapless_space_cursor = true }
+local ON = { ligature_space_cursor = true }
 
 it("moves the cursor when sliding along the space bar", function()
     local calls, VirtualKey = setup(ON)
@@ -332,7 +332,7 @@ it("swallows the swipe that ends a fast slide", function()
     T.eq(calls.stock_swipe, nil)
 end)
 
-it("leaves word swipes that start on a letter to Tapless", function()
+it("leaves word swipes that start on a letter to Ligature", function()
     local calls, VirtualKey = setup(ON)
     local keyboard = newKeyboard(calls)
     local space = spaceKey(VirtualKey, keyboard)
@@ -349,7 +349,7 @@ it("does not swallow a later gesture after an unfinished slide", function()
     -- The finger lifted above the keyboard: no release reached a key.
     VirtualKey:new{ key = "a", keyboard = keyboard }:onSwipeKey(nil,
         { ges = "swipe", pos = { x = 20, y = 50 } })
-    T.eq(calls.tapless_swipe, 1, "word swipe still reaches Tapless")
+    T.eq(calls.ligature_swipe, 1, "word swipe still reaches Ligature")
 end)
 
 it("forgets an unfinished slide once the keyboard is rebuilt", function()
@@ -366,7 +366,7 @@ it("forgets an unfinished slide once the keyboard is rebuilt", function()
     new_space:onSpaceCursorPan(nil, pan(20, 185, 50))
     VirtualKey:new{ key = "a", keyboard = keyboard }:onPanReleaseKey(nil,
         { ges = "pan_release", pos = { x = 191, y = 121 } })
-    T.eq(calls.tapless_pan_release, 1, "word swipe still reaches Tapless")
+    T.eq(calls.ligature_pan_release, 1, "word swipe still reaches Ligature")
 end)
 
 it("types a space when the finger barely moved", function()
@@ -377,7 +377,7 @@ it("types a space when the finger barely moved", function()
     space:onSpaceCursorPan(nil, pan(100, 164))
     space:onPanReleaseKey(nil, { ges = "pan_release", pos = { x = 164, y = 120 } })
     T.eq(calls.cursor, nil)
-    T.eq(calls.tapless_pan_release, 1, "normal release handling")
+    T.eq(calls.ligature_pan_release, 1, "normal release handling")
 end)
 
 it("works with the full-width Japanese space key", function()
@@ -455,7 +455,7 @@ it("leaves a pending switch pending through a pan release", function()
     -- the hold_release that always follows a hold.
     T.eq(key:onPanReleaseKey({}, { ges = "pan_release" }), true, "taken")
     T.eq(calls.switched, nil, "not switched")
-    T.eq(calls.tapless_pan_release, 1, "word release ran")
+    T.eq(calls.ligature_pan_release, 1, "word release ran")
     T.eq(key:onHoldReleaseKey(), true, "switch still pending")
     T.eq(calls.switched, 1, "switched on the later hold release")
 end)
@@ -471,7 +471,7 @@ it("builds a key bold when asked, whatever the global setting", function()
     local calls, VirtualKey = setup()
     local keyboard = newKeyboard(calls)
     T.eq(VirtualKey:new{ key = "a", keyboard = keyboard,
-        tapless_bold = true }.bold_setting, true, "bold key")
+        ligature_bold = true }.bold_setting, true, "bold key")
     T.eq(VirtualKey:new{ key = "b", keyboard = keyboard }.bold_setting,
         false, "plain key")
     T.eq(calls.settings:isTrue("keyboard_key_bold"), false, "restored")
@@ -479,7 +479,7 @@ end)
 
 it("never takes the one-handed handle for a letter", function()
     local _, _, adapter = setup()
-    T.eq(adapter:isTextKey({ key = "a", is_tapless_handle = true }), false)
+    T.eq(adapter:isTextKey({ key = "a", is_ligature_handle = true }), false)
 end)
 
 -- ---------- Slide left on backspace ----------
@@ -506,7 +506,7 @@ local function newSlideKeyboard(calls, available)
     keyboard._swypeDeleteSlideDelete = function(_, words)
         calls.deleted = words
     end
-    -- As on the device: a lift that ends no word swipe is not Tapless's.
+    -- As on the device: a lift that ends no word swipe is not Ligature's.
     keyboard.onSwypeWordMultiswipe = function() return false end
     keyboard.onSwypeWordPanRelease = function() return false end
     return keyboard
@@ -552,7 +552,7 @@ it("deletes the highlighted words when the finger lifts", function()
         { ges = "pan_release", pos = { x = 274, y = 120 } }))
     T.eq(calls.deleted, 2)
     T.eq(calls.stock_pan_release, nil, "the letter is not typed")
-    T.eq(calls.tapless_pan_release, nil)
+    T.eq(calls.ligature_pan_release, nil)
     T.eq(keyboard.swype_mvp_delete_slide, nil, "slide over")
 end)
 

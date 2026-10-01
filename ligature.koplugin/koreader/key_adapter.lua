@@ -1,7 +1,7 @@
 local KeyAdapter = {}
 KeyAdapter.__index = KeyAdapter
 
-KeyAdapter.SPACE_CURSOR_SETTING = "tapless_space_cursor"
+KeyAdapter.SPACE_CURSOR_SETTING = "ligature_space_cursor"
 
 -- KOReader's backspace key label (a glyph in its private-use range).
 KeyAdapter.BACKSPACE_LABEL = "\u{E76D}"
@@ -26,7 +26,7 @@ end
 
 function KeyAdapter:isTextKey(key)
     return key and not key.is_swype_candidate
-        and not key.is_tapless_handle
+        and not key.is_ligature_handle
         and #self.normalization:normalizeText(
             key.key or key.label,
             key.keyboard and key.keyboard.swype_mvp_normalization_profile) == 1
@@ -58,7 +58,7 @@ end
 
 -- Slide on the space bar to move the cursor, one character per quarter key
 -- height. Holding space is left alone (it switches language). Pans that
--- start elsewhere are word swipes and belong to Tapless.
+-- start elsewhere are word swipes and belong to Ligature.
 function KeyAdapter:moveSpaceCursor(key, ges)
     local keyboard = key.keyboard
     local start = ges and ges.start_pos
@@ -161,7 +161,7 @@ end
 -- Slide left from backspace to pick whole words before the cursor, more
 -- the further the finger goes; the lift deletes them (finishDeleteSlide).
 -- The keyboard says how many words there are to pick, and none where the
--- slide is not for Tapless (input method layouts, passwords, read-only
+-- slide is not for Ligature (input method layouts, passwords, read-only
 -- text), which leaves KOReader's own backspace gestures alone.
 function KeyAdapter:moveDeleteSlide(key, ges)
     local keyboard = key.keyboard
@@ -208,7 +208,7 @@ end
 -- The lift that ends a slide from backspace: a pan release (slow, under
 -- the finger), a swipe (fast, reported at the start with end_pos) or a
 -- multiswipe (there and back). Once the slide has picked a word, the
--- lift is Tapless's: it deletes the words picked, or nothing when the
+-- lift is Ligature's: it deletes the words picked, or nothing when the
 -- slide came back. A slide that never picked one is a tap or a flick,
 -- and KOReader's.
 function KeyAdapter:finishDeleteSlide(keyboard, ges)
@@ -245,7 +245,7 @@ function KeyAdapter:finishDeleteSlide(keyboard, ges)
 end
 
 -- Key height before scaling, and key font size when the text size is
--- automatic, for each Tapless keyboard size.
+-- automatic, for each Ligature keyboard size.
 local KEY_HEIGHTS = {
     extra_compact = 40, compact = 48, normal = 64, large = 80,
 }
@@ -253,10 +253,10 @@ local KEY_FONT_SIZES = {
     extra_compact = 18, compact = 20, normal = 22, large = 26,
 }
 
--- Until a Tapless keyboard size is chosen, the keyboard follows KOReader's
+-- Until a Ligature keyboard size is chosen, the keyboard follows KOReader's
 -- own compact keyboard setting.
 function KeyAdapter:keyHeight()
-    local size = self.settings:readSetting("tapless_keyboard_size")
+    local size = self.settings:readSetting("ligature_keyboard_size")
     return KEY_HEIGHTS[size]
         or (self.settings:isTrue("keyboard_key_compact") and 48 or 64)
 end
@@ -264,29 +264,29 @@ end
 -- The key font size, or nil to keep KOReader's own.
 function KeyAdapter:keyFontSize()
     local font_setting = self.settings:readSetting(
-        "tapless_keyboard_font_size", "auto")
+        "ligature_keyboard_font_size", "auto")
     if font_setting == 18 or font_setting == 22 or font_setting == 26 then
         return font_setting
     end
-    return KEY_FONT_SIZES[self.settings:readSetting("tapless_keyboard_size")]
+    return KEY_FONT_SIZES[self.settings:readSetting("ligature_keyboard_size")]
 end
 
 -- VirtualKey reads KOReader's global font-size and bold settings during
 -- init. Override those reads in memory only, then restore them immediately
--- so disabling Tapless leaves the stock keyboard settings untouched.
+-- so disabling Ligature leaves the stock keyboard settings untouched.
 function KeyAdapter:initWithKeyFontSize(original_init, key, ...)
-    local tapless_size = self:keyFontSize()
-    local bold = key.tapless_bold
-    if not tapless_size and not bold then
+    local ligature_size = self:keyFontSize()
+    local bold = key.ligature_bold
+    if not ligature_size and not bold then
         return original_init(key, ...)
     end
     local settings = self.settings
     local original_read_setting = settings.readSetting
     local original_is_true = settings.isTrue
-    if tapless_size then
+    if ligature_size then
         settings.readSetting = function(target, setting, default)
             if setting == "keyboard_key_font_size" then
-                return tapless_size
+                return ligature_size
             end
             return original_read_setting(target, setting, default)
         end
@@ -317,8 +317,8 @@ local function takeLift(keyboard)
         and keyboard:_swypeTakeLift() == true
 end
 
--- Each wrapper receives the method it replaces. Tapless logic runs only in
--- the outermost copy: if another patch later wraps a Tapless wrapper and
+-- Each wrapper receives the method it replaces. Ligature logic runs only in
+-- the outermost copy: if another patch later wraps a Ligature wrapper and
 -- ensureInstalled() wraps again, the inner copy passes straight through.
 function KeyAdapter:wrappers()
     local adapter = self
@@ -477,17 +477,17 @@ function KeyAdapter:_guard(name, wrapped, original)
 end
 
 function KeyAdapter:install(VirtualKey)
-    if VirtualKey._tapless_adapter_installed then
+    if VirtualKey._ligature_adapter_installed then
         return
     end
-    VirtualKey._tapless_adapter_installed = true
+    VirtualKey._ligature_adapter_installed = true
     self.VirtualKey = VirtualKey
     self:ensureInstalled()
 end
 
--- Another plugin or user patch may replace these methods after Tapless has
+-- Another plugin or user patch may replace these methods after Ligature has
 -- loaded. Call this before building keys so letter swipes still reach
--- Tapless first; anything Tapless does not handle falls through to the
+-- Ligature first; anything Ligature does not handle falls through to the
 -- replacement.
 function KeyAdapter:ensureInstalled()
     local VirtualKey = self.VirtualKey
@@ -499,7 +499,7 @@ function KeyAdapter:ensureInstalled()
         if current == nil or current ~= self.installed[name] then
             local original = VirtualKey[name]
             if not OPTIONAL_METHODS[name] then
-                assert(original, "Tapless: VirtualKey." .. name .. " missing")
+                assert(original, "Ligature: VirtualKey." .. name .. " missing")
             end
             local wrapped = self:_guard(name, build(original), original)
             VirtualKey[name] = wrapped

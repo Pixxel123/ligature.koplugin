@@ -292,7 +292,7 @@ it("replays with personal words from a folder", function()
     os.remove(dir)
     os.execute('mkdir -p "' .. dir .. '"')
     local file = assert(io.open(dir .. "/en.txt", "w"))
-    file:write("# Tapless personal dictionary v1\nwater\n")
+    file:write("# Ligature personal dictionary v1\nwater\n")
     file:close()
     local with_personal = Replay.loadPlugin(T.plugin_dir,
         { personal_dir = dir })

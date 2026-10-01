@@ -1,11 +1,11 @@
--- The gesture reference: one page listing every Tapless gesture, drawn
+-- The gesture reference: one page listing every Ligature gesture, drawn
 -- ahead of time as an image (images/gesture_reference.png). It shows
 -- once by itself, the first time the keyboard opens after language setup,
 -- and any time from Tools → Ligature → Gesture reference. A tap anywhere,
 -- or Back, closes it. It takes every other gesture and key press too, so
 -- none reaches the keyboard or text box underneath.
 local GestureReference = {
-    SETTING_KEY = "tapless_gesture_reference_shown",
+    SETTING_KEY = "ligature_gesture_reference_shown",
     -- Seconds after showing the page before the settings are written, so
     -- the write doesn't hold up the page's first paint.
     FLUSH_DELAY = 1,

@@ -87,7 +87,7 @@ it("stripe is at least 1 px when scaleBySize returns 0", function()
 end)
 
 it("off (setting false) gives a plain span", function()
-    local band = newBand({ tapless_one_handed_hatch = false })
+    local band = newBand({ ligature_one_handed_hatch = false })
     local strip = band:create(120, 400)
     T.truthy(strip.span, "a span")
     T.eq(strip.width, 120)

@@ -178,7 +178,7 @@ it("starts a new gesture when a pan starts somewhere else", function()
     T.eq(last(state).events[1].start[1], 9)
 end)
 
-it("drops a gesture that Tapless did not handle", function()
+it("drops a gesture that Ligature did not handle", function()
     local recorder, state = newRecorder({ "water", "hello" })
     recorder:start()
     recorder:gesture("pan", { pos = pos(10, 10), start_pos = pos(1, 1) })

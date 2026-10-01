@@ -1,4 +1,4 @@
--- Tapless dictionary catalog, download and installation manager.
+-- Ligature dictionary catalog, download and installation manager.
 -- The manager is intentionally independent from the swipe-scoring code so
 -- network and archive work can only start from an explicit user action.
 
@@ -20,8 +20,8 @@ local util = require("util")
 local Screen = require("device").screen
 
 
-local CATALOG_URL = "https://pixxel123.github.io/tapless.dictionaries/catalog.json"
-local RELEASE_BASE_URL = "https://github.com/Pixxel123/tapless.dictionaries/releases/download/v"
+local CATALOG_URL = "https://pixxel123.github.io/ligature.dictionaries/catalog.json"
+local RELEASE_BASE_URL = "https://github.com/Pixxel123/ligature.dictionaries/releases/download/v"
 local MAX_PACKAGE_BYTES = 16 * 1024 * 1024
 local MAX_UNCOMPRESSED_BYTES = 20 * 1024 * 1024
 local MAX_CATALOG_BYTES = 256 * 1024
@@ -193,7 +193,7 @@ local function validateCatalog(data)
 end
 
 local function localRoot()
-    return DataStorage:getDataDir() .. "/tapless"
+    return DataStorage:getDataDir() .. "/ligature"
 end
 
 local function installedPath(id, plugin_dir)
@@ -242,7 +242,7 @@ local function httpToFile(url, target)
             return http.request{
                 url = url,
                 method = "GET",
-                headers = { ["User-Agent"] = "Tapless-KOReader" },
+                headers = { ["User-Agent"] = "Ligature-KOReader" },
                 sink = ltn12.sink.file(file),
             }
         end)
@@ -649,7 +649,7 @@ function Manager:_download(package)
         if ok then
             self:_notify("Installed dictionary: " .. package.name)
         else
-            logger.warn("Tapless dictionary install failed", package.id, err)
+            logger.warn("Ligature dictionary install failed", package.id, err)
             self:_notify("Failed to install dictionary:\n" .. tostring(err))
         end
         self:showMenu()

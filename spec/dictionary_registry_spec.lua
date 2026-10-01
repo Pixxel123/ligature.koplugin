@@ -1,7 +1,7 @@
 local T = require("helper")
 local it = T.it
 
-local ROOT = "/tmp/claude-1000/tapless-registry-spec"
+local ROOT = "/tmp/claude-1000/ligature-registry-spec"
 local scans = 0
 
 -- KOReader's lfs, on the real file system, counting folder scans.

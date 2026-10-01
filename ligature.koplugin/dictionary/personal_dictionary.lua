@@ -15,7 +15,7 @@ function PersonalDictionary:new(normalization, dictionary_index, root)
     return setmetatable({
         normalization = assert(normalization),
         dictionary_index = assert(dictionary_index),
-        root = root or (DataStorage:getDataDir() .. "/tapless/personal"),
+        root = root or (DataStorage:getDataDir() .. "/ligature/personal"),
         language = nil,
         profile = nil,
         words = nil,
@@ -108,7 +108,7 @@ end
 
 function PersonalDictionary:_save(words, language)
     return WordListFile.save(self:_path(language),
-        "# Tapless personal dictionary v1", words,
+        "# Ligature personal dictionary v1", words,
         function() util.makePath(self.root) end, "personal dictionary")
 end
 

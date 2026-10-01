@@ -4,7 +4,7 @@
 -- own diagonal hatch in black at 40% opacity, so the page still shows
 -- through while the keyboard reads as one band across the screen.
 local SideBand = {
-    SETTING = "tapless_one_handed_hatch",
+    SETTING = "ligature_one_handed_hatch",
     -- ZenOS's values: stripe width before scaling, and opacity.
     STRIPE = 2,
     ALPHA = 0.4,

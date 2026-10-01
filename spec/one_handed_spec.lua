@@ -53,7 +53,7 @@ it("saves position and size in tenths of a millimetre", function()
         state.width = 70
         state.height = 60.04
     end)
-    local saved = settings.values.tapless_one_handed.portrait
+    local saved = settings.values.ligature_one_handed.portrait
     T.eq(saved.enabled, true, "enabled")
     T.eq(saved.left_mm, 10.1, "left")
     T.eq(saved.width_mm, 70, "width")
@@ -81,7 +81,7 @@ end)
 
 it("pulls a saved position that no longer fits back on screen", function()
     local settings = newSettings()
-    settings.values.tapless_one_handed = {
+    settings.values.ligature_one_handed = {
         portrait = { enabled = true, left_mm = 80, width_mm = 68 },
     }
     near(OneHanded:new(settings):state(PORTRAIT).left, SCREEN_MM - 68)
@@ -89,7 +89,7 @@ end)
 
 it("falls back to the defaults for damaged saved values", function()
     local settings = newSettings()
-    settings.values.tapless_one_handed = {
+    settings.values.ligature_one_handed = {
         portrait = { enabled = "yes", left_mm = "x", width_mm = {},
             height_mm = 0 / 0 },
     }

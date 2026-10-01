@@ -1,7 +1,7 @@
 local T = require("helper")
 local it = T.it
 
--- KOReader's VirtualKeyboard, reduced to the methods Tapless wraps.
+-- KOReader's VirtualKeyboard, reduced to the methods Ligature wraps.
 local function newKeyboardClass(calls)
     local VirtualKeyboard = {}
     VirtualKeyboard.__index = VirtualKeyboard
@@ -83,7 +83,7 @@ it("offers the words before the cursor to a slide from backspace",
     T.eq(keyboard:_swypeDeleteSlideBegin(), 2)
 end)
 
-it("leaves backspace to KOReader while Tapless is off", function()
+it("leaves backspace to KOReader while Ligature is off", function()
     local _, keyboard = setup{ keyboard_swype_mvp_enabled = false }
     T.eq(keyboard:_swypeDeleteSlideBegin(), 0)
 end)

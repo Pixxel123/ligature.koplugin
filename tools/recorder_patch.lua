@@ -1,12 +1,12 @@
--- Tapless swipe test recorder. tools/swipe_session.py installs this as a
+-- Ligature swipe test recorder. tools/swipe_session.py installs this as a
 -- KOReader user patch for the length of a test session; it is not part of
--- the plugin. It does nothing unless tapless-dev/recording exists.
+-- the plugin. It does nothing unless ligature-dev/recording exists.
 local DataStorage = require("datastorage")
 local UIManager = require("ui/uimanager")
 local lfs = require("libs/libkoreader-lfs")
 local logger = require("logger")
 
-local dev_dir = DataStorage:getDataDir() .. "/tapless-dev"
+local dev_dir = DataStorage:getDataDir() .. "/ligature-dev"
 local flag_path = dev_dir .. "/recording"
 
 local function recording()
@@ -75,7 +75,7 @@ local function pauseLearning(VirtualKeyboard)
             model.learn = function() end
             paused[#paused + 1] = model
         else
-            logger.warn("Tapless recorder: cannot pause learning", name)
+            logger.warn("Ligature recorder: cannot pause learning", name)
         end
     end
     return function()
@@ -87,8 +87,8 @@ end
 
 local function install()
     local VirtualKeyboard = require("ui/widget/virtualkeyboard")
-    if not VirtualKeyboard._tapless_adapter_installed then
-        logger.warn("Tapless recorder: Tapless keyboard is not active")
+    if not VirtualKeyboard._ligature_adapter_installed then
+        logger.warn("Ligature recorder: Ligature keyboard is not active")
         return
     end
     local Device = require("device")
@@ -131,7 +131,7 @@ local function install()
             toast = nil
         end
         log:close()
-        logger.info("Tapless recorder: stopped", reason)
+        logger.info("Ligature recorder: stopped", reason)
     end
 
     local recorder = Recorder:new{
@@ -159,7 +159,7 @@ local function install()
         end
         local ok, err = pcall(fn, ...)
         if not ok then
-            logger.warn("Tapless recorder: stopped after error", err)
+            logger.warn("Ligature recorder: stopped after error", err)
             stop("error")
         end
     end
@@ -172,7 +172,7 @@ local function install()
 
     local function wrap(name, wrapper)
         local original = assert(VirtualKeyboard[name],
-            "Tapless recorder: VirtualKeyboard." .. name .. " missing")
+            "Ligature recorder: VirtualKeyboard." .. name .. " missing")
         VirtualKeyboard[name] = function(...)
             return wrapper(original, ...)
         end
@@ -263,7 +263,7 @@ local function install()
     end)
 
     local ok, meta = pcall(dofile,
-        DataStorage:getDataDir() .. "/plugins/tapless.koplugin/_meta.lua")
+        DataStorage:getDataDir() .. "/plugins/ligature.koplugin/_meta.lua")
     -- Log every gesture before any widget sees it, to find out where the
     -- rest of a swipe goes when the keyboard stops receiving it.
     local original_send = UIManager.sendEvent
@@ -285,12 +285,12 @@ local function install()
                 and meta.version or nil,
         }
     end)
-    logger.info("Tapless recorder: recording", mode)
+    logger.info("Ligature recorder: recording", mode)
 end
 
 UIManager:nextTick(function()
     local ok, err = pcall(install)
     if not ok then
-        logger.warn("Tapless recorder: not installed", err)
+        logger.warn("Ligature recorder: not installed", err)
     end
 end)

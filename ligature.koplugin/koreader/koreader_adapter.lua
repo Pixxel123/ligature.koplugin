@@ -6,10 +6,10 @@ function KoreaderAdapter:new(options)
 end
 
 function KoreaderAdapter:install(VirtualKeyboard)
-    if VirtualKeyboard._tapless_adapter_installed then
+    if VirtualKeyboard._ligature_adapter_installed then
         return VirtualKeyboard
     end
-    VirtualKeyboard._tapless_adapter_installed = true
+    VirtualKeyboard._ligature_adapter_installed = true
 
     local original_init = assert(VirtualKeyboard.init)
     local original_show = assert(VirtualKeyboard.onShow)
@@ -265,7 +265,7 @@ function KoreaderAdapter:install(VirtualKeyboard)
         }
     end
 
-    -- The height from Tapless's Keyboard size setting.
+    -- The height from Ligature's Keyboard size setting.
     function VirtualKeyboard:_swypeNormalHeight()
         return adapter.screen:scaleBySize(
             adapter.key_adapter:keyHeight() * (#self.KEYS + 1))
@@ -308,7 +308,7 @@ function KoreaderAdapter:install(VirtualKeyboard)
         handle = adapter.virtual_key:new{
             key = adapter.one_handed.HINT,
             label = adapter.one_handed.HINT,
-            is_tapless_handle = true,
+            is_ligature_handle = true,
             -- Every entry keeps a plain string key: VirtualKeyPopup's
             -- "key = v.key or v" falls back to the whole table otherwise,
             -- which addChar cannot take a swipe fallback string from.
@@ -650,7 +650,7 @@ function KoreaderAdapter:install(VirtualKeyboard)
             state.enabled = true
             state.left = draft.left
             state.width = draft.width
-            -- Left at the normal height, the keys follow Tapless's
+            -- Left at the normal height, the keys follow Ligature's
             -- Keyboard size setting.
             state.height = draft.height
                 and math.abs(draft.height - normal) >= 0.5
@@ -1057,7 +1057,7 @@ function KoreaderAdapter:install(VirtualKeyboard)
         adapter.text_highlight:clear(self)
         self.swype_mvp_delete_starts = nil
         local inputbox = self.inputbox
-        -- Switching Tapless off restores KOReader's own backspace; while
+        -- Switching Ligature off restores KOReader's own backspace; while
         -- the keyboard is being resized, its keys are not for typing.
         -- (Not isSwypeMvpEnabled: the symbol layers keep the slide.)
         if not adapter.settings:nilOrTrue("keyboard_swype_mvp_enabled")

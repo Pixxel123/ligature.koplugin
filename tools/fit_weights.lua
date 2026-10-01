@@ -1,4 +1,4 @@
--- Fits the weights that turn Tapless's per-word evidence into a ranking,
+-- Fits the weights that turn Ligature's per-word evidence into a ranking,
 -- from recorded swipe test sessions.
 --
 -- luajit tools/fit_weights.lua [--plugin DIR] [--shape] SESSION.jsonl...
@@ -521,7 +521,7 @@ local function withoutLast(swipes)
 end
 
 local function main(args)
-    local plugin_dir = tools_dir .. "/../tapless.koplugin"
+    local plugin_dir = tools_dir .. "/../ligature.koplugin"
     local paths = {}
     local shape = false
     local index = 1

@@ -15,9 +15,10 @@ upstream in [#2](https://github.com/azac/tapless.koplugin/pull/2) and
 
 ## Installation
 
-Copy the `tapless.koplugin` folder into KOReader's `plugins` folder and
-restart KOReader. The folder keeps upstream's name, so it replaces Tapless
-if you have it, and your settings and learned words carry over.
+Copy the `ligature.koplugin` folder into KOReader's `plugins` folder and
+restart KOReader. If you have Tapless, delete its `tapless.koplugin`
+folder first, as both change the same keyboard. Ligature keeps its own
+settings and learned words, so it starts fresh.
 
 The first time the keyboard opens, it asks which languages you type in.
 The next time, it shows a page with every gesture. That page is also under
@@ -395,9 +396,9 @@ Only dictionary and personal words count, so typos aren't learned. An
 apostrophe is part of the word, so "don't" is learned whole, never "don" or
 "t"; a hyphenated word like "well-known" isn't learned at all.
 
-Tapless already learned which word you type after which. The fork adds a
-table of common word pairs for English, so this works from the first
-sentence instead of only after you've typed a pair yourself. A pair's
+Upstream Tapless already learned which word you type after which. The
+fork adds a table of common word pairs for English, so this works from the
+first sentence instead of only after you've typed a pair yourself. A pair's
 bonus depends on how much likelier the word is after the previous word
 than anywhere else. The learned bonus and the table bonus are added
 together, up to the same limit the learned bonus had on its own. It only
@@ -411,7 +412,7 @@ for the previous word is read, when it's needed. It was counted from the
 English sentences of [Tatoeba](https://tatoeba.org) (CC BY 2.0 FR) by
 `tools/build_word_pairs.py`, leaving out any sentence that shares four
 words in a row with the test prompts, so replays of the test sessions stay
-fair. See `tapless.koplugin/dictionaries/en/ATTRIBUTION.txt`.
+fair. See `ligature.koplugin/dictionaries/en/ATTRIBUTION.txt`.
 
 A thumb reaching across a one-handed keyboard tends to land short of the
 keys further away, the same way each time. From the words you keep, the
@@ -756,7 +757,7 @@ keyboard.
   removed too.
 - The downloadable dictionaries are Czech, Danish, Dutch, English, French,
   German, Italian, Polish, Portuguese (Brazil), Spanish and Turkish, from
-  [Pixxel123/tapless.dictionaries](https://github.com/Pixxel123/tapless.dictionaries).
+  [Pixxel123/ligature.dictionaries](https://github.com/Pixxel123/ligature.dictionaries).
   Each has an `ATTRIBUTION.txt` saying where its words come from. The
   English one includes the word-pair table.
 - With only one language enabled, holding space types a space.

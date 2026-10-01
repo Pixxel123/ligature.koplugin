@@ -1,4 +1,4 @@
--- Replays recorded Tapless swipe test sessions through a plugin
+-- Replays recorded Ligature swipe test sessions through a plugin
 -- directory's recognition code and reports accuracy, including the swipes
 -- that began on a number key and the words the user has learned.
 --
@@ -64,7 +64,7 @@ local Replay = {}
 -- The device settings keys ContextModel's and UsageModel's counts are saved
 -- under.
 local CONTEXT_SETTING_KEY = "keyboard_swype_mvp_context_counts"
-local USAGE_SETTING_KEY = "tapless_word_usage"
+local USAGE_SETTING_KEY = "ligature_word_usage"
 
 local function deepCopy(value)
     if type(value) ~= "table" then
@@ -371,7 +371,7 @@ end
 -- and so were left to KOReader, which types the digit or its alternate
 -- character: { pos, pans, ends }. attempt.gestures holds every gesture
 -- dispatched since the previous attempt, the attempt's own last. That one
--- is not left out when the swipe began on a number key: Tapless took it.
+-- is not left out when the swipe began on a number key: Ligature took it.
 function Replay.numberKeyGestures(plugin, attempt)
     local layout, profile = layoutOf(plugin, attempt)
     local groups, group = {}, nil
@@ -967,7 +967,7 @@ local function lengthGroup(row)
 end
 
 local function main(args)
-    local plugin_dir = tools_dir .. "/../tapless.koplugin"
+    local plugin_dir = tools_dir .. "/../ligature.koplugin"
     local compare_dir, show_misses, show_losses, paths = nil, false, false,
         {}
     local keep_suspect = false

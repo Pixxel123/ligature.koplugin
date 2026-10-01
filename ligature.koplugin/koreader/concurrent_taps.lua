@@ -13,7 +13,7 @@ local ConcurrentTaps = {}
 -- find_upvalue, and the widget classes that should receive concurrent taps.
 function ConcurrentTaps.install(options)
     local Input = assert(options.input)
-    if Input._tapless_concurrent_taps then
+    if Input._ligature_concurrent_taps then
         return true
     end
     if Input.allow_concurrent_taps ~= nil then
@@ -22,10 +22,10 @@ function ConcurrentTaps.install(options)
     local findUpvalue = assert(options.find_upvalue)
     local Contact = findUpvalue(options.gesture_detector.newContact, "Contact")
     if type(Contact) ~= "table" or type(Contact.tapState) ~= "function" then
-        options.logger.warn("Tapless: cannot backport concurrent taps")
+        options.logger.warn("Ligature: cannot backport concurrent taps")
         return false
     end
-    Input._tapless_concurrent_taps = true
+    Input._ligature_concurrent_taps = true
     Input.allow_concurrent_taps = false
     for _, widget_class in ipairs(options.widget_classes) do
         widget_class.allow_concurrent_taps = true

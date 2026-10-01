@@ -3,7 +3,7 @@
 -- the same on any screen; portrait and landscape each keep their own.
 -- A screen is { w = px, h = px, dpi = dots per inch }.
 local OneHanded = {
-    SETTING = "tapless_one_handed",
+    SETTING = "ligature_one_handed",
     MIN_WIDTH = 64,
     MAX_WIDTH = 92,
     DEFAULT_WIDTH = 68,
