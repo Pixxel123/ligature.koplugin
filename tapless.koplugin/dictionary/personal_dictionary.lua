@@ -9,6 +9,7 @@ PersonalDictionary.__index = PersonalDictionary
 
 local MAX_WORDS = 5000
 local PERSONAL_FREQUENCY = 4500
+local validLanguage = WordListFile.validLanguage
 
 function PersonalDictionary:new(normalization, dictionary_index, root)
     return setmetatable({
@@ -22,11 +23,7 @@ function PersonalDictionary:new(normalization, dictionary_index, root)
     }, self)
 end
 
-function PersonalDictionary:_validLanguage(language)
-    return WordListFile.validLanguage(language)
-end
-
-function PersonalDictionary:_prepareWord(word, profile)
+function PersonalDictionary:prepareWord(word, profile)
     if type(word) ~= "string" or word:find("[\t\r\n]") then
         return
     end
@@ -54,23 +51,14 @@ function PersonalDictionary:_insert(buckets, word, signature)
         bucket = self.dictionary_index:newBucket()
         buckets[key] = bucket
     end
-    local line = table.concat({
-        signature,
-        word,
-        tostring(PERSONAL_FREQUENCY),
-        "en",
-    }, "\t")
-    local entry = self.dictionary_index:addBucketLine(bucket, line)
-    if entry then
-        entry.lang = nil
-        entry.personal = true
-    end
+    self.dictionary_index:addEntry(bucket, signature, word,
+        PERSONAL_FREQUENCY).personal = true
 end
 
 function PersonalDictionary:_buildBuckets(words, profile)
     local buckets = {}
     for word in pairs(words) do
-        local prepared, signature = self:_prepareWord(word, profile)
+        local prepared, signature = self:prepareWord(word, profile)
         if prepared and signature then
             self:_insert(buckets, prepared, signature)
         end
@@ -93,7 +81,7 @@ function PersonalDictionary:_load(language, profile)
             end
             if #line <= 256 and string.sub(line, 1, 1) ~= "#" then
                 local word = line:gsub("\r$", "")
-                local prepared = self:_prepareWord(word, profile)
+                local prepared = self:prepareWord(word, profile)
                 if prepared and not words[prepared] then
                     words[prepared] = true
                     count = count + 1
@@ -109,7 +97,7 @@ function PersonalDictionary:_load(language, profile)
 end
 
 function PersonalDictionary:_ensure(language, profile)
-    if not self:_validLanguage(language) then
+    if not validLanguage(language) then
         return false
     end
     if self.language ~= language or self.profile ~= profile or not self.words then
@@ -124,12 +112,8 @@ function PersonalDictionary:_save(words, language)
         function() util.makePath(self.root) end, "personal dictionary")
 end
 
-function PersonalDictionary:prepareWord(word, profile)
-    return self:_prepareWord(word, profile)
-end
-
 function PersonalDictionary:contains(language, word, profile)
-    local prepared = self:_prepareWord(word, profile)
+    local prepared = self:prepareWord(word, profile)
     if not prepared or not self:_ensure(language, profile) then
         return false
     end
@@ -137,7 +121,7 @@ function PersonalDictionary:contains(language, word, profile)
 end
 
 function PersonalDictionary:add(language, word, profile)
-    local prepared = self:_prepareWord(word, profile)
+    local prepared = self:prepareWord(word, profile)
     if not prepared or not self:_ensure(language, profile) then
         return nil, "Invalid word"
     end
@@ -164,7 +148,7 @@ function PersonalDictionary:add(language, word, profile)
 end
 
 function PersonalDictionary:remove(language, word, profile)
-    local prepared = self:_prepareWord(word, profile)
+    local prepared = self:prepareWord(word, profile)
     if not prepared or not self:_ensure(language, profile)
             or not self.words[prepared] then
         return false
@@ -188,12 +172,7 @@ function PersonalDictionary:list(language, profile)
     if not self:_ensure(language, profile) then
         return {}
     end
-    local words = {}
-    for word in pairs(self.words) do
-        table.insert(words, word)
-    end
-    table.sort(words)
-    return words
+    return WordListFile.sorted(self.words)
 end
 
 function PersonalDictionary:getBucket(first, last, language, profile)

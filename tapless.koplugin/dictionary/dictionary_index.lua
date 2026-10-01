@@ -76,19 +76,16 @@ function DictionaryIndex:newBucket()
     }
 end
 
-function DictionaryIndex:addBucketLine(bucket, line)
-    local signature, word, freq, lang = (line or ""):match(
-        "^([^\t]+)\t([^\t]+)\t([0-9]+)\t([a-z][a-z]*)$")
-    if not signature or not word or not freq then
-        return
-    end
+-- Builds an entry from already-parsed fields, inserts it into the bucket
+-- (indexed by gesture length too) and returns it.
+function DictionaryIndex:addEntry(bucket, signature, word, freq, lang)
     local gesture_signature, repeat_positions = collapseRepeats(signature)
     local entry = {
         signature = signature,
         gesture_signature = gesture_signature,
         repeat_positions = repeat_positions,
         word = word,
-        freq = tonumber(freq) or 0,
+        freq = freq,
         lang = lang,
     }
     table.insert(bucket.entries, entry)
@@ -97,6 +94,15 @@ function DictionaryIndex:addBucketLine(bucket, line)
         bucket.by_gesture_length[gesture_length] or {}
     table.insert(bucket.by_gesture_length[gesture_length], entry)
     return entry
+end
+
+function DictionaryIndex:addBucketLine(bucket, line)
+    local signature, word, freq, lang = (line or ""):match(
+        "^([^\t]+)\t([^\t]+)\t([0-9]+)\t([a-z][a-z]*)$")
+    if not signature then
+        return
+    end
+    return self:addEntry(bucket, signature, word, tonumber(freq) or 0, lang)
 end
 
 function DictionaryIndex:parseBucket(data, bucket)

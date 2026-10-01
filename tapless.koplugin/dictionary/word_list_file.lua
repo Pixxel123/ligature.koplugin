@@ -7,6 +7,16 @@ function WordListFile.validLanguage(language)
         and language:match("^[a-z][a-z0-9-]*$") ~= nil
 end
 
+-- A set of words as a sorted list.
+function WordListFile.sorted(words)
+    local list = {}
+    for word in pairs(words) do
+        list[#list + 1] = word
+    end
+    table.sort(list)
+    return list
+end
+
 -- Writes words (a set) sorted under a header line, replacing the file only
 -- once it is complete. make_folder() creates the folder first. Returns
 -- true, or nil and an error naming what.
@@ -18,12 +28,7 @@ function WordListFile.save(path, header, words, make_folder, what)
         return nil, "Cannot write " .. what
     end
     file:write(header, "\n")
-    local sorted = {}
-    for word in pairs(words) do
-        sorted[#sorted + 1] = word
-    end
-    table.sort(sorted)
-    for _, word in ipairs(sorted) do
+    for _, word in ipairs(WordListFile.sorted(words)) do
         file:write(word, "\n")
     end
     file:close()

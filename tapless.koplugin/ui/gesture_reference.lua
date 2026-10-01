@@ -45,12 +45,10 @@ function GestureReference:_remember()
         return
     end
     self.settings:saveSetting(self.SETTING_KEY, true)
-    if self.settings.flush then
-        local settings = self.settings
-        self.ui_manager:scheduleIn(self.FLUSH_DELAY, function()
-            settings:flush()
-        end)
-    end
+    local settings = self.settings
+    self.ui_manager:scheduleIn(self.FLUSH_DELAY, function()
+        settings:flush()
+    end)
 end
 
 -- The first-run showing: shows the page if it is still due.
@@ -107,9 +105,7 @@ function GestureReference:show()
                 or self.screen:getHeight() ~= built_h then
             build()
         end
-        if paint then
-            return paint(widget, bb, x, y)
-        end
+        return paint(widget, bb, x, y)
     end
 
     local ui_manager = self.ui_manager

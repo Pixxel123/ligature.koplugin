@@ -57,15 +57,6 @@ function BlockedWords:_save(language, words)
         function() self.make_path(self.root) end, "blocked words")
 end
 
-function BlockedWords:_sorted(words)
-    local list = {}
-    for word in pairs(words) do
-        list[#list + 1] = word
-    end
-    table.sort(list)
-    return list
-end
-
 -- Called for every dictionary word a swipe is compared with, so it
 -- returns early when the language has no blocked words.
 function BlockedWords:contains(language, word)
@@ -82,7 +73,7 @@ function BlockedWords:list(language)
     if not validLanguage(language) then
         return {}
     end
-    return self:_sorted(self:_words(language))
+    return WordListFile.sorted(self:_words(language))
 end
 
 -- Returns true, or false (nothing to change) or nil and an error.

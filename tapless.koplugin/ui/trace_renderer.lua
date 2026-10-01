@@ -50,7 +50,7 @@ end
 -- The brush's pixels, as offsets from its centre: a disc WIDTH_MM across
 -- at the screen's dpi, at least 3 pixels.
 function TraceRenderer:brush()
-    local dpi = self.screen.getDPI and self.screen:getDPI() or 160
+    local dpi = self.screen:getDPI()
     local radius = math.max(1,
         math.floor(self.WIDTH_MM * dpi / 25.4 / 2 + 0.5))
     if self.brush_radius ~= radius then
@@ -178,7 +178,7 @@ function TraceRenderer:drawSegment(trace, previous, current)
     end
 end
 
-function TraceRenderer:clear(trace, refresh_type)
+function TraceRenderer:clear(trace)
     if not trace or not trace.drawn_pixels then
         return
     end
@@ -186,7 +186,7 @@ function TraceRenderer:clear(trace, refresh_type)
     trace.drawn_pixels = nil
     trace.render_before = nil
     if region then
-        self.ui_manager:setDirty(nil, refresh_type or self.CLEAR_REFRESH, region)
+        self.ui_manager:setDirty(nil, self.CLEAR_REFRESH, region)
         self:_scheduleCleanup(region)
     end
 end

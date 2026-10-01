@@ -771,8 +771,8 @@ function KoreaderAdapter:install(VirtualKeyboard)
             self.swype_mvp_trace, previous, current)
     end
 
-    function VirtualKeyboard:_swypeClearTracePixels(refresh_type)
-        adapter.trace_renderer:clear(self.swype_mvp_trace, refresh_type)
+    function VirtualKeyboard:_swypeClearTracePixels()
+        adapter.trace_renderer:clear(self.swype_mvp_trace)
     end
 
     function VirtualKeyboard:_swypeCancelBucketPrefetch()
