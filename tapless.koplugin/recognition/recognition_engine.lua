@@ -58,6 +58,18 @@ function RecognitionEngine:pickCandidates(options)
     local max_spatial = math.max(6, #signature)
     local shortlist, seen = {}, {}
 
+    -- What word's kept uses and the word before it earn it, less its
+    -- offensive penalty.
+    local function rankTerms(word)
+        local uses = options.word_uses and options.word_uses(word) or 0
+        local context_bonus = (options.context_bonus
+            and options.context_bonus(
+                trace_info and trace_info.previous_word, word)
+            or 0)
+            - self:_offensivePenalty(dictionary, word, uses)
+        return uses, context_bonus
+    end
+
     local blocked_words = self.blocked_words
     local function scan(entries, allow_endpoint_mismatch, allow_start_mismatch)
         for _, entry in ipairs(entries or {}) do
@@ -65,13 +77,7 @@ function RecognitionEngine:pickCandidates(options)
                     or entry.lang == data_lang)
                     and not (blocked_words
                         and blocked_words:contains(dictionary, entry.word)) then
-                local uses = options.word_uses
-                    and options.word_uses(entry.word) or 0
-                local context_bonus = (options.context_bonus
-                    and options.context_bonus(
-                        trace_info and trace_info.previous_word, entry.word)
-                    or 0)
-                    - self:_offensivePenalty(dictionary, entry.word, uses)
+                local uses, context_bonus = rankTerms(entry.word)
                 local spatial_score, ranked_score, used_near =
                     self.scoring:scoreEntry(
                     signature,
@@ -101,35 +107,30 @@ function RecognitionEngine:pickCandidates(options)
         end
     end
 
-    local personal_bucket = self.personal_dictionary
-        and self.personal_dictionary:getBucket(first, last, dictionary,
-            options.normalization_profile)
-    scan(personal_bucket and personal_bucket.entries)
-
-    local bucket = self.dictionary_store:loadBucket(first, last, dictionary)
-    for length = 2, math.min(14, #signature) do
-        scan(bucket and bucket.by_gesture_length[length])
+    -- The personal words, then the dictionary's, from first_letter to
+    -- last_letter, no longer as gestures than the swipe.
+    local function scanBuckets(first_letter, last_letter,
+            allow_endpoint_mismatch, allow_start_mismatch)
+        local personal_bucket = self.personal_dictionary
+            and self.personal_dictionary:getBucket(first_letter, last_letter,
+                dictionary, options.normalization_profile)
+        scan(personal_bucket and personal_bucket.entries,
+            allow_endpoint_mismatch, allow_start_mismatch)
+        local bucket = self.dictionary_store:loadBucket(first_letter,
+            last_letter, dictionary)
+        for length = 2, math.min(14, #signature) do
+            scan(bucket and bucket.by_gesture_length[length],
+                allow_endpoint_mismatch, allow_start_mismatch)
+        end
     end
+
+    scanBuckets(first, last)
 
     if #signature >= 3 and trace_info and trace_info.endpoint_pos
             and options.endpoint_letters then
         local endpoint_letters = options.endpoint_letters(last)
-        if #endpoint_letters > 1 then
-            for index = 2, #endpoint_letters do
-                local endpoint_last = endpoint_letters[index]
-                local endpoint_bucket = self.dictionary_store:loadBucket(
-                    first, endpoint_last, dictionary)
-                local personal_endpoint_bucket = self.personal_dictionary
-                    and self.personal_dictionary:getBucket(
-                        first, endpoint_last, dictionary,
-                        options.normalization_profile)
-                scan(personal_endpoint_bucket
-                    and personal_endpoint_bucket.entries, true)
-                for length = 2, math.min(14, #signature) do
-                    scan(endpoint_bucket
-                        and endpoint_bucket.by_gesture_length[length], true)
-                end
-            end
+        for index = 2, #endpoint_letters do
+            scanBuckets(first, endpoint_letters[index], true)
         end
     end
 
@@ -137,19 +138,7 @@ function RecognitionEngine:pickCandidates(options)
     if #signature >= 3 and trace_info and options.start_letters then
         local start_letters = options.start_letters(first)
         for index = 2, #start_letters do
-            local start_first = start_letters[index]
-            local personal_start_bucket = self.personal_dictionary
-                and self.personal_dictionary:getBucket(
-                    start_first, last, dictionary,
-                    options.normalization_profile)
-            scan(personal_start_bucket and personal_start_bucket.entries,
-                false, true)
-            local start_bucket = self.dictionary_store:loadBucket(
-                start_first, last, dictionary)
-            for length = 2, math.min(14, #signature) do
-                scan(start_bucket and start_bucket.by_gesture_length[length],
-                    false, true)
-            end
+            scanBuckets(start_letters[index], last, false, true)
         end
     end
 
@@ -178,25 +167,23 @@ function RecognitionEngine:pickCandidates(options)
     local merged = {}
     for _, candidate in ipairs(shortlist) do
         local metadata = candidate.metadata
-        local entry = metadata and metadata.entry
-        if entry then
-            local spatial_score, ranked_score = self.scoring:scoreEntryDynamic(
-                signature,
-                entry,
-                trace_chars,
-                trace_info,
-                key_centers,
-                metadata.allow_endpoint_mismatch,
-                metadata.context_bonus,
-                metadata.allow_start_mismatch,
-                metadata.allow_near and near or nil,
-                metadata.uses,
-                missing_cost)
-            if spatial_score <= max_spatial then
-                merged[entry.word] = merged[entry.word] or metadata
-                self.scoring:addCandidate(results, final_seen, entry,
-                    spatial_score, ranked_score, result_limit)
-            end
+        local entry = metadata.entry
+        local spatial_score, ranked_score = self.scoring:scoreEntryDynamic(
+            signature,
+            entry,
+            trace_chars,
+            trace_info,
+            key_centers,
+            metadata.allow_endpoint_mismatch,
+            metadata.context_bonus,
+            metadata.allow_start_mismatch,
+            metadata.allow_near and near or nil,
+            metadata.uses,
+            missing_cost)
+        if spatial_score <= max_spatial then
+            merged[entry.word] = merged[entry.word] or metadata
+            self.scoring:addCandidate(results, final_seen, entry,
+                spatial_score, ranked_score, result_limit)
         end
     end
     local shape_words = {}
@@ -212,13 +199,7 @@ function RecognitionEngine:pickCandidates(options)
             }) do
             local entry = found.entry
             if not final_seen[entry.word] then
-                local uses = options.word_uses
-                    and options.word_uses(entry.word) or 0
-                local context_bonus = (options.context_bonus
-                    and options.context_bonus(
-                        trace_info and trace_info.previous_word, entry.word)
-                    or 0)
-                    - self:_offensivePenalty(dictionary, entry.word, uses)
+                local uses, context_bonus = rankTerms(entry.word)
                 -- The channel chose the word by its ends, so either may be
                 -- a neighbouring key.
                 local spatial_score, ranked_score =
