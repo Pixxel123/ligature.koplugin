@@ -98,8 +98,7 @@ function InputSession:recordInsert(signature, candidates, previous_word)
     if not candidates or #candidates == 0 then
         return
     end
-    local output_word = candidates[1].output_word or candidates[1].word
-    local inserted = output_word
+    local inserted = candidates[1].output_word or candidates[1].word
     self.candidates = candidates
     self.completion = nil
     self.personal_offer = nil
@@ -108,7 +107,6 @@ function InputSession:recordInsert(signature, candidates, previous_word)
         text = inserted,
         signature = signature,
         word = candidates[1].word,
-        output_word = output_word,
         previous_word = previous_word,
     }
     return inserted
@@ -137,7 +135,6 @@ function InputSession:selection(candidate)
         return
     end
     return {
-        candidate = candidate,
         pending = self.last_insert,
         replacement = candidate.output_word or candidate.word,
         delete_text = self.last_insert.text,
