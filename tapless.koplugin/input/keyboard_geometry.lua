@@ -20,6 +20,13 @@ local function containsPoint(dimen, pos)
         and dimen.y + dimen.h >= pos.y + (pos.h or 0)
 end
 
+-- The letter key types, normalized; nil for any other key.
+function KeyboardGeometry:_letterOf(key, profile)
+    local normalized = self.normalization:normalizeText(
+        key.key or key.label, profile)
+    return #normalized == 1 and normalized or nil
+end
+
 function KeyboardGeometry:keyAt(layout, pos, profile)
     if not pos or not layout then
         return
@@ -30,12 +37,7 @@ function KeyboardGeometry:keyAt(layout, pos, profile)
                 if key.is_swype_candidate then
                     return
                 end
-                local normalized = self.normalization:normalizeText(
-                    key.key or key.label, profile)
-                if #normalized == 1 then
-                    return normalized, key
-                end
-                return nil, key
+                return self:_letterOf(key, profile), key
             end
         end
     end
@@ -72,10 +74,9 @@ function KeyboardGeometry:startKeyAt(layout, pos, profile)
             end
         end
     end
-    local normalized = below and self.normalization:normalizeText(
-        below.key or below.label, profile)
-    if normalized and #normalized == 1 then
-        return normalized, below
+    local letter_below = below and self:_letterOf(below, profile)
+    if letter_below then
+        return letter_below, below
     end
     return letter, key
 end
@@ -109,9 +110,8 @@ function KeyboardGeometry:endpointLetters(layout, pos, exact_last, profile,
             if key.dimen and not key.is_swype_candidate
                     and (not reach
                         or gapTo(key.dimen, pos) < reach) then
-                local normalized = self.normalization:normalizeText(
-                    key.key or key.label, profile)
-                if #normalized == 1 and not seen[normalized] then
+                local normalized = self:_letterOf(key, profile)
+                if normalized and not seen[normalized] then
                     local center_x = key.dimen.x + key.dimen.w / 2
                     local center_y = key.dimen.y + key.dimen.h / 2
                     local dx = pos.x - center_x
@@ -129,7 +129,6 @@ function KeyboardGeometry:endpointLetters(layout, pos, exact_last, profile,
     end)
     for index = 1, math.min(2, #nearby) do
         table.insert(candidates, nearby[index].letter)
-        seen[nearby[index].letter] = true
     end
     return candidates
 end
@@ -150,9 +149,8 @@ function KeyboardGeometry:letterKeys(layout, profile)
     for _, row in ipairs(layout) do
         for _, key in ipairs(row) do
             if key.dimen and not key.is_swype_candidate then
-                local normalized = self.normalization:normalizeText(
-                    key.key or key.label, profile)
-                if #normalized == 1 and not keys[normalized] then
+                local normalized = self:_letterOf(key, profile)
+                if normalized and not keys[normalized] then
                     keys[normalized] = {
                         x = key.dimen.x + key.dimen.w / 2,
                         y = key.dimen.y + key.dimen.h / 2,
