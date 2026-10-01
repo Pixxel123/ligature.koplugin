@@ -73,6 +73,55 @@ it("curves through a turn instead of meeting it at a corner", function()
     end
 end)
 
+-- Draws a straight swipe through xs at height y, a touch point at each.
+local function swipe(renderer, trace, xs, y)
+    local previous
+    for _, x in ipairs(xs) do
+        local point = { x = x, y = y }
+        renderer:drawSegment(trace, previous, point)
+        previous = point
+    end
+end
+
+it("shows only the last 30 mm of the trail behind the finger", function()
+    local renderer, calls = setup(300)
+    local trace = {}
+    local xs = {}
+    for x = 100, 900, 40 do xs[#xs + 1] = x end
+    swipe(renderer, trace, xs, 300)
+    -- 30 mm at 300 dpi is 354 pixels.
+    T.eq(calls.black["150,300"], nil, "the start is erased")
+    T.eq(calls.black["500,300"], nil, "so is the middle")
+    T.truthy(calls.black["600,300"], "the last 30 mm stays")
+    T.truthy(calls.black["900,300"], "up to the finger")
+    T.eq(calls.dirty[#calls.dirty].mode, "a2", "drawn and erased in one A2 step")
+end)
+
+it("keeps the trail where it crosses a part being erased", function()
+    local renderer, calls = setup(300)
+    local trace = {}
+    swipe(renderer, trace, { 100, 140, 180, 220, 260, 300, 260, 220, 180, 140, 100 }, 300)
+    -- Going out and back is 400 pixels: the way out is partly erased, but
+    -- the way back covers the same pixels and must stay black.
+    for _, x in ipairs({ 110, 150, 200, 250 }) do
+        T.truthy(calls.black[x .. ",300"], "still drawn at " .. x)
+    end
+end)
+
+it("refreshes everywhere the trail went when the finger lifts", function()
+    local renderer, calls = setup(300)
+    local trace = {}
+    local xs = {}
+    for x = 100, 900, 40 do xs[#xs + 1] = x end
+    swipe(renderer, trace, xs, 300)
+    renderer:clear(trace)
+    T.eq(black(calls), 0, "all white again")
+    local last = calls.dirty[#calls.dirty]
+    T.eq(last.mode, "ui")
+    T.truthy(last.region.x <= 96 and last.region.x + last.region.w >= 905,
+        "the erased start too, to clear any ghosting")
+end)
+
 it("clears exactly what it drew, crossings included", function()
     local renderer, calls = setup(300)
     local trace = {}
