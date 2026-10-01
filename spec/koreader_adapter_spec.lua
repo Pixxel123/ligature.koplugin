@@ -485,3 +485,65 @@ it("learns nothing from where a swipe began off the letter keys, as on "
     T.eq(sample.start, nil, "began above the letters")
     T.eq(sample.lift.x, 110)
 end)
+
+-- The ◨ handle with the one-handed keys against the screen's keys_side
+-- edge, recording what its swipes do.
+local function handleSetup(keys_side)
+    local calls = {}
+    local one_handed = {
+        target = function() return keys_side == "right" and "left" or "right" end,
+        setEnabled = function(_, _, enabled) calls.enabled = enabled end,
+        moveToTarget = function() calls.moved = true end,
+    }
+    local VirtualKeyboard = newKeyboardClass(calls)
+    T.load("koreader_adapter"):new{
+        virtual_key = { new = function(_, key) return key end },
+        one_handed = one_handed,
+        icon_dir = "/icons",
+        ui_manager = { close = function() end },
+    }:install(VirtualKeyboard)
+    local keyboard = setmetatable({
+        _swypeSetOneHanded = function(_, change) change(one_handed, {}) end,
+        _swypeStartResize = function() calls.resized = true end,
+    }, VirtualKeyboard)
+    return calls, keyboard:_swypeHandle(50, 40, {}, {})
+end
+
+local HANDLE_SIDES = {
+    { keys = "right", outward = "west", inward = "east", arrow = "left" },
+    { keys = "left", outward = "east", inward = "west", arrow = "right" },
+}
+
+it("leaves on a swipe up from the handle, moves the keys on a swipe "
+        .. "outwards and resizes on a swipe inwards", function()
+    for _, side in ipairs(HANDLE_SIDES) do
+        local function swipe(direction)
+            local calls, handle = handleSetup(side.keys)
+            handle.swipe_callback({ direction = direction })
+            return calls
+        end
+        T.eq(swipe("north").enabled, false, side.keys .. ": up leaves")
+        T.truthy(swipe(side.outward).moved, side.keys .. ": outwards moves")
+        T.truthy(swipe("north" .. side.outward).moved,
+            side.keys .. ": up and outwards moves")
+        T.truthy(swipe(side.inward).resized, side.keys .. ": inwards resizes")
+        T.truthy(swipe("north" .. side.inward).resized,
+            side.keys .. ": up and inwards resizes")
+        local calls = swipe("south")
+        T.eq(calls.enabled, nil, side.keys .. ": down does nothing")
+        T.eq(calls.moved, nil)
+        T.eq(calls.resized, nil)
+    end
+end)
+
+it("lays the handle's menu out as its swipes go: move outwards, leave "
+        .. "in the middle, resize inwards", function()
+    for _, side in ipairs(HANDLE_SIDES) do
+        local _, handle = handleSetup(side.keys)
+        local chars = handle.key_chars
+        T.eq(chars[1].key, "leave", side.keys)
+        T.eq(chars[side.outward].key, "move", side.keys)
+        T.eq(chars[side.outward].icon, "/icons/" .. side.arrow .. ".svg")
+        T.eq(chars[side.inward].key, "resize", side.keys)
+    end
+end)

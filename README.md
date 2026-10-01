@@ -628,8 +628,10 @@ These are under `Tools → Tapless`. These are off by default:
   layouts (Chinese, Japanese, Korean, Vietnamese).
 - **One-handed keyboard → Use one-handed keyboard**: narrows the keys to one side of the screen,
   with the page visible beside them. At the end of the suggestion row is
-  ◨. Tap or hold it to open a menu of leave, move and resize, or swipe
-  towards an option to run it. In resize mode the keys fade; drag a top
+  ◨. Swipe up from it to leave, outwards to move the keys to the other
+  side, or inwards, over the keys, to resize them. Tap or hold it for a
+  menu: move on the outer side, leave in the middle, resize on the inner
+  side. In resize mode the keys fade; drag a top
   corner to change width and height, a bottom corner to change width, or
   inside to move them, then tap Done. Portrait and landscape remember
   their own place and size. The top suggestion is in bold, here and at

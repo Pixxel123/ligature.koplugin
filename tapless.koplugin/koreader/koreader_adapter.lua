@@ -272,12 +272,17 @@ function KoreaderAdapter:install(VirtualKeyboard)
             adapter.key_adapter:keyHeight() * (#self.KEYS + 1))
     end
 
-    -- The ◨ handle at the end of the suggestion row: tap or hold opens
-    -- KOReader's own key popup as one row of leave, move and resize.
+    -- The ◨ handle at the end of the suggestion row. Swipe up to leave,
+    -- outwards (towards the edge the keys would move to) to move them
+    -- there, or inwards, over the keys, to resize. Tap or hold opens
+    -- KOReader's own key popup as one row laid out the same way: move on
+    -- the outer side, leave in the middle, resize on the inner side.
     function VirtualKeyboard:_swypeHandle(width, height, block, screen)
         local keyboard = self
         local icon_dir = adapter.icon_dir
         local target = adapter.one_handed.target(block, screen)
+        local outward = target == "left" and "west" or "east"
+        local inward = target == "left" and "east" or "west"
         local handle
         local function closePopup()
             if handle.popup then
@@ -308,15 +313,14 @@ function KoreaderAdapter:install(VirtualKeyboard)
             -- Every entry keeps a plain string key: VirtualKeyPopup's
             -- "key = v.key or v" falls back to the whole table otherwise,
             -- which addChar cannot take a swipe fallback string from.
-            -- One row: leave, move under the finger, resize.
             key_chars = {
-                [1] = { key = "move",
+                [1] = { key = "leave", icon = icon_dir .. "/leave.svg" },
+                [outward] = { key = "move",
                     icon = icon_dir .. "/" .. target .. ".svg" },
-                west = { key = "leave", icon = icon_dir .. "/leave.svg" },
-                west_func = leave,
-                east = { key = "resize",
+                [outward .. "_func"] = move,
+                [inward] = { key = "resize",
                     icon = icon_dir .. "/resize.svg" },
-                east_func = resize,
+                [inward .. "_func"] = resize,
             },
             keyboard = keyboard,
             width = width,
@@ -324,14 +328,14 @@ function KoreaderAdapter:install(VirtualKeyboard)
         }
         -- The callback swap from _swypeWireGlobeKey: while the popup is
         -- built, the centre key reads handle.callback as its own, so it
-        -- moves the keys; afterwards it is tap again.
+        -- leaves; afterwards it is tap again.
         local tap
         local function open()
             -- Without KOReader's popup class, only the swipes work.
             if not adapter.virtual_key_popup then
                 return
             end
-            handle.callback = move
+            handle.callback = leave
             local popup = adapter.virtual_key_popup:new{
                 parent_key = handle,
             }
@@ -354,10 +358,11 @@ function KoreaderAdapter:install(VirtualKeyboard)
         handle.callback = tap
         handle.hold_callback = open
         handle.hold_cb_is_popup = true
-        -- A swipe towards an option runs it; any other direction must not
-        -- fall back to typing the handle's own key.
-        local swipes = { west = leave, northwest = leave, north = move,
-            east = resize, northeast = resize }
+        -- A slanting swipe up counts as its side. Any other direction
+        -- must not fall back to typing the handle's own key.
+        local swipes = { north = leave,
+            [outward] = move, ["north" .. outward] = move,
+            [inward] = resize, ["north" .. inward] = resize }
         handle.swipe_callback = function(ges)
             local key_function = swipes[ges.direction]
             if key_function then

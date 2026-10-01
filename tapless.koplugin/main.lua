@@ -240,9 +240,10 @@ function Tapless:addToMainMenu(menu_items)
                         text = "Use one-handed keyboard",
                         help_text = "Narrows the keys to one side of the "
                             .. "screen, with the page beside them. A ◨ "
-                            .. "handle at the end of the suggestion row "
-                            .. "opens a menu of leave, move and resize. Tap "
-                            .. "it, hold it, or swipe towards an option. "
+                            .. "handle at the end of the suggestion row: "
+                            .. "swipe up to leave, outwards to move the "
+                            .. "keys to the other side, or inwards to "
+                            .. "resize them. Tap or hold it for a menu. "
                             .. "Hold the globe key and lift to switch it on "
                             .. "or off while typing. Portrait and landscape "
                             .. "are remembered separately.",
