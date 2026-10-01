@@ -913,9 +913,8 @@ function KoreaderAdapter:install(VirtualKeyboard)
         return adapter.dictionary_controller:setDictionary(self, dictionary)
     end
 
-    function VirtualKeyboard:_swypeRefreshCandidateRow(refresh_type, only_index)
-        adapter.keyboard_ui:refreshCandidateRow(
-            self, refresh_type, only_index)
+    function VirtualKeyboard:_swypeRefreshCandidateRow(refresh_type)
+        adapter.keyboard_ui:refreshCandidateRow(self, refresh_type)
     end
 
     -- A word's width on a suggestion key, in the keys' font.

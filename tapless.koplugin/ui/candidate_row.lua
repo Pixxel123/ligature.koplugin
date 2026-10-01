@@ -23,7 +23,7 @@ function CandidateRow.words(candidates, personal_offer, slot_count)
 end
 
 function CandidateRow:create(options)
-    local slot_count = options.slot_count or 4
+    local slot_count = 4
     local handle = options.handle
     local horizontal_group = options.HorizontalGroup:new{
         allow_mirroring = false,
@@ -38,23 +38,15 @@ function CandidateRow:create(options)
         - (handle and handle.width or 0)
     local words = CandidateRow.words(candidates, options.personal_offer,
         slot_count)
-    local widths
-    if options.measure then
-        -- Each box as wide as its word and padding, as far as the row
-        -- allows (candidate_widths.lua).
-        local CandidateWidths = assert(options.CandidateWidths)
-        local wants = {}
-        for index, word in ipairs(words) do
-            local natural = options.measure(word, index == 1)
-            wants[index] = natural > 0 and natural + 2 * options.pad or 0
-        end
-        widths = CandidateWidths.compute(wants, math.floor(avail))
-    else
-        widths = {}
-        for index = 1, slot_count do
-            widths[index] = math.floor(avail / slot_count)
-        end
+    -- Each box as wide as its word and padding, as far as the row allows
+    -- (candidate_widths.lua).
+    local CandidateWidths = assert(options.CandidateWidths)
+    local wants = {}
+    for index, word in ipairs(words) do
+        local natural = options.measure(word, index == 1)
+        wants[index] = natural > 0 and natural + 2 * options.pad or 0
     end
+    local widths = CandidateWidths.compute(wants, math.floor(avail))
 
     if handle and handle.side == "left" then
         table.insert(horizontal_group, handle.widget)
@@ -75,11 +67,9 @@ function CandidateRow:create(options)
             -- The top suggestion is bold.
             tapless_bold = index == 1 or nil,
         }
-        if options.fit_label then
-            -- KOReader shrinks labels to fit with 2 px to spare; keep the
-            -- row's own padding instead.
-            options.fit_label(virtual_key, widths[index] - 2 * options.pad)
-        end
+        -- KOReader shrinks labels to fit with 2 px to spare; keep the
+        -- row's own padding instead.
+        options.fit_label(virtual_key, widths[index] - 2 * options.pad)
         virtual_key.swipe_callback = nil
         -- Holding a suggestion offers to block it; the lift that ends the
         -- hold must not also pick it.
@@ -124,32 +114,6 @@ function CandidateRow:create(options)
         layout = layout,
         keys = keys,
     }
-end
-
--- Returns true when a slot's word changed.
-function CandidateRow:refresh(options)
-    local candidates = options.candidates or {}
-    local any_changed = false
-    for index, virtual_key in ipairs(options.keys or {}) do
-        if not options.only_index or index == options.only_index then
-            local word = slotText(index, candidates, options.personal_offer)
-            local changed = virtual_key.label ~= word
-            virtual_key.key = word
-            virtual_key.label = word
-            if changed and virtual_key.swype_mvp_label_widget then
-                virtual_key.swype_mvp_label_widget:setText(word)
-            end
-            any_changed = any_changed or changed
-            if changed and virtual_key[1] and virtual_key[1].dimen then
-                options.UIManager:widgetRepaint(
-                    virtual_key[1], virtual_key[1].dimen.x,
-                    virtual_key[1].dimen.y)
-                options.UIManager:setDirty(
-                    nil, options.refresh_type or "ui", virtual_key[1].dimen)
-            end
-        end
-    end
-    return any_changed
 end
 
 return CandidateRow

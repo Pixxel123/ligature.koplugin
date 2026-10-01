@@ -17,9 +17,8 @@ local function setup(changes)
     local dirty = {}
     local keys = { { { dimen = rect(0, 50) } }, { { dimen = rect(50, 50) } } }
     local ui = T.load("keyboard_ui"):new{
-        candidate_row = {
-            refresh = function() return table.remove(changes, 1) end,
-        },
+        candidate_row = {},
+        candidate_widths = {},
         confirm_box = {},
         horizontal_group = {},
         virtual_key = {},
@@ -37,7 +36,9 @@ local function setup(changes)
     }
     local keyboard = {
         swype_mvp_candidate_keys = keys,
+        swype_mvp_candidate_group = {},
         swype_mvp_session = session,
+        _swypeRebuildCandidateRow = function() return table.remove(changes, 1) end,
     }
     return ui, keyboard, dirty
 end
@@ -46,6 +47,7 @@ it("registers a screen-wide hold_release range for the switch lift",
         function()
     local ui = T.load("keyboard_ui"):new{
         candidate_row = {},
+        candidate_widths = {},
         confirm_box = {},
         horizontal_group = {},
         virtual_key = {},
@@ -85,6 +87,7 @@ it("passes the handle on to the candidate row", function()
         candidate_row = {
             create = function(_, options) received = options end,
         },
+        candidate_widths = {},
         confirm_box = {},
         horizontal_group = {},
         virtual_key = {},
@@ -97,6 +100,9 @@ it("passes the handle on to the candidate row", function()
             getCandidates = function() end,
             getPersonalOffer = function() end,
         },
+        _swypeMeasureLabel = function() return 0 end,
+        _swypeLabelPad = function() return 0 end,
+        _swypeFitLabel = function() end,
     }
     local handle = { widget = {}, width = 40, side = "left" }
     ui:createCandidateRow(keyboard, {

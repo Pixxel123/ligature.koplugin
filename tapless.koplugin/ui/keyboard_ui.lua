@@ -9,8 +9,7 @@ KeyboardUI.__index = KeyboardUI
 function KeyboardUI:new(options)
     return setmetatable({
         candidate_row = assert(options.candidate_row),
-        -- Optional: without it, suggestion boxes stay equal.
-        candidate_widths = options.candidate_widths,
+        candidate_widths = assert(options.candidate_widths),
         confirm_box = assert(options.confirm_box),
         horizontal_group = assert(options.horizontal_group),
         virtual_key = assert(options.virtual_key),
@@ -32,13 +31,13 @@ function KeyboardUI:createCandidateRow(keyboard, options)
         horizontal_padding = options.horizontal_padding,
         handle = options.handle,
         CandidateWidths = self.candidate_widths,
-        measure = keyboard._swypeMeasureLabel and function(word, bold)
+        measure = function(word, bold)
             return keyboard:_swypeMeasureLabel(word, bold)
-        end or nil,
-        pad = keyboard._swypeLabelPad and keyboard:_swypeLabelPad() or 0,
-        fit_label = keyboard._swypeFitLabel and function(key, max_width)
+        end,
+        pad = keyboard:_swypeLabelPad(),
+        fit_label = function(key, max_width)
             keyboard:_swypeFitLabel(key, max_width)
-        end or nil,
+        end,
         candidates = keyboard.swype_mvp_session:getCandidates(),
         personal_offer = keyboard.swype_mvp_session:getPersonalOffer(),
         on_select_candidate = function(index)
@@ -113,26 +112,12 @@ function KeyboardUI:registerGestureRanges(keyboard)
     }
 end
 
-function KeyboardUI:refreshCandidateRow(keyboard, refresh_type, only_index)
+function KeyboardUI:refreshCandidateRow(keyboard, refresh_type)
     if not keyboard.swype_mvp_candidate_keys then
         keyboard:addKeys()
     end
-    local changed
-    if keyboard._swypeRebuildCandidateRow
-            and keyboard.swype_mvp_candidate_group then
-        -- Box widths follow the words, so a change builds a new row.
-        changed = keyboard:_swypeRebuildCandidateRow(refresh_type or "ui")
-    else
-        changed = self.candidate_row:refresh{
-            keys = keyboard.swype_mvp_candidate_keys,
-            candidates = keyboard.swype_mvp_session:getCandidates(),
-            personal_offer = keyboard.swype_mvp_session:getPersonalOffer(),
-            refresh_type = refresh_type or "ui",
-            only_index = only_index,
-            UIManager = self.ui_manager,
-        }
-    end
-    if not changed then
+    -- Box widths follow the words, so a change builds a new row.
+    if not keyboard:_swypeRebuildCandidateRow(refresh_type or "ui") then
         return
     end
     keyboard.swype_mvp_row_changes = (keyboard.swype_mvp_row_changes or 0) + 1

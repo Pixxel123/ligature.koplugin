@@ -13,9 +13,13 @@ local function create(on_hold_candidate)
     local row = T.load("candidate_row"):create{
         HorizontalGroup = { new = function() return {} end },
         VirtualKey = VirtualKey,
+        CandidateWidths = T.load("candidate_widths"),
         width = 400, height = 40, key_padding = 2, padding = 2,
         horizontal_padding = horizontal_padding,
         candidates = {},
+        measure = function() return 0 end,
+        pad = 0,
+        fit_label = function() end,
         on_select_candidate = function() end,
         on_hold_candidate = on_hold_candidate,
     }
@@ -46,7 +50,7 @@ end)
 
 it("keeps the key gap between slots", function()
     local row, _, horizontal_padding = create()
-    T.eq(row.layout[1].width, 96)
+    T.eq(row.layout[1].width, 97)
     T.eq(row.widget[2], horizontal_padding)
 end)
 
@@ -61,9 +65,13 @@ local function createWithHandle(handle)
     local row = T.load("candidate_row"):create{
         HorizontalGroup = { new = function() return {} end },
         VirtualKey = VirtualKey,
+        CandidateWidths = T.load("candidate_widths"),
         width = 400, height = 40, key_padding = 2, padding = 2,
         horizontal_padding = gap,
         candidates = {},
+        measure = function() return 0 end,
+        pad = 0,
+        fit_label = function() end,
         on_select_candidate = function() end,
         handle = handle,
     }
@@ -128,11 +136,6 @@ it("sizes each box to its word", function()
     T.eq(row.keys[2].width, row.keys[3].width, "short words alike")
     T.eq(fitted[1][1], "international")
     T.eq(fitted[1][2], row.keys[1].width - 10, "inside the padding")
-end)
-
-it("keeps equal boxes without a measure", function()
-    local row = create()
-    T.eq(row.keys[1].width, row.keys[4].width)
 end)
 
 it("lists the words the row shows", function()
