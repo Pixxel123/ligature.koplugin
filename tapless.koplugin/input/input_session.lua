@@ -5,7 +5,9 @@ function InputSession:new()
     return setmetatable({
         candidates = nil,
         last_insert = nil,
-        debug_signature = nil,
+        -- The signature of the last swipe that typed nothing; backspace
+        -- right after it only clears this, instead of deleting a character.
+        failed_signature = nil,
         personal_offer = nil,
         completion = nil,
     }, self)
@@ -72,26 +74,26 @@ function InputSession:clearPersonalOffer()
 end
 
 function InputSession:hasCandidateState()
-    return self.candidates ~= nil or self.debug_signature ~= nil
+    return self.candidates ~= nil or self.failed_signature ~= nil
 end
 
-function InputSession:clear(keep_debug)
+function InputSession:clear(keep_failed)
     self.candidates = nil
     self.last_insert = nil
     self.personal_offer = nil
     self.completion = nil
-    if not keep_debug then
-        self.debug_signature = nil
+    if not keep_failed then
+        self.failed_signature = nil
     end
 end
 
 function InputSession:recordNoCandidate(signature)
-    self.debug_signature = signature
+    self.failed_signature = signature
     self:clear(true)
 end
 
 function InputSession:recordShortSignature(signature)
-    self.debug_signature = signature
+    self.failed_signature = signature
 end
 
 function InputSession:recordInsert(signature, candidates, previous_word)
@@ -102,7 +104,7 @@ function InputSession:recordInsert(signature, candidates, previous_word)
     self.candidates = candidates
     self.completion = nil
     self.personal_offer = nil
-    self.debug_signature = signature
+    self.failed_signature = signature
     self.last_insert = {
         text = inserted,
         signature = signature,
