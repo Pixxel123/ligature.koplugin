@@ -15,12 +15,28 @@ local function distance(left, right)
     return math.sqrt(dx * dx + dy * dy)
 end
 
+-- The cosine of the turn the path makes at point, coming from before and
+-- going on to after, and the cross product, whose sign says which way it
+-- turns; nil when either step has no length.
+local function turnAt(before, point, after)
+    local in_x = point.x - before.x
+    local in_y = point.y - before.y
+    local out_x = after.x - point.x
+    local out_y = after.y - point.y
+    local in_length = math.sqrt(in_x * in_x + in_y * in_y)
+    local out_length = math.sqrt(out_x * out_x + out_y * out_y)
+    if in_length > 0 and out_length > 0 then
+        return clamp((in_x * out_x + in_y * out_y)
+                / (in_length * out_length), -1, 1),
+            in_x * out_y - in_y * out_x
+    end
+end
+
 local function buildObservations(trace)
     local observations = {}
-    for index, letter in ipairs(trace.letters or {}) do
+    for index in ipairs(trace.letters or {}) do
         local dimen = (trace.letter_dimens or {})[index]
         observations[index] = {
-            letter = letter,
             center_x = dimen and dimen.x + dimen.w / 2,
             center_y = dimen and dimen.y + dimen.h / 2,
             key_size = dimen and math.max(dimen.w, dimen.h) or 1,
@@ -28,7 +44,6 @@ local function buildObservations(trace)
             path_length = 0,
             signed_turn = 0,
             total_turn = 0,
-            point_count = 0,
         }
     end
 
@@ -37,12 +52,6 @@ local function buildObservations(trace)
         local observation = point.letter_index
             and observations[point.letter_index]
         if observation then
-            observation.point_count = observation.point_count + 1
-            observation.first_point = observation.first_point or point
-            observation.first_point_index = observation.first_point_index
-                or point_index
-            observation.last_point = point
-            observation.last_point_index = point_index
             observation.start_time = observation.start_time or point.time
             observation.end_time = point.time or observation.end_time
 
@@ -56,29 +65,19 @@ local function buildObservations(trace)
                 end
             end
 
-            local previous = points[point_index - 1]
-            if previous and previous.letter_index == point.letter_index then
+            local before = points[point_index - 1]
+            if before and before.letter_index == point.letter_index then
                 observation.path_length = observation.path_length
-                    + distance(previous, point)
+                    + distance(before, point)
             end
 
-            local before = points[point_index - 1]
             local after = points[point_index + 1]
             if before and after
                     and before.letter_index == point.letter_index
                     and after.letter_index == point.letter_index then
-                local in_x = point.x - before.x
-                local in_y = point.y - before.y
-                local out_x = after.x - point.x
-                local out_y = after.y - point.y
-                local in_length = math.sqrt(in_x * in_x + in_y * in_y)
-                local out_length = math.sqrt(out_x * out_x + out_y * out_y)
-                if in_length > 0 and out_length > 0 then
-                    local cosine = clamp(
-                        (in_x * out_x + in_y * out_y)
-                            / (in_length * out_length), -1, 1)
+                local cosine, cross = turnAt(before, point, after)
+                if cosine then
                     local turn = math.acos(cosine)
-                    local cross = in_x * out_y - in_y * out_x
                     observation.signed_turn = observation.signed_turn
                         + (cross < 0 and -turn or turn)
                     if turn >= MIN_SCRIBBLE_TURN then
@@ -112,19 +111,9 @@ local function buildObservations(trace)
         local anchor = observation.anchor_point_index
         local turn_strength = 0
         if anchor and points[anchor - 1] and points[anchor + 1] then
-            local before = points[anchor - 1]
-            local point = points[anchor]
-            local after = points[anchor + 1]
-            local in_x = point.x - before.x
-            local in_y = point.y - before.y
-            local out_x = after.x - point.x
-            local out_y = after.y - point.y
-            local in_length = math.sqrt(in_x * in_x + in_y * in_y)
-            local out_length = math.sqrt(out_x * out_x + out_y * out_y)
-            if in_length > 0 and out_length > 0 then
-                local cosine = clamp(
-                    (in_x * out_x + in_y * out_y)
-                        / (in_length * out_length), -1, 1)
+            local cosine = turnAt(points[anchor - 1], points[anchor],
+                points[anchor + 1])
+            if cosine then
                 turn_strength = (1 - cosine) / 2
             end
         end
