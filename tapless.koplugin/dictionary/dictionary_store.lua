@@ -101,45 +101,22 @@ function DictionaryStore:open(dictionary)
     return package
 end
 
+-- Invalidates every dictionary but this one: closes its files, drops its
+-- caches, and cancels its prefetch jobs, exactly as invalidate() would for
+-- each in turn.
 function DictionaryStore:keepOnly(dictionary)
-    for cached_dictionary, package in pairs(self.packages) do
-        if cached_dictionary ~= dictionary then
-            closePackage(package)
-            self.packages[cached_dictionary] = nil
-        end
-    end
-    for cached_dictionary in pairs(self.pair_cache) do
-        if cached_dictionary ~= dictionary then
-            self.pair_cache[cached_dictionary] = nil
-        end
-    end
-    for cached_dictionary in pairs(self.bucket_cache) do
-        if cached_dictionary ~= dictionary then
-            self.bucket_cache[cached_dictionary] = nil
-        end
-    end
-    for cached_dictionary in pairs(self.first_bucket_cache) do
-        if cached_dictionary ~= dictionary then
-            self.first_bucket_cache[cached_dictionary] = nil
-        end
-    end
-    for cached_dictionary in pairs(self.popular_cache) do
-        if cached_dictionary ~= dictionary then
-            self.popular_cache[cached_dictionary] = nil
-        end
-    end
-    for cached_dictionary in pairs(self.word_presence_cache) do
-        if cached_dictionary ~= dictionary then
-            self.word_presence_cache[cached_dictionary] = nil
-        end
-    end
-    for cached_dictionary, jobs in pairs(self.prefetch_jobs) do
-        if cached_dictionary ~= dictionary then
-            for _, job in pairs(jobs) do
-                job.cancelled = true
+    local others = {}
+    for _, cache in ipairs{ self.packages, self.pair_cache,
+            self.bucket_cache, self.first_bucket_cache, self.popular_cache,
+            self.word_presence_cache, self.prefetch_jobs } do
+        for cached in pairs(cache) do
+            if cached ~= dictionary then
+                others[cached] = true
             end
-            self.prefetch_jobs[cached_dictionary] = nil
         end
+    end
+    for other in pairs(others) do
+        self:invalidate(other)
     end
 end
 
