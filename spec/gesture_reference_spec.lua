@@ -45,6 +45,7 @@ it("shows the page full screen, scaled to fit, on white", function()
     T.eq(calls.shown[1][2], "flashui")
     T.eq(view.dimen.w, 1272)
     T.eq(view.dimen.h, 1696)
+    T.eq(view.modal, true, "above the keyboard, which is modal")
     local frame = view[1]
     T.eq(frame.background, "white")
     local image = frame[1][1]

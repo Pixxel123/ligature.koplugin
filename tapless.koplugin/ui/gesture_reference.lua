@@ -50,6 +50,9 @@ function GestureReference:show()
     local w, h = self.screen:getWidth(), self.screen:getHeight()
     local view = self.input_container:new{
         dimen = self.geometry:new{ x = 0, y = 0, w = w, h = h },
+        -- KOReader puts a widget that isn't modal below the modal ones,
+        -- and the keyboard is modal.
+        modal = true,
         self.frame_container:new{
             bordersize = 0,
             padding = 0,
