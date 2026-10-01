@@ -425,10 +425,9 @@ function Manager:_removePersonalWord(word)
     })
 end
 
-function Manager:showBlockedWords()
-    self:_closeMenu()
-    local language = self:_personalContext()
-    local words = self.blocked_words:list(language)
+-- A page of words, each with one action, then Back.
+function Manager:_showWordList(title, words, empty_text, action_text,
+        on_action)
     local buttons = {}
     local action_width = Screen:scaleBySize(140)
     for _, word in ipairs(words) do
@@ -440,24 +439,16 @@ function Manager:showBlockedWords()
                 callback = function() end,
             },
             {
-                text = "Unblock",
+                text = action_text,
                 width = action_width,
-                callback = function()
-                    local removed, err = self.blocked_words:remove(
-                        language, word)
-                    if removed == nil then
-                        self:_notify("Failed to unblock:\n"
-                            .. tostring(err or word))
-                    end
-                    self:showBlockedWords()
-                end,
+                callback = function() on_action(word) end,
             },
         })
     end
     if #words == 0 then
         table.insert(buttons, {
             {
-                text = "No blocked words. Hold a suggestion to block it.",
+                text = empty_text,
                 enabled = false,
                 callback = function() end,
             },
@@ -470,7 +461,7 @@ function Manager:showBlockedWords()
         },
     })
     self.menu = ButtonDialog:new{
-        title = "Tapless: Blocked words (" .. string.upper(language) .. ")",
+        title = title,
         width_factor = 0.95,
         rows_per_page = 8,
         buttons = buttons,
@@ -478,49 +469,32 @@ function Manager:showBlockedWords()
     UIManager:show(self.menu)
 end
 
+function Manager:showBlockedWords()
+    self:_closeMenu()
+    local language = self:_personalContext()
+    self:_showWordList(
+        "Tapless: Blocked words (" .. string.upper(language) .. ")",
+        self.blocked_words:list(language),
+        "No blocked words. Hold a suggestion to block it.",
+        "Unblock",
+        function(word)
+            local removed, err = self.blocked_words:remove(language, word)
+            if removed == nil then
+                self:_notify("Failed to unblock:\n" .. tostring(err or word))
+            end
+            self:showBlockedWords()
+        end)
+end
+
 function Manager:showPersonalWords()
     self:_closeMenu()
     local language, profile = self:_personalContext()
-    local words = self.personal_dictionary:list(language, profile)
-    local buttons = {}
-    local action_width = Screen:scaleBySize(140)
-    for _, word in ipairs(words) do
-        table.insert(buttons, {
-            {
-                text = word,
-                align = "left",
-                enabled = false,
-                callback = function() end,
-            },
-            {
-                text = "Remove",
-                width = action_width,
-                callback = function() self:_removePersonalWord(word) end,
-            },
-        })
-    end
-    if #words == 0 then
-        table.insert(buttons, {
-            {
-                text = "No personal words",
-                enabled = false,
-                callback = function() end,
-            },
-        })
-    end
-    table.insert(buttons, {
-        {
-            text = "Back",
-            callback = function() self:showMenu() end,
-        },
-    })
-    self.menu = ButtonDialog:new{
-        title = "Tapless: Personal words (" .. string.upper(language) .. ")",
-        width_factor = 0.95,
-        rows_per_page = 8,
-        buttons = buttons,
-    }
-    UIManager:show(self.menu)
+    self:_showWordList(
+        "Tapless: Personal words (" .. string.upper(language) .. ")",
+        self.personal_dictionary:list(language, profile),
+        "No personal words",
+        "Remove",
+        function(word) self:_removePersonalWord(word) end)
 end
 
 function Manager:_packageUrl(package)
