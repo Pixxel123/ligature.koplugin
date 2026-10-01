@@ -12,10 +12,11 @@ local TraceRenderer = {
     DITHER = 0.5,
     -- The refresh that clears the trail when the finger lifts. A2 leaves
     -- faint traces that "ui" doesn't wipe, so they build up over a long
-    -- spell of typing; "partial" is REAGL on Kindles, made to clear them
-    -- without flashing. KOReader turns every so many partials into a
-    -- flash, by the user's own "full refresh" setting.
-    CLEAR_REFRESH = "partial",
+    -- spell of typing; partial is REAGL on Kindles, made to clear them
+    -- without flashing. "[partial]" is the same refresh but isn't counted
+    -- towards the flash KOReader makes every so many "partial"s, which
+    -- flashed the keyboard every few words.
+    CLEAR_REFRESH = "[partial]",
 }
 TraceRenderer.__index = TraceRenderer
 

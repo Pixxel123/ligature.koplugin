@@ -86,7 +86,8 @@ it("clears exactly what it drew, crossings included", function()
     renderer:clear(trace)
     T.eq(black(calls), 0, "all white again")
     T.eq(trace.render_before, nil)
-    T.eq(calls.dirty[#calls.dirty].mode, "partial", "REAGL on Kindles, to clear A2 traces")
+    T.eq(calls.dirty[#calls.dirty].mode, "[partial]",
+        "REAGL on Kindles, to clear A2 traces, not counted towards a flash")
 end)
 
 it("draws a grey trail by dithering: half the pixels, by default", function()
