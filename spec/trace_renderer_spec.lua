@@ -101,28 +101,36 @@ local function stroke(renderer, x0, x1, y)
     renderer:clear(trace)
 end
 
-it("cleans up A2's traces with one REAGL refresh once swiping pauses, "
-        .. "covering every trail since the last clean-up", function()
+it("cleans up A2's traces with one flash once swiping pauses after enough "
+        .. "swipes, covering every trail since the last clean-up", function()
     local renderer, calls = setup(300)
+    T.eq(renderer.CLEANUP_EVERY, 8)
+    renderer.CLEANUP_EVERY = 3
     stroke(renderer, 100, 300, 200)
     stroke(renderer, 400, 600, 500)
+    T.eq(#calls.scheduled, 0, "not yet: too few swipes to be worth a flash")
+    stroke(renderer, 700, 800, 300)
+    stroke(renderer, 700, 900, 600)
     local dirty = #calls.dirty
     T.eq(#calls.scheduled, 2)
     T.eq(calls.scheduled[2].delay, renderer.CLEANUP_DELAY)
     calls.scheduled[1].run()
-    T.eq(#calls.dirty, dirty, "the first was overtaken by the second swipe")
+    T.eq(#calls.dirty, dirty, "the first was overtaken by the next swipe")
     calls.scheduled[2].run()
     local cleanup = calls.dirty[#calls.dirty]
-    T.eq(cleanup.mode, "[partial]", "REAGL, not counted towards a flash")
-    T.truthy(cleanup.region.x <= 96 and cleanup.region.x + cleanup.region.w >= 604
-        and cleanup.region.y <= 196 and cleanup.region.y + cleanup.region.h >= 504,
-        "both trails")
+    T.eq(cleanup.mode, "flashui", "only a flash clears what A2 leaves")
+    T.truthy(cleanup.region.x <= 96 and cleanup.region.x + cleanup.region.w >= 904
+        and cleanup.region.y <= 196 and cleanup.region.y + cleanup.region.h >= 604,
+        "every trail since the last clean-up, the earliest too")
     calls.scheduled[2].run()
     T.eq(#calls.dirty, dirty + 1, "once")
+    stroke(renderer, 100, 300, 200)
+    T.eq(#calls.scheduled, 2, "counting starts again")
 end)
 
 it("doesn't clean up in the middle of a swipe", function()
     local renderer, calls = setup(300)
+    renderer.CLEANUP_EVERY = 1
     stroke(renderer, 100, 300, 200)
     local dirty = #calls.dirty
     renderer:drawSegment({}, nil, { x = 500, y = 500 })

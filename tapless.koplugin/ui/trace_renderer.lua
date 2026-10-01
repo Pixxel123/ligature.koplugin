@@ -14,14 +14,15 @@ local TraceRenderer = {
     -- the next swipe isn't held up.
     CLEAR_REFRESH = "ui",
     -- A2 leaves faint traces that "ui" doesn't wipe, so they build up over
-    -- a long spell of typing. Once swiping pauses for CLEANUP_DELAY
-    -- seconds, everywhere the trails went since the last clean-up gets one
-    -- partial refresh, REAGL on Kindles, made to clear them without
-    -- flashing. Doing that at every lift held up the screen and lost the
-    -- next swipe. "[partial]" isn't counted towards the flash KOReader
-    -- makes every so many "partial"s.
-    CLEANUP_REFRESH = "[partial]",
+    -- a long spell of typing, and only a flashing refresh clears them
+    -- (REAGL, tried first, didn't). So once swiping pauses for
+    -- CLEANUP_DELAY seconds, after at least CLEANUP_EVERY swipes since the
+    -- last clean-up, everywhere those trails went gets one flash. Never
+    -- at a lift: a slow refresh there held up the screen and lost the
+    -- next swipe.
+    CLEANUP_REFRESH = "flashui",
     CLEANUP_DELAY = 1.5,
+    CLEANUP_EVERY = 8,
 }
 TraceRenderer.__index = TraceRenderer
 
@@ -188,9 +189,11 @@ function TraceRenderer:clear(trace, refresh_type)
     end
 end
 
--- Adds region to the area the next clean-up refreshes, and schedules the
--- clean-up for when swiping has paused.
+-- Adds region to the area the next clean-up refreshes, and, once enough
+-- swipes have built up, schedules the clean-up for when swiping has
+-- paused.
 function TraceRenderer:_scheduleCleanup(region)
+    self.cleanup_swipes = (self.cleanup_swipes or 0) + 1
     local area = self.cleanup_area
     if area then
         local x0 = math.min(area.x, region.x)
@@ -203,6 +206,9 @@ function TraceRenderer:_scheduleCleanup(region)
             x = region.x, y = region.y, w = region.w, h = region.h,
         }
     end
+    if self.cleanup_swipes < self.CLEANUP_EVERY then
+        return
+    end
     self.cleanup_generation = (self.cleanup_generation or 0) + 1
     local generation = self.cleanup_generation
     self.ui_manager:scheduleIn(self.CLEANUP_DELAY, function()
@@ -210,7 +216,7 @@ function TraceRenderer:_scheduleCleanup(region)
             return
         end
         local cleanup = self.cleanup_area
-        self.cleanup_area = nil
+        self.cleanup_area, self.cleanup_swipes = nil, 0
         self.ui_manager:setDirty(nil, self.CLEANUP_REFRESH, cleanup)
     end)
 end
