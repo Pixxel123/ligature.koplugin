@@ -180,8 +180,6 @@ function TraceCollector:addPoint(trace, pos, letter, key_dimen, timestamp)
         previous_point = previous_point,
         point_added = point_added,
         letter_added = false,
-        letter_rejected = false,
-        active = #trace.letters >= 2,
     }
     if not letter then
         return result
@@ -201,7 +199,6 @@ function TraceCollector:addPoint(trace, pos, letter, key_dimen, timestamp)
             local minimum_distance = math.max(8,
                 math.floor((key_dimen.w or 40) * 0.45))
             if math.sqrt(dx * dx + dy * dy) < minimum_distance then
-                result.letter_rejected = true
                 return result
             end
         end
@@ -215,7 +212,6 @@ function TraceCollector:addPoint(trace, pos, letter, key_dimen, timestamp)
     elseif point_added then
         point.letter_index = #trace.letters
     end
-    result.active = #trace.letters >= 2
     return result
 end
 

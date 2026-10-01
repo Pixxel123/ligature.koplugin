@@ -59,18 +59,10 @@ function GestureController:addPoint(keyboard, pos)
     end
     local result = self.trace_collector:addPoint(
         keyboard.swype_mvp_trace, pos, letter, key and key.dimen, now)
-    if result and result.point_added then
+    if result.point_added then
         keyboard:_swypeDrawTraceSegment(result.previous_point, result.point)
     end
-    if not letter then
-        self:scheduleFinalize(keyboard)
-        return
-    end
-    if result and result.letter_rejected then
-        self:scheduleFinalize(keyboard)
-        return
-    end
-    if result and result.letter_added then
+    if result.letter_added then
         keyboard:_swypeScheduleBucketPrefetch()
     end
     self:scheduleFinalize(keyboard)
@@ -159,20 +151,26 @@ function GestureController:finalizeTrace(keyboard, released)
     return finalized
 end
 
+-- Starts a trace at start_pos; false, starting none, when no letter key
+-- is there.
+function GestureController:_startTrace(keyboard, start_pos)
+    if not keyboard:_swypeStartKeyAt(start_pos) then
+        return false
+    end
+    keyboard:_swypeCommitPendingContext()
+    keyboard:_swypeClearCandidateState()
+    self:addPoint(keyboard, start_pos)
+    return true
+end
+
 function GestureController:onPan(keyboard, ges)
     if not keyboard:isSwypeMvpEnabled() then
         self:reset(keyboard)
         return false
     end
-    if not keyboard.swype_mvp_trace then
-        local start_pos = ges and ges.start_pos
-        local start_letter = keyboard:_swypeStartKeyAt(start_pos)
-        if not start_letter then
-            return false
-        end
-        keyboard:_swypeCommitPendingContext()
-        keyboard:_swypeClearCandidateState()
-        self:addPoint(keyboard, start_pos)
+    if not keyboard.swype_mvp_trace
+            and not self:_startTrace(keyboard, ges and ges.start_pos) then
+        return false
     end
     self:addPoint(keyboard, ges and ges.pos)
     return true
@@ -218,18 +216,8 @@ function GestureController:onPanRelease(keyboard, ges)
         self:reset(keyboard)
         return false
     end
-    if not keyboard.swype_mvp_trace then
-        local start_pos = ges and ges.start_pos
-        local start_letter = keyboard:_swypeStartKeyAt(start_pos)
-        if not start_letter then
-            return false
-        end
-        keyboard:_swypeCommitPendingContext()
-        keyboard:_swypeClearCandidateState()
-        self:addPoint(keyboard, start_pos)
-    end
-    if not keyboard.swype_mvp_trace then
-        self:reset(keyboard)
+    if not keyboard.swype_mvp_trace
+            and not self:_startTrace(keyboard, ges and ges.start_pos) then
         return false
     end
     self:addPoint(keyboard, ges and ges.pos)
