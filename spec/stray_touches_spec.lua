@@ -24,6 +24,7 @@ local function setup(swiping)
     local installed = T.load("stray_touches").install{
         gesture_detector = GestureDetector,
         logger = { warn = function() end },
+        find_upvalue = T.load("find_upvalue"),
         swiping = function() return swiping end,
     }
     local function first(state)

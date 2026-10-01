@@ -9,11 +9,8 @@
 
 local ConcurrentTaps = {}
 
-local findUpvalue = dofile((debug.getinfo(1, "S").source
-    :match("^@(.+)/[^/]+%.lua$") or ".") .. "/find_upvalue.lua")
-
 -- options: input, gesture_detector, ui_manager, geometry, logger,
--- and the widget classes that should receive concurrent taps.
+-- find_upvalue, and the widget classes that should receive concurrent taps.
 function ConcurrentTaps.install(options)
     local Input = assert(options.input)
     if Input._tapless_concurrent_taps then
@@ -22,6 +19,7 @@ function ConcurrentTaps.install(options)
     if Input.allow_concurrent_taps ~= nil then
         return false -- KOReader has this built in
     end
+    local findUpvalue = assert(options.find_upvalue)
     local Contact = findUpvalue(options.gesture_detector.newContact, "Contact")
     if type(Contact) ~= "table" or type(Contact.tapState) ~= "function" then
         options.logger.warn("Tapless: cannot backport concurrent taps")

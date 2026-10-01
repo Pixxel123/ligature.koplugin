@@ -104,6 +104,7 @@ loadModule("concurrent_taps").install{
     ui_manager = UIManager,
     geometry = Geom,
     logger = logger,
+    find_upvalue = findUpvalue,
     widget_classes = { VirtualKeyboard, VirtualKeyPopup },
 }
 
@@ -111,6 +112,7 @@ loadModule("concurrent_taps").install{
 loadModule("stray_touches").install{
     gesture_detector = require("device/gesturedetector"),
     logger = logger,
+    find_upvalue = findUpvalue,
     swiping = function()
         local stack = UIManager._window_stack or {}
         for index = #stack, 1, -1 do

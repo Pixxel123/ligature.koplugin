@@ -32,6 +32,7 @@ local function setup(options)
         ui_manager = ui_manager,
         geometry = { new = function(_, o) return o end },
         logger = { warn = function() end },
+        find_upvalue = T.load("find_upvalue"),
         widget_classes = { Keyboard },
     }
     local function newContact(fields)

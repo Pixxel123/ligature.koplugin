@@ -5,16 +5,14 @@
 
 local StrayTouches = {}
 
-local findUpvalue = dofile((debug.getinfo(1, "S").source
-    :match("^@(.+)/[^/]+%.lua$") or ".") .. "/find_upvalue.lua")
-
--- options: gesture_detector, logger, and swiping() telling whether touches
--- currently go to a keyboard that takes swipes.
+-- options: gesture_detector, logger, find_upvalue, and swiping() telling
+-- whether touches currently go to a keyboard that takes swipes.
 function StrayTouches.install(options)
     local GestureDetector = assert(options.gesture_detector)
     if GestureDetector._tapless_stray_touches then
         return true
     end
+    local findUpvalue = assert(options.find_upvalue)
     local Contact = findUpvalue(GestureDetector.newContact, "Contact")
     if type(Contact) ~= "table" or type(Contact.panState) ~= "function" then
         options.logger.warn("Tapless: cannot ignore stray touches")
