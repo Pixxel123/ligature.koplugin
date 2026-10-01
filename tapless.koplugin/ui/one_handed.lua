@@ -8,7 +8,7 @@ local OneHanded = {
     MAX_WIDTH = 92,
     DEFAULT_WIDTH = 68,
     -- Always left beside the keys, so some of the page shows.
-    PANEL_ROOM = 12,
+    PAGE_ROOM = 12,
     MIN_HEIGHT = 45,
     MAX_HEIGHT = 75,
     -- Of the screen height, so a dialog keeps room above in landscape.
@@ -58,7 +58,7 @@ function OneHanded.limits(screen)
     local screen_w = OneHanded.toMM(screen.w, screen)
     local screen_h = OneHanded.toMM(screen.h, screen)
     local max_w = math.min(OneHanded.MAX_WIDTH,
-        screen_w - OneHanded.PANEL_ROOM)
+        screen_w - OneHanded.PAGE_ROOM)
     local max_h = math.min(OneHanded.MAX_HEIGHT,
         screen_h * OneHanded.MAX_HEIGHT_SHARE)
     return {
@@ -129,16 +129,6 @@ end
 function OneHanded:toggle(screen)
     return self:update(screen, function(state)
         state.enabled = not state.enabled
-    end)
-end
-
--- Turns the mode on with the keys block where block says.
-function OneHanded:saveBlock(screen, block)
-    return self:update(screen, function(state)
-        state.enabled = true
-        state.left = block.left
-        state.width = block.width
-        state.height = block.height
     end)
 end
 

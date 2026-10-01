@@ -20,7 +20,7 @@ function PanelButton:new(options)
     }, self)
 end
 
--- options: name, width, height, and either icon (a file path) with
+-- options: width, height, and either icon (a file path) with
 -- icon_size or text with font_size and bold; bordersize, radius,
 -- filled (black background and white text), bare (no frame), and
 -- callback (without one, taps are still taken but do nothing).
@@ -49,7 +49,6 @@ function PanelButton:create(options)
     end
     local background
     if options.bare then
-        background = nil
         border, radius = 0, nil
     elseif options.filled then
         background = self.blitbuffer.COLOR_BLACK
@@ -76,7 +75,6 @@ function PanelButton:create(options)
         },
         frame,
     }
-    button.tapless_panel_button = options.name
     button.ges_events = {
         TaplessButtonTap = {
             self.gesture_range:new{

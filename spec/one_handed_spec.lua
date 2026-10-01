@@ -47,8 +47,12 @@ end)
 
 it("saves position and size in tenths of a millimetre", function()
     local settings = newSettings()
-    OneHanded:new(settings):saveBlock(PORTRAIT,
-        { left = 10.123, width = 70, height = 60.04 })
+    OneHanded:new(settings):update(PORTRAIT, function(state)
+        state.enabled = true
+        state.left = 10.123
+        state.width = 70
+        state.height = 60.04
+    end)
     local saved = settings.values.tapless_one_handed.portrait
     T.eq(saved.enabled, true, "enabled")
     T.eq(saved.left_mm, 10.1, "left")

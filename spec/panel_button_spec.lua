@@ -27,7 +27,6 @@ it("builds a white icon button of the given size", function()
         name = "leave", icon = "/icons/leave.svg", icon_size = 100,
         width = 224, height = 224,
     }
-    T.eq(button.tapless_panel_button, "leave", "name")
     T.eq(button.dimen.w, 224, "width")
     T.eq(button.dimen.h, 224, "height")
     local frame = button[1]
