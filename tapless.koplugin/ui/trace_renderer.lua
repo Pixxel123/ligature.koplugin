@@ -21,7 +21,9 @@ local TraceRenderer = {
     -- at a lift: a slow refresh there held up the screen and lost the
     -- next swipe.
     CLEANUP_REFRESH = "flashui",
-    CLEANUP_DELAY = 1.5,
+    -- In recorded sessions only 9% of the gaps before the next word were
+    -- longer than 3 s, so the flash mostly falls at a sentence's end.
+    CLEANUP_DELAY = 3,
     CLEANUP_EVERY = 8,
 }
 TraceRenderer.__index = TraceRenderer
