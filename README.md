@@ -11,7 +11,10 @@ Paperwhite (12th gen). Some of the recognition work is up for review
 upstream in [#2](https://github.com/azac/tapless.koplugin/pull/2) and
 [#4](https://github.com/azac/tapless.koplugin/pull/4).
 
-![](https://github.com/user-attachments/assets/8b1577d7-e5a5-4cd0-876c-627eaad4cc14)
+<img src="screenshots/swiping.png" width="420" alt="Swiping &quot;acknowledged&quot; into KOReader's search box over a page of Pride and Prejudice, with the grey trail across the keyboard and the suggestions for the word before">
+
+Swiping "acknowledged" while searching a book, on a Kindle Paperwhite's
+screen size and resolution.
 
 ## Installation
 
