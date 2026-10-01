@@ -62,6 +62,22 @@ function Tapless:openGestureReference()
     end
 end
 
+-- A radio menu entry that saves value under setting_key, checked while
+-- the setting (default when unset) is value.
+local function choice(text, setting_key, value, default)
+    return {
+        text = text,
+        radio = true,
+        checked_func = function()
+            return G_reader_settings:readSetting(setting_key, default)
+                == value
+        end,
+        callback = function()
+            G_reader_settings:saveSetting(setting_key, value)
+        end,
+    }
+end
+
 function Tapless:addToMainMenu(menu_items)
     local plugin = self
 
@@ -99,109 +115,24 @@ function Tapless:addToMainMenu(menu_items)
                                 "tapless_keyboard_size")
                         end,
                     },
-                    {
-                        text = "Extra compact",
-                        radio = true,
-                        checked_func = function()
-                            return G_reader_settings:readSetting(
-                                "tapless_keyboard_size") == "extra_compact"
-                        end,
-                        callback = function()
-                            G_reader_settings:saveSetting(
-                                "tapless_keyboard_size", "extra_compact")
-                        end,
-                    },
-                    {
-                        text = "Compact",
-                        radio = true,
-                        checked_func = function()
-                            local value = G_reader_settings:readSetting(
-                                "tapless_keyboard_size")
-                            return value == "compact"
-                        end,
-                        callback = function()
-                            G_reader_settings:saveSetting(
-                                "tapless_keyboard_size", "compact")
-                        end,
-                    },
-                    {
-                        text = "Normal",
-                        radio = true,
-                        checked_func = function()
-                            local value = G_reader_settings:readSetting(
-                                "tapless_keyboard_size")
-                            return value == "normal"
-                        end,
-                        callback = function()
-                            G_reader_settings:saveSetting(
-                                "tapless_keyboard_size", "normal")
-                        end,
-                    },
-                    {
-                        text = "Large",
-                        radio = true,
-                        checked_func = function()
-                            return G_reader_settings:readSetting(
-                                "tapless_keyboard_size") == "large"
-                        end,
-                        callback = function()
-                            G_reader_settings:saveSetting(
-                                "tapless_keyboard_size", "large")
-                        end,
-                    },
+                    choice("Extra compact", "tapless_keyboard_size",
+                        "extra_compact"),
+                    choice("Compact", "tapless_keyboard_size", "compact"),
+                    choice("Normal", "tapless_keyboard_size", "normal"),
+                    choice("Large", "tapless_keyboard_size", "large"),
                 },
             },
             {
                 text = "Keyboard text size",
                 sub_item_table = {
-                    {
-                        text = "Auto",
-                        radio = true,
-                        checked_func = function()
-                            return G_reader_settings:readSetting(
-                                "tapless_keyboard_font_size", "auto") == "auto"
-                        end,
-                        callback = function()
-                            G_reader_settings:saveSetting(
-                                "tapless_keyboard_font_size", "auto")
-                        end,
-                    },
-                    {
-                        text = "Small",
-                        radio = true,
-                        checked_func = function()
-                            return G_reader_settings:readSetting(
-                                "tapless_keyboard_font_size", "auto") == 18
-                        end,
-                        callback = function()
-                            G_reader_settings:saveSetting(
-                                "tapless_keyboard_font_size", 18)
-                        end,
-                    },
-                    {
-                        text = "Normal",
-                        radio = true,
-                        checked_func = function()
-                            return G_reader_settings:readSetting(
-                                "tapless_keyboard_font_size", "auto") == 22
-                        end,
-                        callback = function()
-                            G_reader_settings:saveSetting(
-                                "tapless_keyboard_font_size", 22)
-                        end,
-                    },
-                    {
-                        text = "Large",
-                        radio = true,
-                        checked_func = function()
-                            return G_reader_settings:readSetting(
-                                "tapless_keyboard_font_size", "auto") == 26
-                        end,
-                        callback = function()
-                            G_reader_settings:saveSetting(
-                                "tapless_keyboard_font_size", 26)
-                        end,
-                    },
+                    choice("Auto", "tapless_keyboard_font_size", "auto",
+                        "auto"),
+                    choice("Small", "tapless_keyboard_font_size", 18,
+                        "auto"),
+                    choice("Normal", "tapless_keyboard_font_size", 22,
+                        "auto"),
+                    choice("Large", "tapless_keyboard_font_size", 26,
+                        "auto"),
                 },
             },
             {
