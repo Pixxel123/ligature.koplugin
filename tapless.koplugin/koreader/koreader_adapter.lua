@@ -686,7 +686,25 @@ function KoreaderAdapter:install(VirtualKeyboard)
         self:_swypeRefreshSideBands()
         self:_swypeScheduleWarmUp()
         adapter.dictionary_controller:scheduleLanguageSetup(self)
+        self:_swypeScheduleGestureReference()
         return result
+    end
+
+    -- The gesture reference, once: the first time the keyboard opens with
+    -- no languages left to choose. Language setup closes the keyboard, so
+    -- the reference waits for the next time it opens.
+    function VirtualKeyboard:_swypeScheduleGestureReference()
+        local reference = adapter.gesture_reference
+        if not reference or not reference:due()
+                or adapter.dictionary_controller:needsLanguageSetup() then
+            return
+        end
+        local keyboard = self
+        adapter.ui_manager:scheduleIn(0.3, function()
+            if not keyboard.swype_mvp_closed then
+                reference:showOnce()
+            end
+        end)
     end
 
     function VirtualKeyboard:onCloseWidget()

@@ -547,3 +547,53 @@ it("lays the handle's menu out as its swipes go: move outwards, leave "
         T.eq(chars[side.inward].key, "resize", side.keys)
     end
 end)
+
+-- A keyboard whose gesture reference is or isn't still due, with language
+-- setup still needed or done, recording what is scheduled and shown.
+local function referenceSetup(due, needs_setup)
+    local calls = { scheduled = {} }
+    local VirtualKeyboard = newKeyboardClass(calls)
+    T.load("koreader_adapter"):new{
+        gesture_reference = {
+            due = function() return due end,
+            showOnce = function() calls.shown = true end,
+        },
+        dictionary_controller = {
+            needsLanguageSetup = function() return needs_setup end,
+        },
+        ui_manager = {
+            scheduleIn = function(_, delay, fn)
+                calls.scheduled[#calls.scheduled + 1] = { delay, fn }
+            end,
+        },
+    }:install(VirtualKeyboard)
+    return calls, setmetatable({}, VirtualKeyboard)
+end
+
+it("shows the gesture reference the first time the keyboard opens with "
+        .. "no languages left to choose", function()
+    local calls, keyboard = referenceSetup(true, false)
+    keyboard:_swypeScheduleGestureReference()
+    T.eq(#calls.scheduled, 1)
+    calls.scheduled[1][2]()
+    T.truthy(calls.shown)
+end)
+
+it("leaves the gesture reference for later while languages are being "
+        .. "chosen, and once it has been shown", function()
+    local calls, keyboard = referenceSetup(true, true)
+    keyboard:_swypeScheduleGestureReference()
+    T.eq(#calls.scheduled, 0, "language setup first")
+    calls, keyboard = referenceSetup(false, false)
+    keyboard:_swypeScheduleGestureReference()
+    T.eq(#calls.scheduled, 0, "already shown")
+end)
+
+it("doesn't show the gesture reference over a keyboard that closed before "
+        .. "its turn came", function()
+    local calls, keyboard = referenceSetup(true, false)
+    keyboard:_swypeScheduleGestureReference()
+    keyboard.swype_mvp_closed = true
+    calls.scheduled[1][2]()
+    T.eq(calls.shown, nil)
+end)

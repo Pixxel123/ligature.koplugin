@@ -183,6 +183,25 @@ local RecognitionEngine = loadModule("recognition_engine")
     :new(DictionaryStore, Scoring, GeometryReranker, PersonalDictionary,
         BlockedWords, ShapeChannel, OffensiveWords)
 
+local GestureReference = loadModule("gesture_reference"):new{
+    settings = G_reader_settings,
+    ui_manager = UIManager,
+    screen = Screen,
+    input_container = InputContainer,
+    frame_container = FrameContainer,
+    center_container = CenterContainer,
+    image_widget = ImageWidget,
+    geometry = Geom,
+    blitbuffer = Blitbuffer,
+    image = plugin_dir .. "/images/gesture_reference.png",
+    back_keys = Device:hasKeys() and { Device.input.group.Back } or nil,
+}
+
+-- For the main menu's Gesture reference entry.
+function VirtualKeyboard.taplessOpenGestureReference()
+    GestureReference:show()
+end
+
 -- Expose dictionary management to the plugin's permanent main-menu entry.
 -- Passing nil as the keyboard deliberately clears any stale keyboard
 -- reference retained after a text dialog has closed.
@@ -197,6 +216,7 @@ return loadModule("koreader_adapter"):new{
     dictionary_controller = DictionaryController,
     input_controller = InputController,
     touch_model = TouchOffset,
+    gesture_reference = GestureReference,
     keyboard_geometry = KeyboardGeometry,
     keyboard_ui = KeyboardUI,
     candidate_row = CandidateRow,

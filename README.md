@@ -619,6 +619,9 @@ old language's lists.
 
 ## Options
 
+`Tools → Tapless → Gesture reference` shows one page with every gesture.
+It also shows once, the first time the keyboard opens.
+
 These are under `Tools → Tapless`. These are off by default:
 
 - **Slide on space to move cursor**: slide left or right along the space

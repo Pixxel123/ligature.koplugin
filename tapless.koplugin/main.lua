@@ -54,6 +54,14 @@ function Tapless:openDictionaryManager()
     end
 end
 
+function Tapless:openGestureReference()
+    if replacement and replacement.taplessOpenGestureReference then
+        replacement.taplessOpenGestureReference()
+    else
+        logger.err("Tapless: gesture reference is unavailable")
+    end
+end
+
 function Tapless:addToMainMenu(menu_items)
     local plugin = self
 
@@ -65,6 +73,12 @@ function Tapless:addToMainMenu(menu_items)
                 text = "Manage dictionaries",
                 callback = function()
                     plugin:openDictionaryManager()
+                end,
+            },
+            {
+                text = "Gesture reference",
+                callback = function()
+                    plugin:openGestureReference()
                 end,
             },
             {

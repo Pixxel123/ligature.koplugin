@@ -58,4 +58,5 @@ return {
     side_band = "ui/side_band.lua",
     panel_button = "ui/panel_button.lua",
     resize_frame = "ui/resize_frame.lua",
+    gesture_reference = "ui/gesture_reference.lua",
 }

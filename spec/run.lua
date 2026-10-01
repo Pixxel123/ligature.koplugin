@@ -27,6 +27,7 @@ local specs = {
     "dictionary_registry_spec",
     "usage_model_spec",
     "touch_offset_spec",
+    "gesture_reference_spec",
     "word_pairs_spec",
     "tap_completions_spec",
     "path_shape_spec",
