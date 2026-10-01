@@ -867,11 +867,6 @@ function KoreaderAdapter:install(VirtualKeyboard)
         return adapter.input_controller:wordUses(word)
     end
 
-    -- Learning where the finger lands (the touch offset).
-    local function touchLearning()
-        return adapter.touch_model
-    end
-
     -- The keyboard, for the touch offset (see TouchOffset.mode), with its
     -- letter keys.
     function VirtualKeyboard:_swypeTouchMode(keys)
@@ -882,11 +877,8 @@ function KoreaderAdapter:install(VirtualKeyboard)
 
     -- For a finished swipe: the shift, in pixels, that recognition should
     -- read it with (nil when there is none), and the letter keys it was
-    -- worked out for, nil too when touch learning is off.
+    -- worked out for.
     function VirtualKeyboard:_swypeTouchShift()
-        if not touchLearning() then
-            return nil
-        end
         local keys = adapter.keyboard_geometry:letterKeys(self.layout,
             self.swype_mvp_normalization_profile)
         return adapter.touch_model:pixelShift(self:_swypeTouchMode(keys),
@@ -898,7 +890,7 @@ function KoreaderAdapter:install(VirtualKeyboard)
     -- worked out for.
     function VirtualKeyboard:_swypeTouchSample(trace_info)
         local keys = trace_info and trace_info.touch_keys
-        if not touchLearning() or not keys then
+        if not keys then
             return nil
         end
         return adapter.touch_model.sample(self:_swypeTouchMode(keys),
