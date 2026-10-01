@@ -13,6 +13,9 @@ local function setup(values, back_keys)
         settings = {
             isTrue = function(_, key) return values[key] == true end,
             saveSetting = function(_, key, value) values[key] = value end,
+            flush = function()
+                calls.flushed = (calls.flushed or 0) + 1
+            end,
         },
         ui_manager = {
             show = function(_, view, refresh)
@@ -84,6 +87,7 @@ it("shows once on first run, then only when asked", function()
     T.truthy(reference:showOnce())
     T.eq(#calls.shown, 1)
     T.eq(values[reference.SETTING_KEY], true, "remembered")
+    T.eq(calls.flushed, 1, "written now, not only when KOReader exits")
     T.eq(reference:due(), false)
     T.eq(reference:showOnce(), false)
     T.eq(#calls.shown, 1, "not again")

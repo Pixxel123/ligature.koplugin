@@ -35,12 +35,17 @@ function GestureReference:due()
 end
 
 -- Shows the page if the first-run showing is still to come, and
--- remembers that it has been shown.
+-- remembers that it has been shown. KOReader writes settings only when
+-- it exits, so they are written now: a crash before then would otherwise
+-- show the page again.
 function GestureReference:showOnce()
     if not self:due() then
         return false
     end
     self.settings:saveSetting(self.SETTING_KEY, true)
+    if self.settings.flush then
+        self.settings:flush()
+    end
     self:show()
     return true
 end
