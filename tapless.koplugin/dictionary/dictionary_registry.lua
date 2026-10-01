@@ -55,6 +55,15 @@ function Registry:isSafeId(value)
     return isSafeLanguage(value)
 end
 
+-- Orders dictionary ids: en first, then pl, then alphabetically.
+function Registry.compareIds(left, right)
+    if left == "en" then return true end
+    if right == "en" then return false end
+    if left == "pl" then return true end
+    if right == "pl" then return false end
+    return left < right
+end
+
 function Registry:externalRoot()
     return DataStorage:getDataDir() .. "/swype/dictionaries"
 end
@@ -192,13 +201,8 @@ function Registry:_scan(external_root, bundled_root)
     for _, descriptor in pairs(found) do
         table.insert(result, descriptor)
     end
-    table.sort(result, function(left, right)
-        if left.id == "en" then return true end
-        if right.id == "en" then return false end
-        if left.id == "pl" then return true end
-        if right.id == "pl" then return false end
-        return left.id < right.id
-    end)
+    table.sort(result,
+        function(a, b) return Registry.compareIds(a.id, b.id) end)
     return result
 end
 

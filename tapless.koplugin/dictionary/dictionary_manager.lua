@@ -259,13 +259,12 @@ local function httpToFile(url, target)
             return true
         end
         local location = headers and (headers.location or headers.Location)
-        if code and code >= 300 and code < 400 and location and redirect_count < 5 then
-            os.remove(target)
-            url = location
-        else
-            os.remove(target)
+        os.remove(target)
+        if not (code and code >= 300 and code < 400 and location
+                and redirect_count < 5) then
             return nil, "Server returned HTTP " .. tostring(code or result)
         end
+        url = location
     end
     os.remove(target)
     return nil, "Too many redirects"
@@ -535,13 +534,12 @@ function Manager:_extractAndValidate(package, zip_path, temp_dir)
     end
 
     local extracted_bytes = 0
-    for filename in pairs(REQUIRED_FILES) do
-        local size = lfs.attributes(temp_dir .. "/" .. filename, "size") or 0
-        extracted_bytes = extracted_bytes + size
-    end
-    for filename in pairs(OPTIONAL_FILES) do
-        local size = lfs.attributes(temp_dir .. "/" .. filename, "size") or 0
-        extracted_bytes = extracted_bytes + size
+    for _, files in ipairs{ REQUIRED_FILES, OPTIONAL_FILES } do
+        for filename in pairs(files) do
+            local size =
+                lfs.attributes(temp_dir .. "/" .. filename, "size") or 0
+            extracted_bytes = extracted_bytes + size
+        end
     end
     if extracted_bytes > MAX_UNCOMPRESSED_BYTES then
         return nil, "Extracted package exceeds size limit"
@@ -610,9 +608,6 @@ function Manager:_installPackage(package, zip_path)
 end
 
 function Manager:_downloadAndInstall(package)
-    if package.size > MAX_PACKAGE_BYTES then
-        return nil, "Package exceeds size limit"
-    end
     local download_root = localRoot() .. "/downloads"
     util.makePath(download_root)
     local zip_path = download_root .. "/" .. package.archive .. ".part"
@@ -653,12 +648,11 @@ function Manager:_download(package)
         self:_closeLoading()
         if ok then
             self:_notify("Installed dictionary: " .. package.name)
-            self:showMenu()
         else
             logger.warn("Tapless dictionary install failed", package.id, err)
             self:_notify("Failed to install dictionary:\n" .. tostring(err))
-            self:showMenu()
         end
+        self:showMenu()
     end)
 end
 
@@ -692,13 +686,7 @@ function Manager:showMenu()
     for id in pairs(packages) do ids[id] = true end
     local ordered = {}
     for id in pairs(ids) do table.insert(ordered, id) end
-    table.sort(ordered, function(left, right)
-        if left == "en" then return true end
-        if right == "en" then return false end
-        if left == "pl" then return true end
-        if right == "pl" then return false end
-        return left < right
-    end)
+    table.sort(ordered, DictionaryRegistry.compareIds)
     local buttons = {}
     local action_width = Screen:scaleBySize(105)
     local personal_language, personal_profile = self:_personalContext()
