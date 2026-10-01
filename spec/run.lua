@@ -25,6 +25,7 @@ local specs = {
     "keyboard_ui_spec",
     "candidate_row_spec",
     "dictionary_registry_spec",
+    "dictionary_manager_spec",
     "usage_model_spec",
     "touch_offset_spec",
     "gesture_reference_spec",

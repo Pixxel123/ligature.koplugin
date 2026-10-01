@@ -88,6 +88,7 @@ local DictionaryController = loadModule("dictionary_controller")
         default_profile = Normalization.DEFAULT_PROFILE,
     }
 
+DictionaryManager.registry = DictionaryRegistry
 DictionaryManager.language_controller = DictionaryController
 DictionaryManager.blocked_words = BlockedWords
 

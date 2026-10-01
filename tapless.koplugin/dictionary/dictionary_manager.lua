@@ -19,9 +19,6 @@ local UIManager = require("ui/uimanager")
 local util = require("util")
 local Screen = require("device").screen
 
-local source = debug.getinfo(1, "S").source
-local module_dir = source:match("^@(.+)/dictionary_manager%.lua$") or "."
-local DictionaryRegistry = dofile(module_dir .. "/dictionary_registry.lua")
 
 local CATALOG_URL = "https://pixxel123.github.io/tapless.dictionaries/catalog.json"
 local RELEASE_BASE_URL = "https://github.com/Pixxel123/tapless.dictionaries/releases/download/v"
@@ -43,6 +40,9 @@ local OPTIONAL_FILES = {
     ["words.pairs.idx"] = true,
 }
 local Manager = {
+    -- The keyboard's own registry, so an install or removal here
+    -- invalidates the list the keyboard reads, not a second copy of it.
+    registry = nil,
     catalog = nil,
     catalog_path = nil,
     plugin_dir = nil,
@@ -58,7 +58,7 @@ local Manager = {
 }
 
 local function isSafeId(value)
-    return DictionaryRegistry:isSafeId(value)
+    return Manager.registry:isSafeId(value)
 end
 
 local function isSafeFilename(value)
@@ -197,22 +197,22 @@ local function localRoot()
 end
 
 local function installedPath(id, plugin_dir)
-    local descriptor = DictionaryRegistry:get(id, plugin_dir)
+    local descriptor = Manager.registry:get(id, plugin_dir)
     if descriptor then
         return descriptor.path, descriptor.bundled
     end
 end
 
 function Manager:shortLabel(id)
-    return DictionaryRegistry:shortLabel(id, self.plugin_dir)
+    return Manager.registry:shortLabel(id, self.plugin_dir)
 end
 
 function Manager:isDictionaryAvailable(id, plugin_dir)
-    return DictionaryRegistry:isAvailable(id, plugin_dir or self.plugin_dir)
+    return Manager.registry:isAvailable(id, plugin_dir or self.plugin_dir)
 end
 
 function Manager:listInstalled(plugin_dir)
-    return DictionaryRegistry:list(plugin_dir or self.plugin_dir)
+    return Manager.registry:list(plugin_dir or self.plugin_dir)
 end
 
 function Manager:_loadCachedCatalog()
@@ -380,7 +380,7 @@ function Manager:_uninstall(id, name)
             end
 
             local removed = removeTree(path)
-            DictionaryRegistry:invalidate()
+            Manager.registry:invalidate()
             if removed then
                 self.language_controller:onDictionaryRemoved(id)
                 self:_notify("Uninstalled dictionary: " .. (name or id))
@@ -545,7 +545,7 @@ function Manager:_extractAndValidate(package, zip_path, temp_dir)
         return nil, "Extracted package exceeds size limit"
     end
 
-    local manifest, manifest_err = DictionaryRegistry:parseManifest(
+    local manifest, manifest_err = Manager.registry:parseManifest(
         temp_dir .. "/manifest.tsv")
     if not manifest then
         return nil, manifest_err
@@ -576,7 +576,7 @@ function Manager:_extractAndValidate(package, zip_path, temp_dir)
 end
 
 function Manager:_installPackage(package, zip_path)
-    local dictionaries_root = DictionaryRegistry:externalRoot()
+    local dictionaries_root = Manager.registry:externalRoot()
     local install_root = localRoot() .. "/install"
     local temp_dir = install_root .. "/" .. package.id .. ".tmp"
     local destination = dictionaries_root .. "/" .. package.id
@@ -603,7 +603,7 @@ function Manager:_installPackage(package, zip_path)
         return nil, "Cannot install dictionary"
     end
     removeTree(backup)
-    DictionaryRegistry:invalidate()
+    Manager.registry:invalidate()
     return true
 end
 
@@ -686,7 +686,7 @@ function Manager:showMenu()
     for id in pairs(packages) do ids[id] = true end
     local ordered = {}
     for id in pairs(ids) do table.insert(ordered, id) end
-    table.sort(ordered, DictionaryRegistry.compareIds)
+    table.sort(ordered, Manager.registry.compareIds)
     local buttons = {}
     local action_width = Screen:scaleBySize(105)
     local personal_language, personal_profile = self:_personalContext()
