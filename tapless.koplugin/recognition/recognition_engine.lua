@@ -227,7 +227,7 @@ function RecognitionEngine:pickCandidates(options)
     if #results > 0 then
         if self.geometry_reranker then
             results = self.geometry_reranker:rerank(
-                results, trace_info, key_centers, #results,
+                results, trace_info, key_centers,
                 triggered and shape_channel.SHAPE_WEIGHT or nil)
         end
         return self:fillRow(results, limit)

@@ -20,19 +20,13 @@ end
 
 -- weight: what a shape score of 1 adds to the rank; RANK_WEIGHT unless
 -- given.
-function GeometryReranker:rerank(candidates, trace_info, key_centers, limit,
-        weight)
-    limit = limit or #candidates
+function GeometryReranker:rerank(candidates, trace_info, key_centers, weight)
     weight = weight or self.RANK_WEIGHT
-    if #candidates == 0 then
-        return candidates
-    end
-
     local scores = {}
     local score_total = 0
     local score_count = 0
     local points = trace_info and trace_info.points
-    local swipe = points and #points >= 2 and self.path_shape:swipe(points)
+    local swipe = points and self.path_shape:swipe(points)
     if swipe then
         for index, candidate in ipairs(candidates) do
             local signature = candidate.gesture_signature or candidate.signature
@@ -50,7 +44,6 @@ function GeometryReranker:rerank(candidates, trace_info, key_centers, limit,
         local neutral_score = score_total / score_count
         for index, candidate in ipairs(candidates) do
             local score = scores[index] or neutral_score
-            candidate.geometry_score = score
             candidate.ranked_score = candidate.ranked_score
                 + math.floor(score * weight + 0.5)
             candidate.geometry_order = index
@@ -63,9 +56,6 @@ function GeometryReranker:rerank(candidates, trace_info, key_centers, limit,
         end)
     end
 
-    while #candidates > limit do
-        table.remove(candidates)
-    end
     for _, candidate in ipairs(candidates) do
         candidate.geometry_order = nil
     end
