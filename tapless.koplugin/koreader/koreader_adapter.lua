@@ -487,8 +487,10 @@ function KoreaderAdapter:install(VirtualKeyboard)
         self:_swypeRebuild()
     end
 
-    -- The keys frame may have moved or changed width or height, so the
-    -- whole bottom band repaints, not just its own (possibly stale) dimen.
+    -- The keys frame may have moved or changed width, so the whole bottom
+    -- band repaints, not just its own (possibly stale) dimen. A shorter
+    -- keyboard uncovers part of what was under the taller one, so the
+    -- dirty rectangle spans the taller of the two heights.
     local function setBottomDirty(keyboard, old_height, refresh_type)
         local tallest = math.max(old_height, keyboard.height)
         adapter.ui_manager:setDirty("all", refresh_type, adapter.geometry:new{
