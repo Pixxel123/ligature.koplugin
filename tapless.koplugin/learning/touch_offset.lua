@@ -7,8 +7,7 @@
 -- Offsets are in key widths (x) and heights (y), so they hold when the
 -- keyboard is resized, and kept apart for the full-width keyboard and the
 -- one-handed keyboard on either side, where the hand reaches differently
--- (see mode). They live in the settings as { [mode] = { x, y, words } },
--- read afresh each time, so a reset from the menu takes effect at once.
+-- (see mode). They live in the settings as { [mode] = { x, y, words } }.
 local TouchOffset = {
     -- The settings key the device keeps the offsets under.
     SETTING_KEY = "tapless_touch_offset",
