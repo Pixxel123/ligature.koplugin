@@ -553,8 +553,6 @@ function KoreaderAdapter:install(VirtualKeyboard)
             height = self.height,
             keys = { x = area.frame_x + inset, y = inset,
                 w = inner_w, h = inner_h },
-            fade = { x = area.frame_x + inset, y = inset,
-                w = inner_w, h = inner_h },
             on_reset = function() keyboard:_swypeResetResize() end,
             on_done = function() keyboard:_swypeFinishResize() end,
         })

@@ -3,7 +3,14 @@ local it = T.it
 
 local ResizeFrame = T.load("resize_frame")
 
-local Plain = { new = function(_, options) return options end }
+local Plain = {
+    new = function(_, options)
+        -- KOReader's VerticalGroup always has getSize; this stands in for
+        -- it, and its exact size doesn't matter to these tests.
+        options.getSize = function() return { w = 1, h = 1 } end
+        return options
+    end,
+}
 
 local function newFrame(scheduled)
     return ResizeFrame:new{
@@ -148,7 +155,6 @@ it("listens for drags over the whole screen and sends them on", function()
     local widget = frame:create(keyboard, {
         width = 1264, height = 700,
         keys = { x = 461, y = 4, w = 803, h = 692 },
-        fade = { x = 4, y = 4, w = 1256, h = 692 },
         on_reset = function() end, on_done = function() end,
     })
     T.eq(widget.ges_events.ResizePan[1].range(), "screen", "pan range")
@@ -192,7 +198,6 @@ it("creates Reset with a thin rounded border and Done filled and bold",
     frame:create(keyboard, {
         width = 1264, height = 700,
         keys = { x = 461, y = 4, w = 803, h = 692 },
-        fade = { x = 461, y = 4, w = 803, h = 692 },
         on_reset = function() end, on_done = function() end,
     })
     T.eq(recorded.reset.bordersize, 4, "reset border")
@@ -239,7 +244,6 @@ it("fades the keyboard, outlines the keys and records where it drew",
     local widget = frame:create(keyboard, {
         width = 1264, height = 700,
         keys = { x = 461, y = 4, w = 803, h = 692 },
-        fade = { x = 4, y = 4, w = 1256, h = 692 },
         on_reset = function() end, on_done = function() end,
     })
     local lightened, rects = nil, 0
@@ -250,9 +254,9 @@ it("fades the keyboard, outlines the keys and records where it drew",
         paintRect = function() rects = rects + 1 end,
     }
     widget:paintTo(bb, 0, 976)
-    T.eq(lightened.x, 4, "fade x")
+    T.eq(lightened.x, 461, "fade x")
     T.eq(lightened.y, 980, "fade y")
-    T.eq(lightened.w, 1256, "fade w")
+    T.eq(lightened.w, 803, "fade w")
     T.eq(lightened.h, 692, "fade h")
     T.eq(lightened.by, 0.6, "fade amount")
     T.eq(resize.rect.x, 461, "rect x")

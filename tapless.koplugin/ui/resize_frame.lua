@@ -175,8 +175,7 @@ function ResizeFrame:paintOutline(bb, rect, px)
 end
 
 -- The overlay drawn after the keyboard frame. options: width and height
--- of the keyboard; keys and fade, {x, y, w, h} within it; on_reset and
--- on_done.
+-- of the keyboard; keys, {x, y, w, h} within it; on_reset and on_done.
 function ResizeFrame:create(keyboard, options)
     local frame = self
     local dpi = self.screen:getDPI()
@@ -214,9 +213,7 @@ function ResizeFrame:create(keyboard, options)
         done,
     }
     local keys = options.keys
-    local size = column.getSize and column:getSize()
-        or { w = px(self.BUTTON_W_MM),
-            h = 2 * px(self.BUTTON_H_MM) + px(self.MOVE_MM) + 2 * spacing }
+    local size = column:getSize()
     column.overlap_offset = {
         keys.x + math.floor((keys.w - size.w) / 2),
         keys.y + math.floor((keys.h - size.h) / 2),
@@ -251,8 +248,7 @@ function ResizeFrame:create(keyboard, options)
     end
     widget.onResizeSwipe = widget.onResizeRelease
     widget.paintTo = function(this, bb, x, y)
-        local fade = options.fade
-        bb:lightenRect(x + fade.x, y + fade.y, fade.w, fade.h, frame.FADE)
+        bb:lightenRect(x + keys.x, y + keys.y, keys.w, keys.h, frame.FADE)
         local rect = { x = x + keys.x, y = y + keys.y,
             w = keys.w, h = keys.h }
         resize.rect = rect
