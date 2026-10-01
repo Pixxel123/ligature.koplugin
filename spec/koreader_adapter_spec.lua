@@ -548,9 +548,9 @@ it("lays the handle's menu out as its swipes go: move outwards, leave "
     end
 end)
 
--- A keyboard whose gesture reference is or isn't still due, with language
--- setup still needed or done, recording what is scheduled and shown.
-local function referenceSetup(due, needs_setup)
+-- A keyboard whose gesture reference is or isn't still due, opening with
+-- language setup started or not, recording what is scheduled and shown.
+local function referenceSetup(due, setting_up)
     local calls = { scheduled = {} }
     local VirtualKeyboard = newKeyboardClass(calls)
     T.load("koreader_adapter"):new{
@@ -559,7 +559,8 @@ local function referenceSetup(due, needs_setup)
             showOnce = function() calls.shown = true end,
         },
         dictionary_controller = {
-            needsLanguageSetup = function() return needs_setup end,
+            scheduleLanguageSetup = function() return setting_up end,
+            scheduleWarmUp = function() end,
         },
         ui_manager = {
             scheduleIn = function(_, delay, fn)
@@ -567,13 +568,14 @@ local function referenceSetup(due, needs_setup)
             end,
         },
     }:install(VirtualKeyboard)
-    return calls, setmetatable({}, VirtualKeyboard)
+    local keyboard = setmetatable({}, VirtualKeyboard)
+    keyboard:onShow()
+    return calls, keyboard
 end
 
 it("shows the gesture reference the first time the keyboard opens with "
         .. "no languages left to choose", function()
-    local calls, keyboard = referenceSetup(true, false)
-    keyboard:_swypeScheduleGestureReference()
+    local calls = referenceSetup(true, false)
     T.eq(#calls.scheduled, 1)
     calls.scheduled[1][2]()
     T.truthy(calls.shown)
@@ -581,18 +583,29 @@ end)
 
 it("leaves the gesture reference for later while languages are being "
         .. "chosen, and once it has been shown", function()
-    local calls, keyboard = referenceSetup(true, true)
-    keyboard:_swypeScheduleGestureReference()
+    local calls = referenceSetup(true, true)
     T.eq(#calls.scheduled, 0, "language setup first")
-    calls, keyboard = referenceSetup(false, false)
-    keyboard:_swypeScheduleGestureReference()
+    calls = referenceSetup(false, false)
     T.eq(#calls.scheduled, 0, "already shown")
+end)
+
+it("waits to show the gesture reference while a swipe or a slide from "
+        .. "backspace is under way", function()
+    for _, busy in ipairs({ "swype_mvp_trace", "swype_mvp_delete_slide" }) do
+        local calls, keyboard = referenceSetup(true, false)
+        keyboard[busy] = {}
+        calls.scheduled[1][2]()
+        T.eq(calls.shown, nil, busy .. ": not over it")
+        T.eq(#calls.scheduled, 2, busy .. ": asks again")
+        keyboard[busy] = nil
+        calls.scheduled[2][2]()
+        T.truthy(calls.shown, busy .. ": once it's done")
+    end
 end)
 
 it("doesn't show the gesture reference over a keyboard that closed before "
         .. "its turn came", function()
     local calls, keyboard = referenceSetup(true, false)
-    keyboard:_swypeScheduleGestureReference()
     keyboard.swype_mvp_closed = true
     calls.scheduled[1][2]()
     T.eq(calls.shown, nil)

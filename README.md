@@ -620,7 +620,8 @@ old language's lists.
 ## Options
 
 `Tools → Tapless → Gesture reference` shows one page with every gesture.
-It also shows once, the first time the keyboard opens.
+It also shows once by itself, the first time the keyboard opens after
+choosing languages.
 
 These are under `Tools → Tapless`. These are off by default:
 
@@ -657,8 +658,9 @@ name through it.
 | `recognition/` | Finding the words a swipe or tapped letters could be |
 | `learning/` | The words and word pairs you keep |
 | `dictionary/` | Reading, installing and managing word lists |
-| `ui/` | Drawing the suggestion row, the swipe trail and the one-handed keyboard's handle menu and resize frame |
+| `ui/` | Drawing the suggestion row, the swipe trail, the one-handed keyboard's handle menu and resize frame, and the gesture reference page |
 | `icons/` | The icons in the one-handed handle menu and resize frame |
+| `images/` | The gesture reference page, made from screenshots of the keyboard at a Kindle Paperwhite's settings |
 | `dictionaries/` | The word lists and word-pair tables themselves |
 
 ## Testing tools

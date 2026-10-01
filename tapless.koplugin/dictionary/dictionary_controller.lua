@@ -300,9 +300,10 @@ function DictionaryController:completeLanguageSetup(selected, keyboard)
     return true
 end
 
+-- Whether it scheduled language setup, which closes the keyboard.
 function DictionaryController:scheduleLanguageSetup(keyboard)
     if not self:needsLanguageSetup() then
-        return
+        return false
     end
 
     self.ui_manager:scheduleIn(0, function()
@@ -322,6 +323,7 @@ function DictionaryController:scheduleLanguageSetup(keyboard)
                 nil, self.plugin_dir, selected)
         end)
     end)
+    return true
 end
 
 function DictionaryController:initialize(keyboard)

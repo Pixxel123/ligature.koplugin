@@ -189,17 +189,18 @@ local GestureReference = loadModule("gesture_reference"):new{
     screen = Screen,
     input_container = InputContainer,
     frame_container = FrameContainer,
-    center_container = CenterContainer,
     image_widget = ImageWidget,
     geometry = Geom,
     blitbuffer = Blitbuffer,
     image = plugin_dir .. "/images/gesture_reference.png",
-    back_keys = Device:hasKeys() and { Device.input.group.Back } or nil,
+    back_keys = function()
+        return Device:hasKeys() and { Device.input.group.Back } or nil
+    end,
 }
 
 -- For the main menu's Gesture reference entry.
 function VirtualKeyboard.taplessOpenGestureReference()
-    GestureReference:show()
+    GestureReference:open()
 end
 
 -- Expose dictionary management to the plugin's permanent main-menu entry.

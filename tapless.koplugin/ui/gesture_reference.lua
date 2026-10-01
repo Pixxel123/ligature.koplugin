@@ -1,18 +1,22 @@
 -- The gesture reference: one page listing every Tapless gesture, drawn
 -- ahead of time as an image (images/gesture_reference.png). It shows
--- once, the first time the keyboard opens with no languages left to
--- choose, and any time from Tools → Tapless → Gesture reference. A tap
--- anywhere, or Back, closes it; it takes every other gesture too, so
--- none reaches the keyboard underneath.
+-- once by itself, the first time the keyboard opens after language setup,
+-- and any time from Tools → Tapless → Gesture reference. A tap anywhere,
+-- or Back, closes it. It takes every other gesture and key press too, so
+-- none reaches the keyboard or text box underneath.
 local GestureReference = {
     SETTING_KEY = "tapless_gesture_reference_shown",
+    -- Seconds after showing the page before the settings are written, so
+    -- the write doesn't hold up the page's first paint.
+    FLUSH_DELAY = 1,
 }
 GestureReference.__index = GestureReference
 
 -- options: settings, ui_manager, screen, the KOReader widget classes
--- (input_container, frame_container, center_container, image_widget),
--- geometry, blitbuffer, image (the page's path) and, on devices with
--- keys, back_keys (KOReader's Back key group).
+-- (input_container, frame_container, image_widget), geometry, blitbuffer,
+-- image (the page's path) and back_keys, a function giving KOReader's
+-- Back key group when the device has keys (asked each time the page
+-- opens, as a keyboard can be plugged in later).
 function GestureReference:new(options)
     return setmetatable({
         settings = assert(options.settings),
@@ -20,7 +24,6 @@ function GestureReference:new(options)
         screen = assert(options.screen),
         input_container = assert(options.input_container),
         frame_container = assert(options.frame_container),
-        center_container = assert(options.center_container),
         image_widget = assert(options.image_widget),
         geometry = assert(options.geometry),
         blitbuffer = assert(options.blitbuffer),
@@ -34,47 +37,81 @@ function GestureReference:due()
     return not self.settings:isTrue(self.SETTING_KEY)
 end
 
--- Shows the page if the first-run showing is still to come, and
--- remembers that it has been shown. KOReader writes settings only when
--- it exits, so they are written now: a crash before then would otherwise
+-- Remembers that the page has been seen, writing the settings soon after
+-- rather than when KOReader exits: a crash before then would otherwise
 -- show the page again.
+function GestureReference:_remember()
+    if not self:due() then
+        return
+    end
+    self.settings:saveSetting(self.SETTING_KEY, true)
+    if self.settings.flush then
+        local settings = self.settings
+        self.ui_manager:scheduleIn(self.FLUSH_DELAY, function()
+            settings:flush()
+        end)
+    end
+end
+
+-- The first-run showing: shows the page if it is still due.
 function GestureReference:showOnce()
     if not self:due() then
         return false
     end
-    self.settings:saveSetting(self.SETTING_KEY, true)
-    if self.settings.flush then
-        self.settings:flush()
-    end
     self:show()
+    self:_remember()
     return true
 end
 
--- Shows the page full screen, scaled to fit, on white.
+-- From the menu: shows the page, which also counts as the first-run
+-- showing.
+function GestureReference:open()
+    local view = self:show()
+    self:_remember()
+    return view
+end
+
+-- Shows the page full screen, scaled to fit, on white. It lays itself out
+-- again when the screen's size changes, as after a rotation.
 function GestureReference:show()
-    local w, h = self.screen:getWidth(), self.screen:getHeight()
     local view = self.input_container:new{
-        dimen = self.geometry:new{ x = 0, y = 0, w = w, h = h },
         -- KOReader puts a widget that isn't modal below the modal ones,
         -- and the keyboard is modal.
         modal = true,
-        self.frame_container:new{
+        covers_fullscreen = true,
+    }
+    local built_w, built_h
+    local function build()
+        built_w, built_h = self.screen:getWidth(), self.screen:getHeight()
+        view.dimen = self.geometry:new{ x = 0, y = 0, w = built_w, h = built_h }
+        view[1] = self.frame_container:new{
             bordersize = 0,
             padding = 0,
             margin = 0,
             background = self.blitbuffer.COLOR_WHITE,
-            self.center_container:new{
-                dimen = self.geometry:new{ w = w, h = h },
-                self.image_widget:new{
-                    file = self.image,
-                    width = w,
-                    height = h,
-                    scale_factor = 0,
-                    file_do_cache = false,
-                },
+            -- Given a width and height, it scales the page to fit and
+            -- centres it.
+            self.image_widget:new{
+                file = self.image,
+                width = built_w,
+                height = built_h,
+                scale_factor = 0,
+                file_do_cache = false,
             },
-        },
-    }
+        }
+    end
+    build()
+    local paint = view.paintTo
+    view.paintTo = function(widget, bb, x, y)
+        if self.screen:getWidth() ~= built_w
+                or self.screen:getHeight() ~= built_h then
+            build()
+        end
+        if paint then
+            return paint(widget, bb, x, y)
+        end
+    end
+
     local ui_manager = self.ui_manager
     local function close()
         ui_manager:close(view, "flashui")
@@ -86,10 +123,15 @@ function GestureReference:show()
         end
         return true
     end
-    if self.back_keys then
-        view.key_events = { TaplessCloseReference = { self.back_keys } }
-        view.onTaplessCloseReference = close
+    local back = self.back_keys and self.back_keys()
+    view.onKeyPress = function(_, key)
+        if back and key and key.match and key:match(back) then
+            close()
+        end
+        return true
     end
+    view.onKeyRepeat = function() return true end
+    view.onKeyRelease = function() return true end
     ui_manager:show(view, "flashui")
     return view
 end
