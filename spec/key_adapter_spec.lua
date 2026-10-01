@@ -67,6 +67,7 @@ local function newSettings(values)
     values = values or {}
     return {
         isTrue = function(_, name) return values[name] == true end,
+        nilOrTrue = function(_, name) return values[name] ~= false end,
         readSetting = function(_, name, default)
             if values[name] == nil then return default end
             return values[name]
@@ -388,8 +389,14 @@ it("works with the full-width Japanese space key", function()
     T.eq(calls.cursor, 2)
 end)
 
-it("leaves the space bar alone when the option is off", function()
+it("slides along the space bar by default", function()
     local calls, VirtualKey = setup()
+    local space = spaceKey(VirtualKey, newKeyboard(calls))
+    T.truthy(space.ges_events.SpaceCursorPan, "pan registered")
+end)
+
+it("leaves the space bar alone when the option is off", function()
+    local calls, VirtualKey = setup({ ligature_space_cursor = false })
     local space = spaceKey(VirtualKey, newKeyboard(calls))
     T.eq(space.ges_events.SpaceCursorPan, nil, "no pan registered")
     T.eq(space:onSpaceCursorPan(nil, pan(100, 160)), false)

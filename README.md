@@ -35,6 +35,7 @@ The next time, it shows a page with every gesture. That page is also under
 | Tap + in the suggestions | Adds the word you typed to your personal words |
 | Tap ⌫ right after a swipe | Deletes the whole swiped word |
 | Slide left from ⌫ | Deletes more words the further you slide |
+| Slide along space | Moves the text cursor |
 | Hold space | Switches to your next language, if you have more than one |
 | Hold 🌐, then lift | Switches the one-handed keyboard on or off |
 | Tap ◨ (one-handed) | Menu: other side, leave, resize |
@@ -793,7 +794,7 @@ Under `Tools → Ligature`:
 | Gesture reference | | The page with every gesture |
 | Keyboard size | Same as KOReader | Extra compact to Large; changes the height only |
 | Keyboard text size | Auto | Small, Normal or Large key labels |
-| Slide on space to move cursor | Off | Slide along the space bar to move the text cursor, one character per quarter of the key's height. Holding space still switches language. |
+| Slide on space to move cursor | On | Slide along the space bar to move the text cursor, one character per quarter of the key's height. Holding space still switches language. |
 | Double space types a period | Off | A second space right after a word, or a space right after a swiped word, becomes ". ". Not used on input method layouts. |
 | Rank offensive words down | On | See Recognition |
 | One-handed keyboard | Off | Use one-handed keyboard, and Background blur (on) |

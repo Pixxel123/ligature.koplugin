@@ -141,10 +141,10 @@ function Ligature:addToMainMenu(menu_items)
                     .. "move the text cursor. Holding space still switches "
                     .. "language.",
                 checked_func = function()
-                    return G_reader_settings:isTrue("ligature_space_cursor")
+                    return G_reader_settings:nilOrTrue("ligature_space_cursor")
                 end,
                 callback = function()
-                    G_reader_settings:flipNilOrFalse("ligature_space_cursor")
+                    G_reader_settings:flipNilOrTrue("ligature_space_cursor")
                 end,
             },
             {

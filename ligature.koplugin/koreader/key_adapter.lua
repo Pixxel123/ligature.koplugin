@@ -47,7 +47,7 @@ function KeyAdapter:isSpaceKey(key)
 end
 
 function KeyAdapter:spaceCursorEnabled()
-    return self.settings:isTrue(self.SPACE_CURSOR_SETTING)
+    return self.settings:nilOrTrue(self.SPACE_CURSOR_SETTING)
 end
 
 local function contains(dimen, pos)
