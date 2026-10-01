@@ -1,6 +1,15 @@
 local DictionaryController = {}
 DictionaryController.__index = DictionaryController
 
+local function includes(list, value)
+    for _, item in ipairs(list) do
+        if item == value then
+            return true
+        end
+    end
+    return false
+end
+
 function DictionaryController:new(options)
     return setmetatable({
         plugin_dir = assert(options.plugin_dir),
@@ -70,16 +79,30 @@ function DictionaryController:activeDictionary(keyboard)
         or self.settings:readSetting(self.setting_key, "en")
 end
 
+-- The dictionary's normalization profile, from its registry descriptor,
+-- falling back to the default when there is no descriptor or no profile.
+function DictionaryController:_profile(dictionary)
+    local descriptor = self.registry:get(dictionary, self.plugin_dir)
+    return descriptor and descriptor.normalization_profile
+        or self.default_profile
+end
+
+-- Makes id the active dictionary: on the keyboard when one is open,
+-- otherwise in the settings, for when it next opens.
+function DictionaryController:_activate(keyboard, id)
+    if keyboard then
+        return self:setDictionary(keyboard, id)
+    end
+    self.settings:saveSetting(self.setting_key, id)
+    return true
+end
+
 -- The language whose personal words to show, and its normalization
 -- profile: the keyboard's when one is open, otherwise the saved language.
 function DictionaryController:personalContext(keyboard)
     local dictionary = self:activeDictionary(keyboard)
     local profile = keyboard and keyboard.swype_mvp_normalization_profile
-    if not profile then
-        local descriptor = self.registry:get(dictionary, self.plugin_dir)
-        profile = descriptor and descriptor.normalization_profile
-            or self.default_profile
-    end
+        or self:_profile(dictionary)
     return dictionary, profile
 end
 
@@ -112,14 +135,9 @@ function DictionaryController:setEnabled(id, enabled, keyboard)
 
     self.settings:saveSetting(self.enabled_setting_key, result)
 
-    if not enabled and self:activeDictionary(keyboard) == id then
-        if keyboard then
-            if not self:setDictionary(keyboard, result[1]) then
-                return false, "Cannot switch to another dictionary."
-            end
-        else
-            self.settings:saveSetting(self.setting_key, result[1])
-        end
+    if not enabled and self:activeDictionary(keyboard) == id
+            and not self:_activate(keyboard, result[1]) then
+        return false, "Cannot switch to another dictionary."
     end
 
     return true
@@ -137,12 +155,7 @@ function DictionaryController:selectDictionary(id, keyboard)
         end
     end
 
-    if keyboard then
-        return self:setDictionary(keyboard, id)
-    end
-
-    self.settings:saveSetting(self.setting_key, id)
-    return true
+    return self:_activate(keyboard, id)
 end
 
 function DictionaryController:prepareRemoval(id, replacement, keyboard)
@@ -166,12 +179,7 @@ function DictionaryController:prepareRemoval(id, replacement, keyboard)
         target = replacement
     end
 
-    if keyboard then
-        return self:setDictionary(keyboard, target)
-    end
-
-    self.settings:saveSetting(self.setting_key, target)
-    return true
+    return self:_activate(keyboard, target)
 end
 
 function DictionaryController:onDictionaryRemoved(id)
@@ -190,13 +198,7 @@ function DictionaryController:onDictionaryRemoved(id)
     self.settings:saveSetting(self.enabled_setting_key, enabled_ids)
 
     local active = self.settings:readSetting(self.setting_key, "en")
-    local active_enabled = false
-    for _, id in ipairs(enabled_ids) do
-        if id == active then
-            active_enabled = true
-            break
-        end
-    end
+    local active_enabled = includes(enabled_ids, active)
 
     if not active_enabled and enabled_ids[1] then
         self.settings:saveSetting(self.setting_key, enabled_ids[1])
@@ -271,29 +273,16 @@ function DictionaryController:completeLanguageSetup(selected, keyboard)
     local previous = self.settings:readSetting(self.enabled_setting_key)
     self.settings:saveSetting(self.enabled_setting_key, enabled_ids)
 
-    local active = self:activeDictionary(keyboard)
-    local active_enabled = false
-    for _, id in ipairs(enabled_ids) do
-        if id == active then
-            active_enabled = true
-            break
-        end
-    end
+    local active_enabled =
+        includes(enabled_ids, self:activeDictionary(keyboard))
 
-    if not active_enabled then
-        if keyboard then
-            if not self:setDictionary(keyboard, enabled_ids[1]) then
-                if previous == nil then
-                    self.settings:delSetting(self.enabled_setting_key)
-                else
-                    self.settings:saveSetting(
-                        self.enabled_setting_key, previous)
-                end
-                return false, "Cannot select the chosen language."
-            end
+    if not active_enabled and not self:_activate(keyboard, enabled_ids[1]) then
+        if previous == nil then
+            self.settings:delSetting(self.enabled_setting_key)
         else
-            self.settings:saveSetting(self.setting_key, enabled_ids[1])
+            self.settings:saveSetting(self.enabled_setting_key, previous)
         end
+        return false, "Cannot select the chosen language."
     end
 
     self.settings:saveSetting(self.setup_setting_key, true)
@@ -335,9 +324,7 @@ function DictionaryController:initialize(keyboard)
         self.settings:saveSetting(self.setting_key, dictionary)
     end
     keyboard.swype_mvp_dictionary = dictionary
-    local descriptor = self.registry:get(dictionary, self.plugin_dir)
-    keyboard.swype_mvp_normalization_profile = descriptor
-        and descriptor.normalization_profile or self.default_profile
+    keyboard.swype_mvp_normalization_profile = self:_profile(dictionary)
 end
 
 function DictionaryController:label(keyboard)
@@ -372,9 +359,7 @@ function DictionaryController:setDictionary(keyboard, dictionary)
     keyboard:_swypeCancelBucketPrefetch()
     self.store:invalidate(dictionary)
     keyboard.swype_mvp_dictionary = dictionary
-    local descriptor = self.registry:get(dictionary, self.plugin_dir)
-    keyboard.swype_mvp_normalization_profile = descriptor
-        and descriptor.normalization_profile or self.default_profile
+    keyboard.swype_mvp_normalization_profile = self:_profile(dictionary)
     self.store:keepOnly(dictionary)
     self.settings:saveSetting(self.setting_key, dictionary)
     self.logger.info(
