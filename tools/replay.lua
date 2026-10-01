@@ -701,7 +701,7 @@ function Replay.lossStage(plugin, attempt)
         return getmetatable(self).addCandidate(self, list, seen, entry,
             spatial, ranked, limit, metadata)
     end
-    -- The reranker trims the results in place, so note them first.
+    -- The reranker reorders the results in place, so note them first.
     if reranker then
         reranker.rerank = function(self, candidates, ...)
             results = {}
