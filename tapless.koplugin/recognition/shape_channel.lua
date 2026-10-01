@@ -96,8 +96,7 @@ end
 -- keyboard.
 function ShapeChannel:_paths(entries, key_centers)
     local paths = self.paths[entries]
-    if paths and paths.count == #entries
-            and paths.min_letters == self.MIN_LETTERS then
+    if paths and paths.count == #entries then
         return paths
     end
     local lengths, scales = {}, {}
@@ -113,8 +112,7 @@ function ShapeChannel:_paths(entries, key_centers)
         end
         lengths[index], scales[index] = length, scale
     end
-    paths = { count = #entries, min_letters = self.MIN_LETTERS,
-        lengths = lengths, scales = scales }
+    paths = { count = #entries, lengths = lengths, scales = scales }
     self.paths[entries] = paths
     return paths
 end
@@ -163,8 +161,10 @@ function ShapeChannel:candidates(options)
     local max_score = path_shape.MAX_SCORE
     local a = swipe.samples
     local b = self.samples
-    -- length and scale: the word's path, from _paths; length is -1 for a
-    -- word too short to look at, which is left out before anything else.
+    -- length and scale: the word's path, from _paths. length is 0 for a
+    -- word with a letter off the keyboard, left out here after it is
+    -- marked seen; scan never passes the -1 of a word too short to look
+    -- at.
     local function consider(entry, length, scale)
         local word = entry.word
         if seen[word]
@@ -175,7 +175,7 @@ function ShapeChannel:candidates(options)
             return
         end
         seen[word] = true
-        if length <= 0 then
+        if length == 0 then
             return
         end
         local ratio = swipe.length / length
