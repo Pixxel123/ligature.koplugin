@@ -1,9 +1,10 @@
 local T = require("helper")
 local it = T.it
 
--- A renderer over a screen at dpi that records every inverted pixel (a
--- pixel inverted twice is back to white) and every refresh.
-local function setup(dpi)
+-- A renderer over a screen at dpi, drawing dither of its pixels (solid
+-- unless given), that records every inverted pixel (a pixel inverted
+-- twice is back to white) and every refresh.
+local function setup(dpi, dither)
     local calls = { black = {}, dirty = {} }
     local screen = {
         getDPI = function() return dpi or 300 end,
@@ -23,6 +24,7 @@ local function setup(dpi)
             calls.dirty[#calls.dirty + 1] = { mode = mode, region = region }
         end,
     }, { new = function(_, o) return o end })
+    renderer.DITHER = dither or 1
     return renderer, calls
 end
 
@@ -85,4 +87,40 @@ it("clears exactly what it drew, crossings included", function()
     T.eq(black(calls), 0, "all white again")
     T.eq(trace.render_before, nil)
     T.eq(calls.dirty[#calls.dirty].mode, "ui")
+end)
+
+it("draws a grey trail by dithering: half the pixels, by default", function()
+    T.eq(T.load("trace_renderer").DITHER, 0.5)
+    for _, case in ipairs({ { 0.5, 0.45, 0.55 }, { 0.75, 0.7, 0.8 } }) do
+        local dither, low, high = case[1], case[2], case[3]
+        local solid_renderer, solid = setup(300)
+        local renderer, grey = setup(300, dither)
+        local path = { { x = 100, y = 300 }, { x = 220, y = 280 }, { x = 360, y = 320 } }
+        local solid_trace = {}
+        for i, p in ipairs(path) do
+            solid_renderer:drawSegment(solid_trace, path[i - 1], p)
+        end
+        local trace = {}
+        for i, p in ipairs(path) do
+            renderer:drawSegment(trace, path[i - 1], p)
+        end
+        local share = black(grey) / black(solid)
+        T.truthy(share > low and share < high, dither .. ": " .. share)
+        renderer:clear(trace)
+        T.eq(black(grey), 0, dither .. ": clears to white")
+    end
+end)
+
+it("keeps the dither pattern fixed to the screen, so pieces that overlap "
+        .. "or cross don't leave holes or blotches", function()
+    local renderer, calls = setup(300, 0.5)
+    local trace = {}
+    renderer:drawSegment(trace, nil, { x = 100, y = 100 })
+    renderer:drawSegment(trace, { x = 100, y = 100 }, { x = 200, y = 100 })
+    renderer:drawSegment(trace, { x = 200, y = 100 }, { x = 100, y = 100 })
+    for key in pairs(calls.black) do
+        local x, y = key:match("(%d+),(%d+)")
+        T.eq((tonumber(x) + tonumber(y)) % 2, 0, "only pattern pixels: " .. key)
+    end
+    T.truthy(calls.black["150,100"] and calls.black["151,101"], "both lines of the grid")
 end)

@@ -1,11 +1,28 @@
 -- Draws the swipe trail on e-ink: a round brush about WIDTH_MM wide along
 -- smooth curves through the touch points. It inverts the pixels under the
 -- brush, so clearing the trail is inverting them back, and refreshes each
--- new piece with A2, the fast black and white waveform.
+-- new piece with A2, the fast black and white waveform. A2 shows only
+-- black and white, so a grey trail is dithered: only DITHER of the
+-- brush's pixels are inverted, in a pattern fixed to the screen so pieces
+-- that overlap line up. Inverting keeps it readable in night mode too,
+-- where it shows light on the dark keys.
 local TraceRenderer = {
     WIDTH_MM = 0.75,
+    -- The share of pixels drawn: 1 is solid, 0.75 dark grey, 0.5 grey.
+    DITHER = 0.5,
 }
 TraceRenderer.__index = TraceRenderer
+
+-- Whether the dither pattern draws the pixel at x, y.
+function TraceRenderer:inPattern(x, y)
+    local dither = self.DITHER
+    if dither >= 1 then
+        return true
+    elseif dither >= 0.75 then
+        return x % 2 == 0 or y % 2 == 0
+    end
+    return (x + y) % 2 == 0
+end
 
 function TraceRenderer:new(screen, ui_manager, geometry)
     return setmetatable({
@@ -127,7 +144,7 @@ function TraceRenderer:drawSegment(trace, previous, current)
                 row = {}
                 trace.drawn_pixels[y] = row
             end
-            if not row[x] then
+            if not row[x] and self:inPattern(x, y) then
                 row[x] = true
                 local new_row = new_pixels[y]
                 if not new_row then
