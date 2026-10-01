@@ -841,13 +841,11 @@ function InputController:addChar(keyboard, key, keep_swype_candidates)
     if keep_pending_space then
         self:_markPendingSpace(keyboard)
     end
-    local chars = self.normalization:splitChars(key or "")
-    local last = chars[#chars]
     -- An apostrophe leaves the word unfinished: "don'" goes on to "don't".
-    if last and (isApostrophe(last) or self.normalization:normalizeChar(
-            last, keyboard.swype_mvp_normalization_profile)) then
+    if key_last and (letter or isApostrophe(key_last)) then
         self:_afterManualEdit(keyboard, false)
-    elseif last and (last:match("^%s$") or last:match("^%p$")) then
+    elseif key_last and (key_last:match("^%s$")
+            or key_last:match("^%p$")) then
         self:_afterManualEdit(keyboard, true)
     else
         self:_clearPersonalOffer(keyboard)
