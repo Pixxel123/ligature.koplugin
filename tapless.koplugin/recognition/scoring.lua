@@ -331,13 +331,11 @@ function Scoring:matchScore(candidate, trace_chars, next_positions,
         elseif string.byte(trace_chars[1]) - ASCII_A + 1 ~= first_code then
             score = score + self.FIRST_LETTER_COST
         end
-        if not endpoint_mismatch
-                and string.byte(trace_chars[trace_len]) - ASCII_A + 1
-                    ~= last_code then
-            score = score + 4
-        end
         if endpoint_mismatch then
             score = score + self.ENDPOINT_MISMATCH_COST
+        elseif string.byte(trace_chars[trace_len]) - ASCII_A + 1
+                ~= last_code then
+            score = score + 4
         end
         score = score + near_used * self.NEAR_KEY_COST
     end
@@ -621,12 +619,10 @@ function Scoring:finishEntryScore(signature, entry, score, matched_positions,
     if endpoint_score and (#candidate <= 3 or (entry.freq or 0) >= 6500) then
         score = math.min(score, math.max(endpoint_score, score - 1))
     end
-    if math.abs(#signature - #candidate) <= self.EDIT_DISTANCE_MAX then
-        local edit_score = self:editDistance(
-            signature, candidate, self.EDIT_DISTANCE_MAX)
-        if edit_score <= self.EDIT_DISTANCE_MAX then
-            score = math.min(score, edit_score + math.floor(#signature / 2))
-        end
+    local edit_score = self:editDistance(
+        signature, candidate, self.EDIT_DISTANCE_MAX)
+    if edit_score <= self.EDIT_DISTANCE_MAX then
+        score = math.min(score, edit_score + math.floor(#signature / 2))
     end
     local repeat_bonus = 0
     if entry.repeat_positions and trace_info and trace_info.observations then
