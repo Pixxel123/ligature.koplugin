@@ -9,13 +9,11 @@ function PrefetchController:new(dictionary_store, ui_manager, is_trace_active,
         is_trace_active = assert(is_trace_active),
         batch_size = batch_size or 96,
         work_ms = work_ms or 3,
-        generation = 0,
         controller = nil,
     }, self)
 end
 
 function PrefetchController:cancel()
-    self.generation = self.generation + 1
     local controller = self.controller
     if not controller then
         return
@@ -42,8 +40,6 @@ function PrefetchController:schedule(trace, dictionary, priority_lasts)
             jobs = {},
         }
         self.controller = controller
-        self.generation = self.generation + 1
-        controller.generation = self.generation
     else
         controller.current_last = trace.letters[#trace.letters]
         controller.priority_lasts = priority_lasts
@@ -57,7 +53,6 @@ function PrefetchController:schedule(trace, dictionary, priority_lasts)
         self.ui_manager:scheduleIn(delay, function()
             controller.scheduled = false
             if self.controller ~= controller
-                    or self.generation ~= controller.generation
                     or not self.is_trace_active() then
                 return
             end
