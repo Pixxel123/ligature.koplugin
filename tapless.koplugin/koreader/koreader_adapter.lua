@@ -1126,26 +1126,15 @@ function KoreaderAdapter:install(VirtualKeyboard)
         return adapter.gesture_controller:onPan(self, ges)
     end
 
-    function VirtualKeyboard:_onSwypeWordPathRelease(_, ges, source_key)
-        return adapter.gesture_controller:onPathRelease(
-            self, ges, source_key)
-    end
-
     function VirtualKeyboard:onSwypeWordSwipe(_, ges, source_key)
         -- A slide from backspace whose lift landed on no key.
         if adapter.key_adapter:finishDeleteSlide(self, ges) then
             return true
         end
-        return self:_onSwypeWordPathRelease(_, ges, source_key)
+        return adapter.gesture_controller:onPathRelease(
+            self, ges, source_key)
     end
-
-    function VirtualKeyboard:onSwypeWordMultiswipe(_, ges, source_key)
-        -- A slide from backspace whose lift landed on no key.
-        if adapter.key_adapter:finishDeleteSlide(self, ges) then
-            return true
-        end
-        return self:_onSwypeWordPathRelease(_, ges, source_key)
-    end
+    VirtualKeyboard.onSwypeWordMultiswipe = VirtualKeyboard.onSwypeWordSwipe
 
     function VirtualKeyboard:onSwypeWordPanRelease(_, ges)
         -- A slide from backspace whose lift landed on no key.
