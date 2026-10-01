@@ -353,8 +353,7 @@ function InputController:_selectCompletion(keyboard, candidate, completion)
     keyboard.inputbox:addChars(candidate.output_word or candidate.word)
     keyboard.swype_mvp_tapped_word = nil
     self:_markPendingSpace(keyboard)
-    self:clearCandidateState(keyboard)
-    keyboard:_swypeRefreshCandidateRow()
+    self:clearCandidateRow(keyboard)
 end
 
 -- A word tapped out letter by letter and ended with a space or
@@ -477,20 +476,16 @@ end
 
 function InputController:rejectLastInsert(keyboard)
     local rejection = keyboard.swype_mvp_session:rejection()
+    if not rejection.handled then
+        return false
+    end
     if rejection.text then
         self.logger.dbg("swype mvp rejected", rejection.signature)
         self:deleteText(keyboard, rejection.text)
-        keyboard:_swypeReset()
-        self:clearCandidateState(keyboard)
-        keyboard:_swypeRefreshCandidateRow()
-        return true
     end
-    if rejection.handled then
-        keyboard:_swypeReset()
-        self:clearCandidateRow(keyboard)
-        return true
-    end
-    return false
+    keyboard:_swypeReset()
+    self:clearCandidateRow(keyboard)
+    return true
 end
 
 -- uses is what the word counts for: a pick by default, less when the user
@@ -521,8 +516,7 @@ function InputController:selectCandidate(keyboard, candidate, uses)
         uses or self.PICK_USES)
     keyboard.inputbox:addChars(selection.replacement)
     self:_markPendingSpace(keyboard)
-    self:clearCandidateState(keyboard)
-    keyboard:_swypeRefreshCandidateRow()
+    self:clearCandidateRow(keyboard)
 end
 
 -- Never suggests the word again in this language. The word a swipe just
