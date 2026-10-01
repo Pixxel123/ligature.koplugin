@@ -10,6 +10,12 @@ local TraceRenderer = {
     WIDTH_MM = 0.75,
     -- The share of pixels drawn: 1 is solid, 0.75 dark grey, 0.5 grey.
     DITHER = 0.5,
+    -- The refresh that clears the trail when the finger lifts. A2 leaves
+    -- faint traces that "ui" doesn't wipe, so they build up over a long
+    -- spell of typing; "partial" is REAGL on Kindles, made to clear them
+    -- without flashing. KOReader turns every so many partials into a
+    -- flash, by the user's own "full refresh" setting.
+    CLEAR_REFRESH = "partial",
 }
 TraceRenderer.__index = TraceRenderer
 
@@ -169,7 +175,7 @@ function TraceRenderer:clear(trace, refresh_type)
     trace.drawn_pixels = nil
     trace.render_before = nil
     if region then
-        self.ui_manager:setDirty(nil, refresh_type or "ui", region)
+        self.ui_manager:setDirty(nil, refresh_type or self.CLEAR_REFRESH, region)
     end
 end
 

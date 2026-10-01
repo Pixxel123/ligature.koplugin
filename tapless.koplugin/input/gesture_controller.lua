@@ -12,7 +12,7 @@ end
 
 function GestureController:reset(keyboard, keep_prefetch)
     if keyboard.swype_mvp_trace then
-        keyboard:_swypeClearTracePixels("ui")
+        keyboard:_swypeClearTracePixels()
     end
     if not keep_prefetch then
         keyboard:_swypeCancelBucketPrefetch()
