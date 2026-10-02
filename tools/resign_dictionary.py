@@ -8,7 +8,13 @@ signatures without it, and a swipe crossing that letter's key no longer
 matches them. Words, frequencies and every other file stay as they are;
 a row whose spelling the profile can no longer sign is left out.
 
-    python3 tools/resign_dictionary.py --version 2.1.0 PACKAGE_DIR...
+--drop-misdecoded also leaves out rows that are another row's spelling
+read in the wrong code page: Windows-1250 or 1254 text decoded as Latin-1
+in the corpora (siê for się, þüphesiz for şüphesiz). Only rows whose
+repaired spelling is in the list go.
+
+    python3 tools/resign_dictionary.py --version 2.1.0 [--drop-misdecoded]
+        PACKAGE_DIR...
 """
 import argparse
 import collections
@@ -21,16 +27,35 @@ import add_contractions as ac  # noqa: E402
 import build_dictionary as bd  # noqa: E402
 
 
-def resign(directory, version):
+CODE_PAGES = ("cp1250", "cp1254")
+
+
+def misdecoded(word, words):
+    """Whether word is another of words read in the wrong code page."""
+    if word.isascii():
+        return False
+    for page in CODE_PAGES:
+        try:
+            fixed = word.encode("latin-1").decode(page)
+        except (UnicodeEncodeError, UnicodeDecodeError):
+            continue
+        if fixed != word and fixed in words:
+            return True
+    return False
+
+
+def resign(directory, version, drop_misdecoded=False):
     manifest = bd.read_manifest(os.path.join(directory, "manifest.tsv"))
     profile = manifest.get("normalization_profile", "latin-extended-v1")
     table = bd.read_profile(profile)
     if not table:
         sys.exit(f"{directory}: no normalization profile {profile}")
     rows, changed, dropped = [], 0, 0
-    for row in ac.read_rows(os.path.join(directory, "words.buckets.tsv")):
+    read = ac.read_rows(os.path.join(directory, "words.buckets.tsv"))
+    words = {row[1] for row in read}
+    for row in read:
         sig = bd.signature(row[1], table)
-        if not sig:
+        if not sig or (drop_misdecoded and misdecoded(row[1], words)):
             dropped += 1
             continue
         if sig != row[0]:
@@ -72,9 +97,10 @@ def main():
         description=__doc__, formatter_class=argparse.RawTextHelpFormatter)
     parser.add_argument("packages", nargs="+")
     parser.add_argument("--version", help="the packages' new version")
+    parser.add_argument("--drop-misdecoded", action="store_true")
     args = parser.parse_args()
     for directory in args.packages:
-        resign(directory, args.version)
+        resign(directory, args.version, args.drop_misdecoded)
 
 
 if __name__ == "__main__":
