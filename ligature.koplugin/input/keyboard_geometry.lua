@@ -140,9 +140,14 @@ function KeyboardGeometry:startLetters(layout, pos, exact_first, profile)
 end
 
 -- Each letter's key, as the letter it types (normalized) to its centre
--- and size: { x, y, w, h }. The first key typing a letter counts.
+-- and size: { x, y, w, h }. A key labelled with the letter itself counts
+-- over an accented key that normalizes to it, wherever that is: Czech
+-- has ě on the number row above e, Spanish ñ above n, Danish å above a,
+-- Turkish ı and ğ above i and g. Otherwise the first key typing a letter
+-- counts.
 function KeyboardGeometry:letterKeys(layout, profile)
     local keys = {}
+    local own_key = {}
     if not layout then
         return keys
     end
@@ -150,13 +155,19 @@ function KeyboardGeometry:letterKeys(layout, profile)
         for _, key in ipairs(row) do
             if key.dimen and not key.is_swype_candidate then
                 local normalized = self:_letterOf(key, profile)
-                if normalized and not keys[normalized] then
-                    keys[normalized] = {
-                        x = key.dimen.x + key.dimen.w / 2,
-                        y = key.dimen.y + key.dimen.h / 2,
-                        w = key.dimen.w,
-                        h = key.dimen.h,
-                    }
+                if normalized and not own_key[normalized] then
+                    local label = key.key or key.label
+                    local own = type(label) == "string"
+                        and label:lower() == normalized
+                    if own or not keys[normalized] then
+                        keys[normalized] = {
+                            x = key.dimen.x + key.dimen.w / 2,
+                            y = key.dimen.y + key.dimen.h / 2,
+                            w = key.dimen.w,
+                            h = key.dimen.h,
+                        }
+                        own_key[normalized] = own
+                    end
                 end
             end
         end

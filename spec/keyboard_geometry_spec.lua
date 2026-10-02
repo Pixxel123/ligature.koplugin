@@ -141,3 +141,57 @@ it("gives each letter key's centre and size, and the key centres from them",
     T.eq(centers[string.byte("w")].x, 150)
     T.eq(centers[string.byte("w")].size, 100)
 end)
+
+-- Folds the accented letters of the layouts below to a-z, as the
+-- latin-extended profile does, and leaves the rest to T.normalization.
+local ACCENTS = { ["ě"] = "e", ["č"] = "c", ["ñ"] = "n", ["å"] = "a",
+    ["ı"] = "i", ["ğ"] = "g" }
+local folding = setmetatable({
+    normalizeText = function(self, text)
+        if ACCENTS[text] then return ACCENTS[text] end
+        return T.normalization.normalizeText(self, text)
+    end,
+}, { __index = T.normalization })
+
+-- Rows of 100px keys, top row first.
+local function rowsOf(...)
+    local layout = {}
+    for row_index, keys in ipairs({ ... }) do
+        local row = {}
+        for index, key in ipairs(keys) do
+            row[index] = {
+                key = key,
+                dimen = { x = (index - 1) * 100, y = (row_index - 1) * 100,
+                    w = 100, h = 100 },
+            }
+        end
+        layout[row_index] = row
+    end
+    return layout
+end
+
+it("places a letter on its own key, not an accented key above it",
+        function()
+    local geometry = KeyboardGeometry:new(folding)
+    -- Czech: ě and č on the number row, e and c below.
+    local keys = geometry:letterKeys(rowsOf({ "ě", "č" }, { "e", "x" },
+        { "z", "c" }))
+    T.eq(keys.e.y, 150, "e")
+    T.eq(keys.c.x, 150, "c")
+    T.eq(keys.c.y, 250, "c")
+    -- Spanish ñ beside l, above n; Danish å at the end of the top row.
+    keys = geometry:letterKeys(rowsOf({ "q", "å" }, { "a", "ñ" }, { "n" }))
+    T.eq(keys.n.y, 250, "n")
+    T.eq(keys.a.y, 150, "a")
+    -- Turkish ı and ğ on the top row, i and g on the next.
+    keys = geometry:letterKeys(rowsOf({ "ı", "ğ" }, { "g", "i" }))
+    T.eq(keys.i.x, 150, "i")
+    T.eq(keys.g.x, 50, "g")
+end)
+
+it("still places a letter that only has an accented key", function()
+    local geometry = KeyboardGeometry:new(folding)
+    local keys = geometry:letterKeys(rowsOf({ "ñ", "q" }))
+    T.eq(keys.n.x, 50)
+    T.eq(geometry:keyCenters(rowsOf({ "ñ" }))[string.byte("n")].x, 50)
+end)
