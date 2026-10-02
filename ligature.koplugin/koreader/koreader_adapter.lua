@@ -687,43 +687,8 @@ function KoreaderAdapter:install(VirtualKeyboard)
         local result = original_show(self)
         self:_swypeRefreshSideBands()
         self:_swypeScheduleWarmUp()
-        -- Language setup closes the keyboard, so the gesture reference
-        -- waits for the next time it opens.
-        if not adapter.dictionary_controller:scheduleLanguageSetup(self) then
-            self:_swypeScheduleGestureReference()
-        end
+        adapter.dictionary_controller:scheduleLanguageSetup(self)
         return result
-    end
-
-    -- Something the finger is in the middle of: a swipe, a slide from ⌫
-    -- or along space, a hold on 🌐, or resizing.
-    function VirtualKeyboard:_swypeBusy()
-        return self.swype_mvp_trace ~= nil
-            or self.swype_mvp_delete_slide ~= nil
-            or self.swype_mvp_space_cursor ~= nil
-            or self.swype_mvp_switch_on_lift ~= nil
-            or self.swype_mvp_resize ~= nil
-    end
-
-    -- The gesture reference, once, the first time the keyboard opens.
-    -- It waits while the finger is busy: taking over then would cut a
-    -- swipe short and type the wrong word under the page.
-    function VirtualKeyboard:_swypeScheduleGestureReference(delay)
-        local reference = adapter.gesture_reference
-        if not reference or not reference:due() then
-            return
-        end
-        local keyboard = self
-        adapter.ui_manager:scheduleIn(delay or 0.3, function()
-            if keyboard.swype_mvp_closed then
-                return
-            end
-            if keyboard:_swypeBusy() then
-                keyboard:_swypeScheduleGestureReference(0.5)
-                return
-            end
-            reference:showOnce()
-        end)
     end
 
     function VirtualKeyboard:onCloseWidget()

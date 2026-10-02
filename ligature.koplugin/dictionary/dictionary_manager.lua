@@ -50,6 +50,7 @@ local Manager = {
     personal_dictionary = nil,
     blocked_words = nil,
     language_controller = nil,
+    gesture_reference = nil,
     menu = nil,
     language_setup_menu = nil,
     language_setup_selected = nil,
@@ -974,6 +975,13 @@ function Manager:_showLanguageSetupMenu()
     end
 
     table.insert(buttons, {
+        {
+            -- Over the picker; closing the page comes back to it.
+            text = "Show gestures",
+            callback = function()
+                self.gesture_reference:open()
+            end,
+        },
         {
             text = "Use selected languages",
             callback = function()

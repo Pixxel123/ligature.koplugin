@@ -11,13 +11,6 @@ local function setup(values, back_keys)
         return { new = function(_, o) return o end }
     end
     local reference = T.load("gesture_reference"):new{
-        settings = {
-            isTrue = function(_, key) return values[key] == true end,
-            saveSetting = function(_, key, value) values[key] = value end,
-            flush = function()
-                calls.flushed = (calls.flushed or 0) + 1
-            end,
-        },
         ui_manager = {
             show = function(_, view, refresh)
                 calls.shown[#calls.shown + 1] = { view, refresh }
@@ -116,41 +109,6 @@ it("closes on Back, and takes every other key so none is typed into the "
     local plain = keyless:show()
     T.eq(plain:onKeyPress(key(true)), true, "still taken")
     T.eq(#keyless_calls.closed, 0, "no Back without keys")
-end)
-
-it("shows once on first run, then only when asked", function()
-    local reference, calls, values = setup()
-    T.truthy(reference:due())
-    T.truthy(reference:showOnce())
-    T.eq(#calls.shown, 1)
-    T.eq(values[reference.SETTING_KEY], true, "remembered")
-    T.eq(reference:due(), false)
-    T.eq(reference:showOnce(), false)
-    T.eq(#calls.shown, 1, "not again")
-    reference:open()
-    T.eq(#calls.shown, 2, "from the menu")
-end)
-
-it("writes the settings just after showing the page, not before it or "
-        .. "only when KOReader exits", function()
-    local reference, calls = setup()
-    reference:showOnce()
-    T.eq(calls.flushed, nil, "not before the page is drawn")
-    T.eq(#calls.scheduled, 1)
-    T.eq(calls.scheduled[1][1], reference.FLUSH_DELAY)
-    calls.scheduled[1][2]()
-    T.eq(calls.flushed, 1)
-end)
-
-it("counts opening it from the menu as the first-run showing", function()
-    local reference, calls, values = setup()
-    reference:open()
-    T.eq(values[reference.SETTING_KEY], true)
-    T.eq(reference:due(), false)
-    T.eq(reference:showOnce(), false, "not again by itself")
-    T.eq(#calls.shown, 1)
-    reference:open()
-    T.eq(#calls.scheduled, 1, "written once")
 end)
 
 it("ships the page as a 1272 by 1696 PNG", function()

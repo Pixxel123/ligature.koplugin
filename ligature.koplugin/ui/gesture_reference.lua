@@ -1,25 +1,19 @@
 -- The gesture reference: one page listing every Ligature gesture, drawn
--- ahead of time as an image (images/gesture_reference.png). It shows
--- once by itself, the first time the keyboard opens after language setup,
--- and any time from Tools → Ligature → Gesture reference. A tap anywhere,
--- or Back, closes it. It takes every other gesture and key press too, so
--- none reaches the keyboard or text box underneath.
-local GestureReference = {
-    SETTING_KEY = "ligature_gesture_reference_shown",
-    -- Seconds after showing the page before the settings are written, so
-    -- the write doesn't hold up the page's first paint.
-    FLUSH_DELAY = 1,
-}
+-- ahead of time as an image (images/gesture_reference.png). It opens from
+-- the language picker's Show gestures button and from Tools → Ligature →
+-- Gesture reference. A tap anywhere, or Back, closes it. It takes every
+-- other gesture and key press too, so none reaches the keyboard or text
+-- box underneath.
+local GestureReference = {}
 GestureReference.__index = GestureReference
 
--- options: settings, ui_manager, screen, the KOReader widget classes
+-- options: ui_manager, screen, the KOReader widget classes
 -- (input_container, frame_container, image_widget), geometry, blitbuffer,
 -- image (the page's path) and back_keys, a function giving KOReader's
 -- Back key group when the device has keys (asked each time the page
 -- opens, as a keyboard can be plugged in later).
 function GestureReference:new(options)
     return setmetatable({
-        settings = assert(options.settings),
         ui_manager = assert(options.ui_manager),
         screen = assert(options.screen),
         input_container = assert(options.input_container),
@@ -32,41 +26,8 @@ function GestureReference:new(options)
     }, self)
 end
 
--- Whether the first-run showing is still to come.
-function GestureReference:due()
-    return not self.settings:isTrue(self.SETTING_KEY)
-end
-
--- Remembers that the page has been seen, writing the settings soon after
--- rather than when KOReader exits: a crash before then would otherwise
--- show the page again.
-function GestureReference:_remember()
-    if not self:due() then
-        return
-    end
-    self.settings:saveSetting(self.SETTING_KEY, true)
-    local settings = self.settings
-    self.ui_manager:scheduleIn(self.FLUSH_DELAY, function()
-        settings:flush()
-    end)
-end
-
--- The first-run showing: shows the page if it is still due.
-function GestureReference:showOnce()
-    if not self:due() then
-        return false
-    end
-    self:show()
-    self:_remember()
-    return true
-end
-
--- From the menu: shows the page, which also counts as the first-run
--- showing.
 function GestureReference:open()
-    local view = self:show()
-    self:_remember()
-    return view
+    return self:show()
 end
 
 -- Shows the page full screen, scaled to fit, on white. It lays itself out

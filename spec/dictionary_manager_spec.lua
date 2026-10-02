@@ -230,3 +230,18 @@ it("keeps the menu when Wi-Fi is declined, and shows it from the shipped "
     manager:_download(package("pl", "Polish"))
     T.eq(closed, 0, "nothing closes before the download starts")
 end)
+
+it("the language picker's last row opens the gestures or uses the choice",
+        function()
+    local manager = setup()
+    local opened = 0
+    manager.gesture_reference = { open = function() opened = opened + 1 end }
+    manager.catalog = { packages = {} }
+    manager:showLanguageSetup(nil, "/plugin", { en = true })
+    local rows = shown[#shown].buttons
+    local last = rows[#rows]
+    T.eq(last[1].text, "Show gestures")
+    T.eq(last[2].text, "Use selected languages")
+    last[1].callback()
+    T.eq(opened, 1)
+end)

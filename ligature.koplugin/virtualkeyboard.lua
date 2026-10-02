@@ -188,7 +188,6 @@ local RecognitionEngine = loadModule("recognition_engine")
         BlockedWords, ShapeChannel, OffensiveWords)
 
 local GestureReference = loadModule("gesture_reference"):new{
-    settings = G_reader_settings,
     ui_manager = UIManager,
     screen = Screen,
     input_container = InputContainer,
@@ -201,6 +200,9 @@ local GestureReference = loadModule("gesture_reference"):new{
         return Device:hasKeys() and { Device.input.group.Back } or nil
     end,
 }
+
+-- For the language picker's Show gestures button.
+DictionaryManager.gesture_reference = GestureReference
 
 -- For the main menu's Gesture reference entry.
 function VirtualKeyboard.ligatureOpenGestureReference()
@@ -221,7 +223,6 @@ return loadModule("koreader_adapter"):new{
     dictionary_controller = DictionaryController,
     input_controller = InputController,
     touch_model = TouchOffset,
-    gesture_reference = GestureReference,
     keyboard_geometry = KeyboardGeometry,
     keyboard_ui = KeyboardUI,
     candidate_row = CandidateRow,

@@ -25,8 +25,8 @@ settings and learned words, so it starts fresh.
 
 The first time the keyboard opens, it asks which languages you type in.
 English comes with the plugin; any other language you pick is downloaded
-then. The next time, it shows a page with every gesture. That page is also under
-`Tools → Ligature → Gesture reference`.
+then. Its Show gestures button opens a page with every gesture, which
+is also under `Tools → Ligature → Gesture reference`.
 
 ## Gestures
 
