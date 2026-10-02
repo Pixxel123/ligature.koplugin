@@ -203,6 +203,11 @@ it("keeps a letter's accented keys beside its own key", function()
     T.eq(a.x, 50)
     T.eq(a.others[1].x, 150)
     T.eq(a.others[1].size, 100)
+    -- The å key's own code, for paths through it.
+    T.eq(centers.codes["å"], 128)
+    T.eq(centers[128].x, 150)
+    T.eq(geometry:keyCenters(rowsOf({ "a", "s" })).codes, nil,
+        "no codes without such keys")
 end)
 
 it("still places a letter that only has an accented key", function()

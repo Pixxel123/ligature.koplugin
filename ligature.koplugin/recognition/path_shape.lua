@@ -132,7 +132,70 @@ local function layoutKey(key_centers)
             and (center.x .. "," .. center.y .. "," .. (center.size or 1))
             or "-"
     end
+    -- Keys of their own for accented letters (KeyboardGeometry:keyCenters).
+    for code = 128, 255 do
+        local center = key_centers[code]
+        if not center then
+            break
+        end
+        parts[#parts + 1] = center.x .. "," .. center.y
+    end
     return table.concat(parts, ";")
+end
+
+local APOSTROPHE = string.byte("'")
+local RIGHT_QUOTE = "\226\128\153"
+-- Reused by pathSignature, which runs for every word the shape channel
+-- loads.
+local path_codes = {}
+
+-- The keys entry's ideal path runs through, as a signature: its gesture
+-- signature, except that a letter of its spelling with a key of its own
+-- (å, ñ, ě; key_centers.codes) runs through that key and not the one it
+-- normalizes to. Doubled keys collapse, as in a gesture signature.
+-- entry: { word, signature, gesture_signature }.
+function PathShape.pathSignature(entry, key_centers)
+    local gesture = entry.gesture_signature or entry.signature
+    local codes = key_centers and key_centers.codes
+    local word, signature = entry.word, entry.signature
+    if not codes or not word or not signature
+            or not word:find("[\128-\255]") then
+        return gesture
+    end
+    local count, length, last = 0, 0, nil
+    local index, size = 1, #word
+    while index <= size do
+        local byte = string.byte(word, index)
+        local width = byte < 0x80 and 1 or byte < 0xE0 and 2
+            or byte < 0xF0 and 3 or 4
+        local code
+        if width == 1 then
+            if byte ~= APOSTROPHE then
+                count = count + 1
+                code = string.byte(signature, count)
+            end
+        else
+            local char = string.sub(word, index, index + width - 1)
+            if char ~= RIGHT_QUOTE then
+                count = count + 1
+                code = codes[char] or string.byte(signature, count)
+            end
+        end
+        if count > #signature then
+            return gesture
+        end
+        if code and code ~= last then
+            length = length + 1
+            path_codes[length] = code
+            last = code
+        end
+        index = index + width
+    end
+    -- A letter the profile drops would put the spelling out of step.
+    if count ~= #signature then
+        return gesture
+    end
+    return string.char(unpack(path_codes, 1, length))
 end
 
 -- The layout key_centers belong to, switched to: a string that changes

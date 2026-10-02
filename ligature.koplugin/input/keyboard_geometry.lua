@@ -162,13 +162,14 @@ function KeyboardGeometry:letterKeys(layout, profile)
                 if normalized then
                     local list = places[normalized] or {}
                     places[normalized] = list
+                    local label = key.key or key.label
                     list[#list + 1] = {
                         x = key.dimen.x + key.dimen.w / 2,
                         y = key.dimen.y + key.dimen.h / 2,
                         w = key.dimen.w,
                         h = key.dimen.h,
+                        label = type(label) == "string" and label or nil,
                     }
-                    local label = key.key or key.label
                     if not own_index[normalized] and type(label) == "string"
                             and label:lower() == normalized then
                         own_index[normalized] = #list
@@ -193,19 +194,42 @@ local function center(key)
     }
 end
 
+-- The first code given to a key of its own for an accented letter: above
+-- any byte of an a-z signature.
+local FIRST_KEY_CODE = 128
+
 -- Letter byte to key centre and size: { x, y, size, others }, others as in
--- letterKeys.
+-- letterKeys. The other keys also get codes of their own from
+-- FIRST_KEY_CODE up, in a-z order, and centers.codes gives a key's label
+-- its code, so that a word's ideal path can run through the å key rather
+-- than the a key (see PathShape.pathSignature).
 function KeyboardGeometry:keyCenters(layout, profile)
     local centers = {}
-    for letter, key in pairs(self:letterKeys(layout, profile)) do
-        local entry = center(key)
-        if key.others then
-            entry.others = {}
-            for index, other in ipairs(key.others) do
-                entry.others[index] = center(other)
+    local codes = {}
+    local next_code = FIRST_KEY_CODE
+    local keys = self:letterKeys(layout, profile)
+    for byte = string.byte("a"), string.byte("z") do
+        local key = keys[string.char(byte)]
+        if key then
+            local entry = center(key)
+            if key.others then
+                entry.others = {}
+                for index, other in ipairs(key.others) do
+                    local place = center(other)
+                    entry.others[index] = place
+                    if other.label and not codes[other.label]
+                            and next_code <= 255 then
+                        codes[other.label] = next_code
+                        centers[next_code] = place
+                        next_code = next_code + 1
+                    end
+                end
             end
+            centers[byte] = entry
         end
-        centers[string.byte(letter)] = entry
+    end
+    if next(codes) then
+        centers.codes = codes
     end
     return centers
 end

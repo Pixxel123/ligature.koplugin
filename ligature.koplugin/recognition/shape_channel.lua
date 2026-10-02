@@ -73,8 +73,14 @@ function ShapeChannel:_lettersNear(point, key_centers)
         local center = key_centers[code]
         if center then
             local near = self:_reaches(center, point)
-            for _, other in ipairs(not near and center.others or {}) do
-                near = near or self:_reaches(other, point)
+            local others = not near and center.others
+            if others then
+                for index = 1, #others do
+                    if self:_reaches(others[index], point) then
+                        near = true
+                        break
+                    end
+                end
             end
             if near then
                 letters[#letters + 1] = string.char(code)
@@ -111,7 +117,7 @@ function ShapeChannel:_paths(entries, key_centers)
     end
     local lengths, scales = {}, {}
     for index, entry in ipairs(entries) do
-        local signature = entry.gesture_signature or entry.signature
+        local signature = self.path_shape.pathSignature(entry, key_centers)
         local length, scale = -1, 0
         if entry.word and signature
                 and #(entry.signature or signature) >= self.MIN_LETTERS then
@@ -122,7 +128,10 @@ function ShapeChannel:_paths(entries, key_centers)
         end
         lengths[index], scales[index] = length, scale
     end
-    paths = { count = #entries, lengths = lengths, scales = scales }
+    -- signatures: each word's path letters (PathShape.pathSignature),
+    -- kept once a swipe has looked at the word's shape.
+    paths = { count = #entries, lengths = lengths, scales = scales,
+        signatures = {} }
     self.paths[entries] = paths
     return paths
 end
@@ -175,7 +184,7 @@ function ShapeChannel:candidates(options)
     -- word with a letter off the keyboard, left out here after it is
     -- marked seen; scan never passes the -1 of a word too short to look
     -- at.
-    local function consider(entry, length, scale)
+    local function consider(entry, length, scale, paths, position)
         local word = entry.word
         if seen[word]
                 or (entry.lang and entry.lang ~= dictionary
@@ -192,8 +201,12 @@ function ShapeChannel:candidates(options)
         if ratio < self.MIN_RATIO or ratio > self.MAX_RATIO then
             return
         end
-        path_shape:resampleInto(entry.gesture_signature or entry.signature,
-            length, b)
+        local signature = paths.signatures[position]
+        if not signature then
+            signature = path_shape.pathSignature(entry, key_centers)
+            paths.signatures[position] = signature
+        end
+        path_shape:resampleInto(signature, length, b)
         local length_term = math.min(max_score,
             math.abs(swipe.length - length) / math.max(scale, length))
         local length_component = 0.15 * length_term
@@ -248,7 +261,7 @@ function ShapeChannel:candidates(options)
         for index = 1, #entries do
             local length = lengths[index]
             if length >= 0 then
-                consider(entries[index], length, scales[index])
+                consider(entries[index], length, scales[index], paths, index)
             end
         end
     end

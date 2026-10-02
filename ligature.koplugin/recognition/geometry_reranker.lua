@@ -29,7 +29,8 @@ function GeometryReranker:rerank(candidates, trace_info, key_centers, weight)
     local swipe = points and self.path_shape:swipe(points)
     if swipe then
         for index, candidate in ipairs(candidates) do
-            local signature = candidate.gesture_signature or candidate.signature
+            local signature = self.path_shape.pathSignature(candidate,
+                key_centers)
             local ideal = self.path_shape:ideal(signature, key_centers or {})
             local score = ideal and self.path_shape:score(swipe, ideal) or nil
             scores[index] = score

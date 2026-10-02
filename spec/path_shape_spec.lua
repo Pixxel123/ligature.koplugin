@@ -60,3 +60,22 @@ end)
 it("has no ideal path for a word with a letter off the keyboard", function()
     T.eq(PathShape:new():ideal("az", centers()), nil)
 end)
+
+it("runs a word's path through the keys of its own accented letters",
+        function()
+    local key_centers = { codes = { ["å"] = 128, ["ø"] = 129 } }
+    local function path(word, signature, gesture)
+        return PathShape.pathSignature({ word = word, signature = signature,
+            gesture_signature = gesture }, key_centers)
+    end
+    T.eq(path("på", "pa"), "p\128")
+    T.eq(path("først", "forst"), "f\129rst")
+    T.eq(path("håb", "hab"), "h\128b")
+    T.eq(path("sådan", "sadan"), "s\128dan", "å and a stay apart")
+    T.eq(path("ååå", "aaa", "a"), "\128", "doubled keys collapse")
+    T.eq(path("don’t", "dont"), "dont", "no accented letters")
+    T.eq(path("hello", "hello", "helo"), "helo", "plain words as before")
+    T.eq(path("café", "caf"), "caf", "out of step: the signature as is")
+    T.eq(PathShape.pathSignature({ word = "på", signature = "pa" }, {}),
+        "pa", "a layout without such keys")
+end)

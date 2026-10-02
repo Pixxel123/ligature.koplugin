@@ -61,7 +61,10 @@ end
 -- How far point is from a letter's key, in key sizes: the nearest of its
 -- own key and any other key typing it (Danish å for a, Czech ě for e).
 local function keyDistance(target, point)
-    local best = scaledDistance(target, point)
+    local dx = point.x - target.x
+    local dy = point.y - target.y
+    local best = math.sqrt(dx * dx + dy * dy)
+        / math.max(1, target.size or 1)
     local others = target.others
     if others then
         for index = 1, #others do
