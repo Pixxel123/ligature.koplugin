@@ -1316,6 +1316,7 @@ aposematic	aposematic	1856	en
 arcsec	arcsec	1856	en
 astigmatic	astigmatic	1856	en
 autotrophic	autotrophic	1856	en
+alfric	Ælfric	1856	en
 aarc	AARC	1759	en
 aidc	AIDC	1759	en
 arcc	ARCC	1759	en
@@ -1834,6 +1835,11 @@ autoclaved	autoclaved	1890	en
 averred	averred	1890	en
 axiomatized	axiomatized	1890	en
 aed	Áed	1890	en
+athelbald	Æthelbald	1890	en
+athelflad	Æthelflæd	1890	en
+athelred	Æthelred	1890	en
+athelwald	Æthelwald	1890	en
+athelwold	Æthelwold	1890	en
 acpd	ACPD	1856	en
 aboud	Aboud	1856	en
 adelheid	Adelheid	1856	en
@@ -1880,6 +1886,7 @@ applehood	applehood	1759	en
 arytenoid	arytenoid	1759	en
 ashwood	ashwood	1759	en
 aland	Åland	1759	en
+alfweard	Ælfweard	1759	en
 abbeyfield	Abbeyfield	1634	en
 abiad	Abiad	1634	en
 abyad	Abyad	1634	en
@@ -2784,6 +2791,7 @@ axoneme	axoneme	1890	en
 azeotrope	azeotrope	1890	en
 azote	azote	1890	en
 aine	Áine	1890	en
+alle	Ælle	1890	en
 acgme	ACGME	1856	en
 amerisafe	AMERISAFE	1856	en
 avre	AVRE	1856	en
@@ -3028,6 +3036,7 @@ atef	Atef	1890	en
 aardwolf	aardwolf	1890	en
 alef	alef	1890	en
 aperitif	apéritif	1890	en
+athelwulf	Æthelwulf	1890	en
 aef	AEF	1856	en
 aoasf	AOASF	1856	en
 akif	Akif	1856	en
@@ -3326,6 +3335,7 @@ autoflowering	autoflowering	1890	en
 autographing	autographing	1890	en
 autoscaling	autoscaling	1890	en
 auxlang	auxlang	1890	en
+atheling	Ætheling	1890	en
 apng	APNG	1856	en
 aamjiwnaang	Aamjiwnaang	1856	en
 abzug	Abzug	1856	en
@@ -3515,6 +3525,8 @@ agtech	agtech	1890	en
 avodah	avodah	1890	en
 aweigh	aweigh	1890	en
 azariah	azariah	1890	en
+alfheah	Ælfheah	1890	en
+athelfrith	Æthelfrith	1890	en
 asph	ASPH	1856	en
 aboah	Aboah	1856	en
 agnipath	Agnipath	1856	en
@@ -5341,6 +5353,7 @@ avestan	avestan	1890	en
 avulsion	avulsion	1890	en
 axiomatization	axiomatization	1890	en
 aztlan	aztlan	1890	en
+athelstan	Æthelstan	1890	en
 atman	ātman	1890	en
 acen	ACEN	1856	en
 augmentin	AUGMENTIN	1856	en
@@ -6337,6 +6350,8 @@ autoinjector	autoinjector	1890	en
 autoloader	autoloader	1890	en
 avuncular	avuncular	1890	en
 amter	Ämter	1890	en
+asir	Æsir	1890	en
+agir	ægir	1890	en
 anwr	ANWR	1856	en
 acinetobacter	Acinetobacter	1856	en
 ahmir	Ahmir	1856	en
@@ -6362,6 +6377,7 @@ asar	asar	1856	en
 astrogator	astrogator	1856	en
 autoresponder	autoresponder	1856	en
 avascular	avascular	1856	en
+alfgar	Ælfgar	1856	en
 asor	ASOR	1759	en
 abinger	Abinger	1759	en
 adhemar	Adhemar	1759	en
@@ -8722,6 +8738,7 @@ artnet	artnet	1890	en
 aspart	aspart	1890	en
 autodidact	autodidact	1890	en
 akerfeldt	Åkerfeldt	1890	en
+athelberht	Æthelberht	1890	en
 aggt	AGGT	1856	en
 adamist	Adamist	1856	en
 alquist	Alquist	1856	en
@@ -8881,6 +8898,7 @@ andreou	Andreou	1856	en
 asau	Asau	1856	en
 atyrau	Atyrau	1856	en
 asatru	Ásatrú	1856	en
+alfgifu	Ælfgifu	1856	en
 aju	AJU	1759	en
 apdu	APDU	1759	en
 asnmu	ASNMU	1759	en
@@ -11879,7 +11897,7 @@ buble	Bublé	1890	en
 buckinghamshire	Buckinghamshire	1890	en
 buie	Buie	1890	en
 bukele	Bukele	1890	en
-bundesstrae	Bundesstraße	1890	en
+bundesstrase	Bundesstraße	1890	en
 bunnie	Bunnie	1890	en
 buonanotte	Buonanotte	1890	en
 burbidge	Burbidge	1890	en
@@ -19874,7 +19892,7 @@ cosmographia	Cosmographia	1759	en
 cossa	Cossa	1759	en
 costanera	Costanera	1759	en
 costilla	Costilla	1759	en
-cyclopdia	Cyclopædia	1759	en
+cyclopadia	Cyclopædia	1759	en
 cypria	Cypria	1759	en
 caponata	caponata	1759	en
 cardia	cardia	1759	en
@@ -26938,7 +26956,7 @@ crueler	crueler	1890	en
 cryptographer	cryptographer	1890	en
 customizer	customizer	1890	en
 cycler	cycler	1890	en
-cur	cœur	1890	en
+cour	cœur	1890	en
 cmbr	CMBR	1856	en
 crestor	CRESTOR	1856	en
 crr	CRR	1856	en
@@ -27000,7 +27018,7 @@ coyer	Coyer	1759	en
 crantor	Crantor	1759	en
 creedmoor	Creedmoor	1759	en
 crover	Crover	1759	en
-csar	Cæsar	1759	en
+casar	Cæsar	1759	en
 canceller	canceller	1759	en
 candlepower	candlepower	1759	en
 cefdinir	cefdinir	1759	en
@@ -35824,7 +35842,7 @@ depressurization	depressurization	1856	en
 dilapidation	dilapidation	1856	en
 donjon	donjon	1856	en
 dynein	dynein	1856	en
-dmon	dæmon	1856	en
+damon	dæmon	1856	en
 decstation	DECstation	1759	en
 dadlington	Dadlington	1759	en
 dahlman	Dahlman	1759	en
@@ -38003,7 +38021,7 @@ dukedoms	dukedoms	1856	en
 dumbs	dumbs	1856	en
 dumpsites	dumpsites	1856	en
 dzongkhags	dzongkhags	1856	en
-dmons	dæmons	1856	en
+damons	dæmons	1856	en
 departements	départements	1856	en
 dalys	DALYs	1759	en
 darms	DARMS	1759	en
@@ -39472,7 +39490,7 @@ elanga	Elanga	1890	en
 elea	Elea	1890	en
 elphaba	Elphaba	1890	en
 emesa	Emesa	1890	en
-encyclopdia	Encyclopædia	1890	en
+encyclopadia	Encyclopædia	1890	en
 enga	Enga	1890	en
 eniola	Eniola	1890	en
 entamoeba	Entamoeba	1890	en
@@ -44612,7 +44630,6 @@ exclamatory	exclamatory	1759	en
 exotically	exotically	1759	en
 expansively	expansively	1759	en
 extemporaneously	extemporaneously	1759	en
-ey	þey	1759	en
 edenderry	Edenderry	1634	en
 ederney	Ederney	1634	en
 elsley	Elsley	1634	en
@@ -51475,7 +51492,7 @@ grandniece	grandniece	1890	en
 graphophone	graphophone	1890	en
 greenspace	greenspace	1890	en
 groupware	groupware	1890	en
-groe	große	1890	en
+grose	große	1890	en
 gruyere	gruyère	1890	en
 guanosine	guanosine	1890	en
 guessable	guessable	1890	en
@@ -53263,14 +53280,14 @@ gastrin	gastrin	1759	en
 gastrulation	gastrulation	1759	en
 geriatrician	geriatrician	1759	en
 gesticulation	gesticulation	1759	en
-gieen	gießen	1759	en
+giesen	gießen	1759	en
 glinn	glinn	1759	en
 glycan	glycan	1759	en
 gomen	gomen	1759	en
 gpon	gpon	1759	en
 graden	graden	1759	en
 grosgrain	grosgrain	1759	en
-groen	großen	1759	en
+grosen	großen	1759	en
 gun	gün	1759	en
 gaimin	Gaimin	1634	en
 galarian	Galarian	1634	en
@@ -53896,7 +53913,6 @@ gravatar	gravatar	1890	en
 gravimeter	gravimeter	1890	en
 groper	groper	1890	en
 guber	guber	1890	en
-gir	ægir	1890	en
 gahr	Gahr	1856	en
 galibier	Galibier	1856	en
 gastarbeiter	Gastarbeiter	1856	en
@@ -53908,7 +53924,7 @@ glamr	Glámr	1856	en
 goldner	Goldner	1856	en
 gouder	Gouder	1856	en
 grauer	Grauer	1856	en
-groer	Großer	1856	en
+groser	Großer	1856	en
 gstreamer	gstreamer	1856	en
 guesser	guesser	1856	en
 gatr	GATR	1759	en
@@ -59158,7 +59174,7 @@ husson	Husson	1759	en
 hyakunin	Hyakunin	1759	en
 hyden	Hyden	1759	en
 hylian	Hylian	1759	en
-hmon	Hæmon	1759	en
+hamon	Hæmon	1759	en
 hogen	Hōgen	1759	en
 hazzan	hazzan	1759	en
 hemocyanin	hemocyanin	1759	en
@@ -59291,7 +59307,6 @@ herero	Herero	1890	en
 hermoso	Hermoso	1890	en
 herro	Herro	1890	en
 hiero	Hiero	1890	en
-himmelsto	Himmelstoß	1890	en
 hindoo	Hindoo	1890	en
 hitomaro	Hitomaro	1890	en
 hokkaido	Hokkaidō	1890	en
@@ -59668,7 +59683,7 @@ hektor	Hektor	1890	en
 helfer	Helfer	1890	en
 helsingor	Helsingør	1890	en
 hemmer	Hemmer	1890	en
-hermor	Hermóðr	1890	en
+hermodr	Hermóðr	1890	en
 hetmyer	Hetmyer	1890	en
 heydar	Heydar	1890	en
 hiper	HiPER	1890	en
@@ -59694,7 +59709,7 @@ hurzeler	Hurzeler	1890	en
 hvergelmir	Hvergelmir	1890	en
 hyperledger	Hyperledger	1890	en
 hector	Héctor	1890	en
-hor	Höðr	1890	en
+hodr	Höðr	1890	en
 hutter	Hütter	1890	en
 hairier	hairier	1890	en
 hallstar	hallstar	1890	en
@@ -60616,6 +60631,7 @@ herules	Herules	1890	en
 hessians	Hessians	1890	en
 highcharts	Highcharts	1890	en
 hilltoppers	Hilltoppers	1890	en
+himmelstos	Himmelstoß	1890	en
 hipgnosis	Hipgnosis	1890	en
 hipparchus	Hipparchus	1890	en
 hipparcos	Hipparcos	1890	en
@@ -64355,7 +64371,7 @@ iswaran	Iswaran	1890	en
 itchen	Itchen	1890	en
 itron	Itron	1890	en
 ixion	Ixion	1890	en
-iunn	Iðunn	1890	en
+idunn	Iðunn	1890	en
 icosahedron	icosahedron	1890	en
 icosidodecahedron	icosidodecahedron	1890	en
 ilion	ilion	1890	en
@@ -65973,7 +65989,6 @@ insouciant	insouciant	1759	en
 interactionist	interactionist	1759	en
 interpolant	interpolant	1759	en
 intumescent	intumescent	1759	en
-it	œit	1759	en
 ibit	IBIT	1634	en
 imtt	IMTT	1634	en
 indot	INDOT	1634	en
@@ -67267,14 +67282,12 @@ jyothi	Jyothi	1890	en
 janmabhoomi	janmabhoomi	1890	en
 junzi	junzi	1890	en
 joruri	jōruri	1890	en
-jalfi	Þjálfi	1890	en
 jahmai	Jahmai	1856	en
 jaji	Jaji	1856	en
 jamali	Jamali	1856	en
 jarecki	Jarecki	1856	en
 jelani	Jelani	1856	en
 juri	Jüri	1856	en
-jazi	Þjazi	1856	en
 jaini	Jaini	1759	en
 jaki	Jaki	1759	en
 jakubowski	Jakubowski	1759	en
@@ -73262,7 +73275,6 @@ leofric	Leofric	1856	en
 lombardic	Lombardic	1856	en
 lauric	lauric	1856	en
 lyotropic	lyotropic	1856	en
-lfric	Ælfric	1856	en
 lddc	LDDC	1759	en
 levc	LEVC	1759	en
 lihtc	LIHTC	1759	en
@@ -73614,7 +73626,6 @@ longword	longword	1759	en
 loped	loped	1759	en
 louvered	louvered	1759	en
 lovebird	lovebird	1759	en
-lfweard	Ælfweard	1759	en
 lbusd	LBUSD	1634	en
 lakehead	Lakehead	1634	en
 liburd	Liburd	1634	en
@@ -74193,7 +74204,6 @@ louisae	louisae	1890	en
 lumiere	lumière	1890	en
 lunette	lunette	1890	en
 lycee	lycée	1890	en
-lle	Ælle	1890	en
 lldpe	LLDPE	1856	en
 lwe	LWE	1856	en
 lafave	LaFave	1856	en
@@ -74764,7 +74774,6 @@ lh	lh	1890	en
 linewidth	linewidth	1890	en
 logstash	logstash	1890	en
 lungfish	lungfish	1890	en
-lfheah	Ælfheah	1890	en
 lehrbuch	Lehrbuch	1856	en
 leylah	Leylah	1856	en
 lowth	Lowth	1856	en
@@ -76422,7 +76431,6 @@ lukather	Lukather	1856	en
 leaster	leaster	1856	en
 lexer	lexer	1856	en
 lurcher	lurcher	1856	en
-lfgar	Ælfgar	1856	en
 lvr	LVR	1759	en
 laidler	Laidler	1759	en
 laimbeer	Laimbeer	1759	en
@@ -77298,7 +77306,7 @@ lepus	Lepus	1856	en
 liberatores	Liberatores	1856	en
 lifesteps	LifeSteps	1856	en
 lindos	Lindos	1856	en
-linnus	Linnæus	1856	en
+linnaus	Linnæus	1856	en
 llys	Llys	1856	en
 loblaws	Loblaws	1856	en
 louisianans	Louisianans	1856	en
@@ -77721,7 +77729,6 @@ lu	lü	1890	en
 lifu	Lifu	1856	en
 lubuntu	Lubuntu	1856	en
 lyu	Lyu	1856	en
-lfgifu	Ælfgifu	1856	en
 lbu	LBU	1759	en
 llu	LLU	1759	en
 lru	LRU	1759	en
@@ -78719,7 +78726,7 @@ mqa	MQA	1890	en
 muga	MUGA	1890	en
 mabhida	Mabhida	1890	en
 machinga	Machinga	1890	en
-macropdia	Macropædia	1890	en
+macropadia	Macropædia	1890	en
 madariaga	Madariaga	1890	en
 madawaska	Madawaska	1890	en
 madhyamaka	Madhyamaka	1890	en
@@ -78803,7 +78810,7 @@ meyiwa	Meyiwa	1890	en
 micaela	Micaëla	1890	en
 michelia	Michelia	1890	en
 michinaga	Michinaga	1890	en
-micropdia	Micropædia	1890	en
+micropadia	Micropædia	1890	en
 miglia	Miglia	1890	en
 mikawa	Mikawa	1890	en
 milza	Milza	1890	en
@@ -85123,7 +85130,7 @@ midgar	Midgar	1890	en
 midwesterner	Midwesterner	1890	en
 mieder	Mieder	1890	en
 mihdhar	Mihdhar	1890	en
-militrgevrer	Militærgeværer	1890	en
+militargevarer	Militærgeværer	1890	en
 minaur	Minaur	1890	en
 mirzapur	Mirzapur	1890	en
 mixmaster	Mixmaster	1890	en
@@ -91489,13 +91496,13 @@ niederreiter	Niederreiter	1890	en
 niffenegger	Niffenegger	1890	en
 nijjar	Nijjar	1890	en
 nippur	Nippur	1890	en
-njorr	Njörðr	1890	en
+njordr	Njörðr	1890	en
 noether	Noether	1890	en
 noldor	Noldor	1890	en
 noussair	Noussair	1890	en
 nucor	Nucor	1890	en
 nupur	Nupur	1890	en
-nihoggr	Níðhöggr	1890	en
+nidhoggr	Níðhöggr	1890	en
 nameserver	nameserver	1890	en
 navbar	navbar	1890	en
 neckbreaker	neckbreaker	1890	en
@@ -96067,6 +96074,7 @@ ossenfort	Ossenfort	1759	en
 oudinot	Oudinot	1759	en
 omnibenevolent	omnibenevolent	1759	en
 overhit	overhit	1759	en
+oit	œit	1759	en
 oceanfirst	OceanFirst	1634	en
 okert	Okert	1634	en
 onpoint	OnPoint	1634	en
@@ -96801,6 +96809,7 @@ pellucida	pellucida	1890	en
 phenylketonuria	phenylketonuria	1890	en
 phia	phia	1890	en
 philia	philia	1890	en
+philosophia	philosophiæ	1890	en
 phonearena	phonearena	1890	en
 photokina	photokina	1890	en
 phrma	phrma	1890	en
@@ -99989,7 +99998,6 @@ paini	Pāṇini	1890	en
 palazzi	palazzi	1890	en
 parodi	parodi	1890	en
 pasi	pasi	1890	en
-philosophi	philosophiæ	1890	en
 piatti	piatti	1890	en
 plastoglobuli	plastoglobuli	1890	en
 pmhi	pmHi	1890	en
@@ -107951,7 +107959,7 @@ rivard	Rivard	1890	en
 rockfield	Rockfield	1890	en
 rushd	Rushd	1890	en
 rustad	Rustad	1890	en
-rdwald	Rædwald	1890	en
+radwald	Rædwald	1890	en
 railhead	railhead	1890	en
 ramified	ramified	1890	en
 rampaged	rampaged	1890	en
@@ -111659,8 +111667,6 @@ requestor	requestor	1856	en
 retarder	retarder	1856	en
 rhetor	rhetor	1856	en
 rockier	rockier	1856	en
-rymheimr	Þrymheimr	1856	en
-rymr	Þrymr	1856	en
 rxr	RXR	1759	en
 radyr	Radyr	1759	en
 randhir	Randhir	1759	en
@@ -111672,7 +111678,7 @@ reichsleiter	Reichsleiter	1759	en
 reisinger	Reisinger	1759	en
 repeller	Repeller	1759	en
 revuebar	Revuebar	1759	en
-ricur	Ricœur	1759	en
+ricour	Ricœur	1759	en
 ridenour	Ridenour	1759	en
 rippteacher	RippTeacher	1759	en
 risacher	Risacher	1759	en
@@ -117496,7 +117502,7 @@ stonegate	Stonegate	1890	en
 storrie	Storrie	1890	en
 storwize	Storwize	1890	en
 storybundle	StoryBundle	1890	en
-strae	Straße	1890	en
+strase	Straße	1890	en
 struensee	Struensee	1890	en
 sture	Sture	1890	en
 stephane	Stéphane	1890	en
@@ -119565,7 +119571,7 @@ singhvi	Singhvi	1890	en
 sirianni	Sirianni	1890	en
 sitiveni	Sitiveni	1890	en
 skadi	Skadi	1890	en
-skai	Skaði	1890	en
+skadi	Skaði	1890	en
 skibicki	Skibicki	1890	en
 sloughi	Sloughi	1890	en
 snorri	Snorri	1890	en
@@ -119690,7 +119696,7 @@ sukhothai	Sukhothai	1759	en
 suleimani	Suleimani	1759	en
 sumiyoshi	Sumiyoshi	1759	en
 svaneti	Svaneti	1759	en
-svailfari	Svaðilfari	1759	en
+svadilfari	Svaðilfari	1759	en
 swiderski	Swiderski	1759	en
 swierczynski	Swierczynski	1759	en
 sydni	Sydni	1759	en
@@ -123611,7 +123617,6 @@ superorder	superorder	1890	en
 superscalar	superscalar	1890	en
 superuser	superuser	1890	en
 supraventricular	supraventricular	1890	en
-sir	Æsir	1890	en
 sbvr	SBVR	1856	en
 sedar	SEDAR	1856	en
 spqr	SPQR	1856	en
@@ -123646,7 +123651,7 @@ sinar	Sinar	1856	en
 sippar	Sippar	1856	en
 sivakumar	Sivakumar	1856	en
 sklenar	Sklenar	1856	en
-skiblanir	Skíðblaðnir	1856	en
+skidbladnir	Skíðblaðnir	1856	en
 sleator	Sleator	1856	en
 sleumer	Sleumer	1856	en
 slusser	Slusser	1856	en
@@ -127195,7 +127200,7 @@ sundquist	Sundquist	1890	en
 swampscott	Swampscott	1890	en
 sweetscent	Sweetscent	1890	en
 symptomswhat	SymptomsWhat	1890	en
-sberht	Sæberht	1890	en
+saberht	Sæberht	1890	en
 sackbut	sackbut	1890	en
 samet	samet	1890	en
 samizdat	samizdat	1890	en
@@ -129779,11 +129784,6 @@ truffled	truffled	1890	en
 trundled	trundled	1890	en
 tunnelled	tunnelled	1890	en
 tussled	tussled	1890	en
-thelbald	Æthelbald	1890	en
-thelfld	Æthelflæd	1890	en
-thelred	Æthelred	1890	en
-thelwald	Æthelwald	1890	en
-thelwold	Æthelwold	1890	en
 thorvald	Thorvald	1856	en
 townend	Townend	1856	en
 townhead	Townhead	1856	en
@@ -130687,7 +130687,6 @@ tychonoff	Tychonoff	1890	en
 teff	teff	1890	en
 tf	tf	1890	en
 troff	troff	1890	en
-thelwulf	Æthelwulf	1890	en
 tefaf	TEFAF	1856	en
 tulf	TULF	1856	en
 tardif	Tardif	1856	en
@@ -131028,7 +131027,6 @@ truncating	truncating	1890	en
 trundling	trundling	1890	en
 twentysomething	twentysomething	1890	en
 typecasting	typecasting	1890	en
-theling	Ætheling	1890	en
 telang	Telang	1856	en
 temiskaming	Temiskaming	1856	en
 tuggeranong	Tuggeranong	1856	en
@@ -131182,7 +131180,6 @@ tsarevich	tsarevich	1890	en
 tsh	tsh	1890	en
 tuah	tuah	1890	en
 turlough	turlough	1890	en
-thelfrith	Æthelfrith	1890	en
 talulah	Talulah	1856	en
 tambiah	Tambiah	1856	en
 tetteh	Tetteh	1856	en
@@ -131393,6 +131390,7 @@ tarocchi	tarocchi	1890	en
 technorati	technorati	1890	en
 tithi	tithi	1890	en
 tumaini	tumaini	1890	en
+tjalfi	Þjálfi	1890	en
 tcpi	TCPI	1856	en
 tabari	Tabari	1856	en
 tajikistani	Tajikistani	1856	en
@@ -131415,6 +131413,7 @@ timini	timini	1856	en
 trimurti	trimurti	1856	en
 trulli	trulli	1856	en
 tumuli	tumuli	1856	en
+tjazi	Þjazi	1856	en
 tagi	Tagi	1759	en
 taiki	Taiki	1759	en
 takauji	Takauji	1759	en
@@ -132514,7 +132513,6 @@ tribunician	tribunician	1890	en
 trimaran	trimaran	1890	en
 trogon	trogon	1890	en
 tuberculin	tuberculin	1890	en
-thelstan	Æthelstan	1890	en
 tdsun	TDSun	1856	en
 tgn	TGN	1856	en
 tracon	TRACON	1856	en
@@ -133417,6 +133415,8 @@ triumphator	triumphator	1856	en
 truecolor	truecolor	1856	en
 tweezer	tweezer	1856	en
 typesetter	typesetter	1856	en
+trymheimr	Þrymheimr	1856	en
+trymr	Þrymr	1856	en
 tavr	TAVR	1759	en
 trelstar	TRELSTAR	1759	en
 taffer	Taffer	1759	en
@@ -135229,7 +135229,6 @@ tricobalt	tricobalt	1890	en
 triumphalist	triumphalist	1890	en
 turboshaft	turboshaft	1890	en
 txt	txt	1890	en
-thelberht	Æthelberht	1890	en
 tarbert	Tarbert	1856	en
 taskrabbit	TaskRabbit	1856	en
 teachtext	TeachText	1856	en
@@ -135949,6 +135948,7 @@ tubeway	tubeway	1759	en
 tumultuously	tumultuously	1759	en
 turbary	turbary	1759	en
 typographically	typographically	1759	en
+tey	þey	1759	en
 tessy	Tessy	1634	en
 thinkberry	Thinkberry	1634	en
 tiley	Tiley	1634	en
@@ -136883,7 +136883,7 @@ unprogrammed	unprogrammed	1759	en
 unrefrigerated	unrefrigerated	1759	en
 unrelieved	unrelieved	1759	en
 unruptured	unruptured	1759	en
-unrd	unræd	1759	en
+unrad	unræd	1759	en
 unscrutinized	unscrutinized	1759	en
 unshaded	unshaded	1759	en
 unspecialized	unspecialized	1759	en
@@ -140542,7 +140542,7 @@ vortimer	Vortimer	1890	en
 vosper	Vosper	1890	en
 vuhledar	Vuhledar	1890	en
 victor	Víctor	1890	en
-viarr	Víðarr	1890	en
+vidarr	Víðarr	1890	en
 vcenter	vCenter	1890	en
 vaar	vaar	1890	en
 vaguer	vaguer	1890	en

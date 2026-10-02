@@ -8,12 +8,12 @@ data_language	en
 keyboard_layout	en_keyboard
 short_label	EN
 normalization_profile	latin-extended-v1
-version	2.0.0
+version	2.1.0
 rows	147345
 data	words.buckets.tsv
 index	words.buckets.idx
-sha256_data	4f05ecbd6b087ef227dd969b07f5beddb311d00bed23a2dae8bf09ed416cca86
-sha256_index	aee477103345bf8d8b5b2e30f08883f0449042782d22d6f6d71dae60233602e7
+sha256_data	6cc598c210de287a52daedfd3e263c12eb3ae0c38ade73bec0aa34eb6e66ddf2
+sha256_index	5d10fd13f47cb918343b842181554d0b8d2284df1442ce8bef6882ba44171a1f
 popular_data	words.popular.tsv
 popular_index	words.popular.idx
 popular_per_first	256
