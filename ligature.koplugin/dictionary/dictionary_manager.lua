@@ -54,7 +54,8 @@ local Manager = {
     language_setup_menu = nil,
     language_setup_selected = nil,
     loading_message = nil,
-    busy = false,
+    -- Ids of the packages waiting for runWhenOnline or downloading.
+    queued = {},
 }
 
 local function isSafeId(value)
@@ -215,8 +216,8 @@ function Manager:listInstalled(plugin_dir)
     return Manager.registry:list(plugin_dir or self.plugin_dir)
 end
 
-function Manager:_loadCachedCatalog()
-    local data = readFile(self.catalog_path, MAX_CATALOG_BYTES)
+local function readCatalog(path)
+    local data = path and readFile(path, MAX_CATALOG_BYTES)
     if not data then
         return nil
     end
@@ -224,11 +225,33 @@ function Manager:_loadCachedCatalog()
     if not ok then
         return nil
     end
-    local catalog = validateCatalog(decoded)
+    return (validateCatalog(decoded))
+end
+
+function Manager:_loadCachedCatalog()
+    local catalog = readCatalog(self.catalog_path)
     if catalog then
         self.catalog = catalog
     end
     return self.catalog
+end
+
+-- The catalog's packages by id: the last catalog downloaded, else the copy
+-- that ships with the plugin, so setup can offer every language offline.
+function Manager:catalogPackages(plugin_dir)
+    self.catalog_path = self.catalog_path or localRoot() .. "/catalog.json"
+    if not self.catalog then
+        self:_loadCachedCatalog()
+    end
+    local dir = plugin_dir or self.plugin_dir
+    if not self.catalog and dir then
+        local shipped = readCatalog(dir .. "/catalog.json")
+        if shipped then
+            shipped.shipped = true
+            self.catalog = shipped
+        end
+    end
+    return self.catalog and self.catalog.packages or {}
 end
 
 local function httpToFile(url, target)
@@ -313,6 +336,8 @@ function Manager:_showLoading(text)
     self:_closeLoading()
     self.loading_message = InfoMessage:new{ text = text, timeout = 0 }
     UIManager:show(self.loading_message)
+    -- Downloads block until they finish; draw the message before they start.
+    UIManager:forceRePaint()
 end
 
 function Manager:_closeMenu()
@@ -635,37 +660,146 @@ function Manager:_downloadAndInstall(package)
     return installed, install_err
 end
 
-function Manager:_download(package)
-    if self.busy then
-        return
+-- Whether id is waiting to download, or downloading.
+function Manager:isQueued(id)
+    return self.queued[id] == true
+end
+
+-- Downloads and installs packages in turn once online, then calls
+-- done(failed), failed listing { package =, err = } for each that failed.
+-- runWhenOnline drops the callback when the user declines Wi-Fi, so the
+-- menu stays and nothing is shown before it runs; the packages then stay
+-- queued until KOReader restarts.
+function Manager:_downloadPackages(packages, done)
+    for _, package in ipairs(packages) do
+        self.queued[package.id] = true
     end
-    self.busy = true
-    self:_closeMenu()
-    self:_showLoading("Downloading dictionary: " .. package.name .. "...")
     NetworkMgr:runWhenOnline(function()
-        local ok, err = self:_downloadAndInstall(package)
-        self.busy = false
-        self:_closeLoading()
-        if ok then
-            self:_notify("Installed dictionary: " .. package.name)
-        else
-            logger.warn("Ligature dictionary install failed", package.id, err)
-            self:_notify("Failed to install dictionary:\n" .. tostring(err))
+        self:_closeMenu()
+        local failed = {}
+        for index, package in ipairs(packages) do
+            local text = "Downloading dictionary: " .. package.name
+            if #packages > 1 then
+                text = text .. " (" .. index .. " of " .. #packages .. ")"
+            end
+            self:_showLoading(text .. "...")
+            local call_ok, ok, err = pcall(self._downloadAndInstall, self,
+                package)
+            if not call_ok then
+                ok, err = false, ok
+            end
+            if not ok then
+                logger.warn("Ligature dictionary install failed",
+                    package.id, err)
+                failed[#failed + 1] = { package = package, err = err }
+            end
+            self.queued[package.id] = nil
         end
+        self:_closeLoading()
+        done(failed)
+    end)
+end
+
+local function failureText(failed)
+    local lines = {}
+    for _, item in ipairs(failed) do
+        lines[#lines + 1] = item.package.name .. ": " .. tostring(item.err)
+    end
+    return "Failed to install dictionary:\n" .. table.concat(lines, "\n")
+end
+
+local function names(packages)
+    local list = {}
+    for _, package in ipairs(packages) do
+        list[#list + 1] = package.name
+    end
+    return table.concat(list, ", ")
+end
+
+local function megabytes(bytes)
+    return string.format("%.1f MB", bytes / (1024 * 1024))
+end
+
+-- Tells the user how a download went: what failed, else what installed.
+function Manager:_notifyInstalled(packages, failed)
+    if failed[1] then
+        self:_notify(failureText(failed))
+    else
+        self:_notify((#packages > 1 and "Installed dictionaries: "
+            or "Installed dictionary: ") .. names(packages))
+    end
+end
+
+function Manager:_download(package)
+    self:_downloadPackages({ package }, function(failed)
+        self:_notifyInstalled({ package }, failed)
         self:showMenu()
     end)
 end
 
-function Manager:_refreshCatalog()
-    if self.busy then
-        return
+-- Asks about enabled languages that aren't installed: chosen in setup,
+-- but declining Wi-Fi or a failed download left them out. Not now, and a
+-- download that fails, take them out of the enabled languages; one that
+-- installs is enabled already.
+function Manager:offerDownloads(plugin_dir, packages)
+    self.plugin_dir = plugin_dir or self.plugin_dir
+    local size = 0
+    local ids = {}
+    for _, package in ipairs(packages) do
+        size = size + package.size
+        ids[#ids + 1] = package.id
     end
-    self.busy = true
-    self:_closeMenu()
-    self:_showLoading("Downloading dictionary catalog...")
+    local it = #packages > 1 and "them" or "it"
+    UIManager:show(ConfirmBox:new{
+        text = "Ligature: " .. names(packages)
+            .. (#packages > 1 and " are" or " is")
+            .. " enabled but not downloaded. Download " .. it .. " now ("
+            .. megabytes(size) .. ")?\n\nYou can also download " .. it
+            .. " later under Manage dictionaries.",
+        ok_text = "Download",
+        cancel_text = "Not now",
+        ok_callback = function()
+            -- Only those still missing: a download setup started may have
+            -- finished while the question was up.
+            local still = {}
+            for _, package in ipairs(
+                    self.language_controller:missingLanguages()) do
+                still[package.id] = true
+            end
+            local wanted = {}
+            for _, package in ipairs(packages) do
+                if still[package.id] then
+                    wanted[#wanted + 1] = package
+                end
+            end
+            if not wanted[1] then
+                return
+            end
+            self:_downloadPackages(wanted, function(failed)
+                local failed_ids = {}
+                for _, item in ipairs(failed) do
+                    failed_ids[#failed_ids + 1] = item.package.id
+                end
+                self.language_controller:forgetMissing(failed_ids)
+                self:_notifyInstalled(wanted, failed)
+            end)
+        end,
+        cancel_callback = function()
+            self.language_controller:forgetMissing(ids)
+        end,
+    })
+end
+
+-- Fetches the current catalog once online. The menu stays until then,
+-- so declining Wi-Fi leaves it showing.
+function Manager:_refreshCatalog()
     NetworkMgr:runWhenOnline(function()
-        local catalog, err = self:_fetchCatalog()
-        self.busy = false
+        self:_closeMenu()
+        self:_showLoading("Downloading dictionary catalog...")
+        local call_ok, catalog, err = pcall(self._fetchCatalog, self)
+        if not call_ok then
+            catalog, err = nil, catalog
+        end
         self:_closeLoading()
         if not catalog then
             self:_notify("Failed to download catalog:\n" .. tostring(err))
@@ -783,6 +917,30 @@ function Manager:showMenu()
     UIManager:show(self.menu)
 end
 
+-- What setup offers: the installed languages and the catalog's others,
+-- each { id =, name =, package = }, package set when it is to download.
+function Manager:setupChoices(plugin_dir)
+    local choices = {}
+    local installed = {}
+    local packages = self:catalogPackages(plugin_dir)
+    for _, info in ipairs(self:listInstalled(plugin_dir)) do
+        installed[info.id] = true
+        local package = packages[info.id]
+        choices[#choices + 1] = { id = info.id,
+            name = package and package.name or info.name or info.id }
+    end
+    for id, package in pairs(packages) do
+        if not installed[id] then
+            choices[#choices + 1] =
+                { id = id, name = package.name, package = package }
+        end
+    end
+    table.sort(choices, function(left, right)
+        return Manager.registry.compareIds(left.id, right.id)
+    end)
+    return choices
+end
+
 function Manager:_closeLanguageSetup()
     if self.language_setup_menu then
         UIManager:close(self.language_setup_menu)
@@ -796,9 +954,13 @@ function Manager:_showLanguageSetupMenu()
     local selected = self.language_setup_selected or {}
     local buttons = {}
 
-    for _, info in ipairs(self:listInstalled(self.plugin_dir)) do
-        local id = info.id
-        local name = info.name or id
+    for _, choice in ipairs(self:setupChoices()) do
+        local id = choice.id
+        local name = choice.name
+        if choice.package then
+            name = name .. " (" .. megabytes(choice.package.size)
+                .. " download)"
+        end
         table.insert(buttons, {
             {
                 text = (selected[id] and "[x] " or "[ ] ") .. name,
@@ -824,6 +986,14 @@ function Manager:_showLanguageSetupMenu()
 
                 self:_closeLanguageSetup()
                 self.language_setup_selected = nil
+                -- Chosen languages still to download. One that fails stays
+                -- enabled, so offerDownloads asks about it next time.
+                local missing = self.language_controller:missingLanguages()
+                if missing[1] then
+                    self:_downloadPackages(missing, function(failed)
+                        self:_notifyInstalled(missing, failed)
+                    end)
+                end
             end,
         },
     })
@@ -863,12 +1033,14 @@ function Manager:open(keyboard, plugin_dir, personal_dictionary)
     self.plugin_dir = plugin_dir or self.plugin_dir
     self.personal_dictionary = personal_dictionary or self.personal_dictionary
     self.catalog_path = localRoot() .. "/catalog.json"
-    if not self.catalog then
+    if not self.catalog or self.catalog.shipped then
         self:_loadCachedCatalog()
     end
-    if self.catalog then
-        self:showMenu()
-    else
+    -- The menu shows at once, from the copy shipped with the plugin until
+    -- a catalog has been downloaded, and the first time that is fetched.
+    self:catalogPackages()
+    self:showMenu()
+    if not self.catalog or self.catalog.shipped then
         self:_refreshCatalog()
     end
 end

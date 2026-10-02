@@ -24,7 +24,8 @@ folder first, as both change the same keyboard. Ligature keeps its own
 settings and learned words, so it starts fresh.
 
 The first time the keyboard opens, it asks which languages you type in.
-The next time, it shows a page with every gesture. That page is also under
+English comes with the plugin; any other language you pick is downloaded
+then. The next time, it shows a page with every gesture. That page is also under
 `Tools → Ligature → Gesture reference`.
 
 ## Gestures
@@ -747,7 +748,8 @@ keyboard.
 
 ### Languages and keyboard size
 
-- Pick your languages the first time the keyboard opens.
+- Pick your languages the first time the keyboard opens. English comes
+  with the plugin, and the other 10 are downloaded when you pick them.
 - The language is shown on the space bar. Hold space to switch: the
   keyboard changes to KOReader's layout for that language too.
 - 11 languages can be downloaded from the dictionary manager.
@@ -758,8 +760,15 @@ keyboard.
 
 - Languages can be enabled, disabled, downloaded and removed under
   `Tools → Ligature → Manage dictionaries`. At least one has to stay
-  enabled, and the last one can't be removed. Bundled dictionaries can be
-  removed too.
+  enabled, and the last one can't be removed. The English dictionary that
+  comes with the plugin can be removed too.
+- The first-run list comes from a copy of the catalog in the plugin, so it
+  shows every language offline. Picking languages other than English
+  downloads them, asking to turn on Wi-Fi first if it is off. Until they
+  are installed, the keyboard types in English.
+- A language picked at setup whose download didn't happen (Wi-Fi
+  declined, or the download failed) is offered again once, the next time
+  the keyboard opens.
 - The downloadable dictionaries are Czech, Danish, Dutch, English, French,
   German, Italian, Polish, Portuguese (Brazil), Spanish and Turkish, from
   [Pixxel123/ligature.dictionaries](https://github.com/Pixxel123/ligature.dictionaries).
@@ -779,8 +788,11 @@ keyboard.
 #### Technical details
 
 Each dictionary is a folder with a manifest and its word lists, bundled in
-the plugin or downloaded to KOReader's data folder. A downloaded one with
-the same name takes over from the bundled one. The folders are only read
+the plugin (English only) or downloaded to KOReader's data folder. A
+downloaded one with the same name takes over from the bundled one.
+`catalog.json` in the plugin is a copy of the dictionaries repository's
+catalog, used until the dictionary manager first downloads the current
+one; update it when a dictionary release changes the catalog. The folders are only read
 again when one of them changes, since reading every manifest is slow on an
 e-reader. Word lists are loaded when first needed and kept in memory, about
 30 MB for the whole of English at most. Switching language frees the old
@@ -823,7 +835,8 @@ name through it.
 | `ui/` | Drawing the suggestion row, the swipe trail, the one-handed keyboard's handle menu and resize frame, and the gesture reference page |
 | `icons/` | The icons in the one-handed handle menu and resize frame |
 | `images/` | The gesture reference page, made from screenshots of the keyboard at a Kindle Paperwhite's settings |
-| `dictionaries/` | The bundled word lists and word-pair tables |
+| `dictionaries/` | The bundled English word lists and word-pair table |
+| `catalog.json` | A copy of the dictionary catalog, for choosing languages offline |
 
 ## Tools
 
