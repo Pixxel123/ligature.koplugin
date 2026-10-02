@@ -57,16 +57,26 @@ function ShapeChannel:triggered(signature)
     return #(signature or "") >= self.TRIGGER_LETTERS
 end
 
--- The letters whose key centre lies within REACH key sizes of point.
+-- Whether center lies within REACH of its key sizes from point.
+function ShapeChannel:_reaches(center, point)
+    local dx = center.x - point.x
+    local dy = center.y - point.y
+    return math.sqrt(dx * dx + dy * dy)
+        <= self.REACH * math.max(1, center.size or 1)
+end
+
+-- The letters with a key whose centre lies within REACH key sizes of
+-- point: the letter's own key, or another key typing it (Danish å for a).
 function ShapeChannel:_lettersNear(point, key_centers)
     local letters = {}
     for code = string.byte("a"), string.byte("z") do
         local center = key_centers[code]
         if center then
-            local dx = center.x - point.x
-            local dy = center.y - point.y
-            if math.sqrt(dx * dx + dy * dy)
-                    <= self.REACH * math.max(1, center.size or 1) then
+            local near = self:_reaches(center, point)
+            for _, other in ipairs(not near and center.others or {}) do
+                near = near or self:_reaches(other, point)
+            end
+            if near then
                 letters[#letters + 1] = string.char(code)
             end
         end

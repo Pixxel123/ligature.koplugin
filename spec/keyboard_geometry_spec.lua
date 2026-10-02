@@ -189,6 +189,22 @@ it("places a letter on its own key, not an accented key above it",
     T.eq(keys.g.x, 50, "g")
 end)
 
+it("keeps a letter's accented keys beside its own key", function()
+    local geometry = KeyboardGeometry:new(folding)
+    -- Danish: å at the end of the top row, a below.
+    local keys = geometry:letterKeys(rowsOf({ "q", "å" }, { "a", "s" }))
+    T.eq(keys.a.x, 50)
+    T.eq(#keys.a.others, 1)
+    T.eq(keys.a.others[1].x, 150)
+    T.eq(keys.a.others[1].y, 50)
+    T.eq(keys.s.others, nil, "a letter with one key")
+    local centers = geometry:keyCenters(rowsOf({ "q", "å" }, { "a", "s" }))
+    local a = centers[string.byte("a")]
+    T.eq(a.x, 50)
+    T.eq(a.others[1].x, 150)
+    T.eq(a.others[1].size, 100)
+end)
+
 it("still places a letter that only has an accented key", function()
     local geometry = KeyboardGeometry:new(folding)
     local keys = geometry:letterKeys(rowsOf({ "ñ", "q" }))

@@ -52,6 +52,28 @@ Scoring.__index = Scoring
 
 local ASCII_A = string.byte("a")
 
+local function scaledDistance(center, point)
+    local dx = point.x - center.x
+    local dy = point.y - center.y
+    return math.sqrt(dx * dx + dy * dy) / math.max(1, center.size or 1)
+end
+
+-- How far point is from a letter's key, in key sizes: the nearest of its
+-- own key and any other key typing it (Danish å for a, Czech ě for e).
+local function keyDistance(target, point)
+    local best = scaledDistance(target, point)
+    local others = target.others
+    if others then
+        for index = 1, #others do
+            local distance = scaledDistance(others[index], point)
+            if distance < best then
+                best = distance
+            end
+        end
+    end
+    return best
+end
+
 function Scoring:new(normalization)
     return setmetatable({
         normalization = assert(normalization),
@@ -269,11 +291,8 @@ function Scoring:matchScore(candidate, trace_chars, next_positions,
             if trace_letter_points and endpoint_pos and key_centers then
                 local target = key_centers[byte]
                 if target then
-                    local dx = endpoint_pos.x - target.x
-                    local dy = endpoint_pos.y - target.y
-                    local scale = math.max(1, target.size or 1)
                     geometry_total = geometry_total
-                        + math.min(2, math.sqrt(dx * dx + dy * dy) / scale)
+                        + math.min(2, keyDistance(target, endpoint_pos))
                     geometry_measured = geometry_measured + 1
                 end
             end
@@ -290,11 +309,8 @@ function Scoring:matchScore(candidate, trace_chars, next_positions,
             local point = trace_letter_points[found]
             local target = key_centers[byte]
             if point and target then
-                local dx = point.x - target.x
-                local dy = point.y - target.y
-                local scale = math.max(1, target.size or 1)
                 geometry_total = geometry_total
-                    + math.min(2, math.sqrt(dx * dx + dy * dy) / scale)
+                    + math.min(2, keyDistance(target, point))
                 geometry_measured = geometry_measured + 1
             end
         end
@@ -454,11 +470,7 @@ function Scoring:dynamicMatchScore(candidate, trace_chars,
                     or trace_letter_points[trace_position]
                 local target = key_centers[candidate_byte]
                 if point and target then
-                    local dx = point.x - target.x
-                    local dy = point.y - target.y
-                    local scale = math.max(1, target.size or 1)
-                    geometry = math.min(2,
-                        math.sqrt(dx * dx + dy * dy) / scale)
+                    geometry = math.min(2, keyDistance(target, point))
                         * 2 / candidate_len
                 end
             end

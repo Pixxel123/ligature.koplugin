@@ -10,6 +10,7 @@ latin-extended-v1	ā	a
 latin-extended-v1	ă	a
 latin-extended-v1	ą	a
 latin-extended-v1	ǎ	a
+latin-extended-v1	æ	a
 latin-extended-v1	c	c
 latin-extended-v1	ç	c
 latin-extended-v1	ć	c
@@ -18,6 +19,7 @@ latin-extended-v1	ċ	c
 latin-extended-v1	d	d
 latin-extended-v1	ď	d
 latin-extended-v1	đ	d
+latin-extended-v1	ð	d
 latin-extended-v1	e	e
 latin-extended-v1	é	e
 latin-extended-v1	è	e
@@ -59,6 +61,7 @@ latin-extended-v1	ø	o
 latin-extended-v1	ō	o
 latin-extended-v1	ő	o
 latin-extended-v1	ǒ	o
+latin-extended-v1	œ	o
 latin-extended-v1	r	r
 latin-extended-v1	ř	r
 latin-extended-v1	ŕ	r
@@ -68,10 +71,12 @@ latin-extended-v1	ś	s
 latin-extended-v1	š	s
 latin-extended-v1	ş	s
 latin-extended-v1	ș	s
+latin-extended-v1	ß	s
 latin-extended-v1	t	t
 latin-extended-v1	ť	t
 latin-extended-v1	ţ	t
 latin-extended-v1	ț	t
+latin-extended-v1	þ	t
 latin-extended-v1	u	u
 latin-extended-v1	ú	u
 latin-extended-v1	ù	u
@@ -102,6 +107,7 @@ latin-extended-v1	Ā	a
 latin-extended-v1	Ă	a
 latin-extended-v1	Ą	a
 latin-extended-v1	Ǎ	a
+latin-extended-v1	Æ	a
 latin-extended-v1	C	c
 latin-extended-v1	Ç	c
 latin-extended-v1	Ć	c
@@ -110,6 +116,7 @@ latin-extended-v1	Ċ	c
 latin-extended-v1	D	d
 latin-extended-v1	Ď	d
 latin-extended-v1	Đ	d
+latin-extended-v1	Ð	d
 latin-extended-v1	E	e
 latin-extended-v1	É	e
 latin-extended-v1	È	e
@@ -150,6 +157,7 @@ latin-extended-v1	Ø	o
 latin-extended-v1	Ō	o
 latin-extended-v1	Ő	o
 latin-extended-v1	Ǒ	o
+latin-extended-v1	Œ	o
 latin-extended-v1	R	r
 latin-extended-v1	Ř	r
 latin-extended-v1	Ŕ	r
@@ -159,10 +167,12 @@ latin-extended-v1	Ś	s
 latin-extended-v1	Š	s
 latin-extended-v1	Ş	s
 latin-extended-v1	Ș	s
+latin-extended-v1	ẞ	s
 latin-extended-v1	T	t
 latin-extended-v1	Ť	t
 latin-extended-v1	Ţ	t
 latin-extended-v1	Ț	t
+latin-extended-v1	Þ	t
 latin-extended-v1	U	u
 latin-extended-v1	Ú	u
 latin-extended-v1	Ù	u

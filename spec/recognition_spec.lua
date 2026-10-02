@@ -335,6 +335,33 @@ it("limits letters from neighbouring keys in the final alignment too",
     T.truthy(score < 1000, "score " .. score)
 end)
 
+it("scores a swipe through another key typing a letter like its own key",
+        function()
+    local scoring = T.load("scoring"):new(T.normalization)
+    local chars = scoring:buildNextPositions("pat")
+    local function centers(with_others)
+        return {
+            [string.byte("p")] = { x = 0, y = 0, size = 100 },
+            -- a in the next row; Danish å at the end of the top row.
+            [string.byte("a")] = { x = 0, y = 200, size = 100,
+                others = with_others and { { x = 1000, y = 0, size = 100 } }
+                    or nil },
+            [string.byte("t")] = { x = 500, y = 0, size = 100 },
+        }
+    end
+    local function score(a_point, key_centers)
+        local points = { { x = 0, y = 0 }, a_point, { x = 500, y = 0 } }
+        return scoring:dynamicMatchScore("pat", chars, false, points,
+            points[3], key_centers)
+    end
+    local on_a = { x = 0, y = 200 }
+    local on_aa = { x = 1000, y = 0 }
+    T.eq(score(on_aa, centers(true)), score(on_a, centers(true)),
+        "through å as through a")
+    T.truthy(score(on_aa, centers(false)) > score(on_a, centers(false)),
+        "without the other key, å is far from a")
+end)
+
 it("charges only the endpoint cost for a word whose last letter is " ..
         "taken through the endpoint allowance", function()
     local scoring = T.load("scoring"):new(T.normalization)

@@ -140,49 +140,72 @@ function KeyboardGeometry:startLetters(layout, pos, exact_first, profile)
 end
 
 -- Each letter's key, as the letter it types (normalized) to its centre
--- and size: { x, y, w, h }. A key labelled with the letter itself counts
--- over an accented key that normalizes to it, wherever that is: Czech
--- has ě on the number row above e, Spanish ñ above n, Danish å above a,
--- Turkish ı and ğ above i and g. Otherwise the first key typing a letter
--- counts.
+-- and size: { x, y, w, h, others }. A key labelled with the letter itself
+-- counts over an accented key that normalizes to it, wherever that is:
+-- Czech has ě on the number row above e, Spanish ñ above n, Danish å
+-- above a, Turkish ı and ğ above i and g. Otherwise the first key typing
+-- a letter counts. others lists the letter's other keys, the same way,
+-- or is nil: a swipe through å is as good as one through a.
 function KeyboardGeometry:letterKeys(layout, profile)
     local keys = {}
-    local own_key = {}
     if not layout then
         return keys
     end
+    -- Every key typing each letter, in layout order, and the first of
+    -- them labelled with the letter itself.
+    local places = {}
+    local own_index = {}
     for _, row in ipairs(layout) do
         for _, key in ipairs(row) do
             if key.dimen and not key.is_swype_candidate then
                 local normalized = self:_letterOf(key, profile)
-                if normalized and not own_key[normalized] then
+                if normalized then
+                    local list = places[normalized] or {}
+                    places[normalized] = list
+                    list[#list + 1] = {
+                        x = key.dimen.x + key.dimen.w / 2,
+                        y = key.dimen.y + key.dimen.h / 2,
+                        w = key.dimen.w,
+                        h = key.dimen.h,
+                    }
                     local label = key.key or key.label
-                    local own = type(label) == "string"
-                        and label:lower() == normalized
-                    if own or not keys[normalized] then
-                        keys[normalized] = {
-                            x = key.dimen.x + key.dimen.w / 2,
-                            y = key.dimen.y + key.dimen.h / 2,
-                            w = key.dimen.w,
-                            h = key.dimen.h,
-                        }
-                        own_key[normalized] = own
+                    if not own_index[normalized] and type(label) == "string"
+                            and label:lower() == normalized then
+                        own_index[normalized] = #list
                     end
                 end
             end
         end
     end
+    for letter, list in pairs(places) do
+        local primary = table.remove(list, own_index[letter] or 1)
+        primary.others = list[1] and list or nil
+        keys[letter] = primary
+    end
     return keys
 end
 
+local function center(key)
+    return {
+        x = key.x,
+        y = key.y,
+        size = math.max(key.w, key.h),
+    }
+end
+
+-- Letter byte to key centre and size: { x, y, size, others }, others as in
+-- letterKeys.
 function KeyboardGeometry:keyCenters(layout, profile)
     local centers = {}
     for letter, key in pairs(self:letterKeys(layout, profile)) do
-        centers[string.byte(letter)] = {
-            x = key.x,
-            y = key.y,
-            size = math.max(key.w, key.h),
-        }
+        local entry = center(key)
+        if key.others then
+            entry.others = {}
+            for index, other in ipairs(key.others) do
+                entry.others[index] = center(other)
+            end
+        end
+        centers[string.byte(letter)] = entry
     end
     return centers
 end

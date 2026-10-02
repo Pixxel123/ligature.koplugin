@@ -161,3 +161,15 @@ it("works its word lengths out again when the keys move", function()
         key_centers = bigger })
     T.eq(table.concat(after, ","), table.concat(before, ","))
 end)
+
+it("counts a letter as near a point on another key typing it", function()
+    local ch = ShapeChannel:new({}, PathShape:new())
+    local centers = {
+        [string.byte("a")] = { x = 0, y = 200, size = 100,
+            others = { { x = 1000, y = 0, size = 100 } } },
+        [string.byte("p")] = { x = 900, y = 0, size = 100 },
+    }
+    T.eq(table.concat(ch:_lettersNear({ x = 1000, y = 0 }, centers), ","),
+        "a,p", "on Danish å, next to p")
+    T.eq(table.concat(ch:_lettersNear({ x = 0, y = 200 }, centers), ","), "a")
+end)
