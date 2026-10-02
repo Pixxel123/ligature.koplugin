@@ -55,12 +55,11 @@ function Registry:isSafeId(value)
     return isSafeLanguage(value)
 end
 
--- Orders dictionary ids: en first, then pl, then alphabetically.
+-- Orders dictionary ids: en first, then alphabetically.
 function Registry.compareIds(left, right)
+    if left == right then return false end
     if left == "en" then return true end
     if right == "en" then return false end
-    if left == "pl" then return true end
-    if right == "pl" then return false end
     return left < right
 end
 

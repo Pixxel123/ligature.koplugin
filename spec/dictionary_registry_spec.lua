@@ -126,3 +126,11 @@ it("gives the KOReader layout a dictionary is typed with", function()
     T.eq(registry:get("en", ROOT .. "/plugin").keyboard_layout, nil,
         "a manifest without one")
 end)
+
+it("orders English first, then the rest alphabetically", function()
+    local order = { "tr", "pl", "cs", "en", "pt-br", "de", "fr", "it", "nl",
+        "da", "es" }
+    table.sort(order, fresh().compareIds)
+    T.eq(table.concat(order, ","), "en,cs,da,de,es,fr,it,nl,pl,pt-br,tr")
+    T.eq(fresh().compareIds("en", "en"), false)
+end)
