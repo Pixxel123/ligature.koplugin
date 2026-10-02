@@ -470,6 +470,14 @@ function KoreaderAdapter:install(VirtualKeyboard)
     end
 
     function VirtualKeyboard:_swypeTakeLift()
+        -- Holding space switched language; its layout rebuilds the
+        -- keyboard now that no finger is down.
+        local layout = self.swype_mvp_layout_on_lift
+        if layout then
+            self.swype_mvp_layout_on_lift = nil
+            self:setKeyboardLayout(layout)
+            return true
+        end
         if not self.swype_mvp_switch_on_lift then
             return false
         end
@@ -723,6 +731,12 @@ function KoreaderAdapter:install(VirtualKeyboard)
         self.swype_mvp_pending_space = nil
         self.swype_mvp_tapped_word = nil
         self.swype_mvp_switch_on_lift = nil
+        if self.swype_mvp_layout_on_lift then
+            -- Closed before the lift: the next keyboard takes the layout.
+            self.swype_mvp_layout_on_lift = nil
+            adapter.dictionary_controller:followLanguage(nil,
+                self.swype_mvp_dictionary)
+        end
         if self.swype_mvp_resize then
             adapter.resize_frame:cancelRedraw(self.swype_mvp_resize)
             self.swype_mvp_resize = nil
@@ -907,8 +921,9 @@ function KoreaderAdapter:install(VirtualKeyboard)
         return adapter.dictionary_controller:toggle(self)
     end
 
-    function VirtualKeyboard:_swypeSetDictionary(dictionary)
-        return adapter.dictionary_controller:setDictionary(self, dictionary)
+    function VirtualKeyboard:_swypeSetDictionary(dictionary, layout_on_lift)
+        return adapter.dictionary_controller:setDictionary(self, dictionary,
+            layout_on_lift)
     end
 
     function VirtualKeyboard:_swypeRefreshCandidateRow(refresh_type)

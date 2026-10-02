@@ -39,7 +39,7 @@ The next time, it shows a page with every gesture. That page is also under
 | Tap ⌫ right after a swipe | Deletes the whole swiped word |
 | Slide left from ⌫ | Deletes more words the further you slide |
 | Slide along space | Moves the text cursor |
-| Hold space | Switches to your next language, if you have more than one |
+| Hold space | Switches to your next language, and to its keyboard layout, if you have more than one |
 | Hold 🌐, then lift | Switches the one-handed keyboard on or off |
 | Tap ◨ (one-handed) | Menu: other side, leave, resize |
 | Swipe from ◨ (one-handed) | Up leaves, outwards moves the keys, inwards resizes them |
@@ -748,7 +748,8 @@ keyboard.
 ### Languages and keyboard size
 
 - Pick your languages the first time the keyboard opens.
-- The language is shown on the space bar. Hold space to switch.
+- The language is shown on the space bar. Hold space to switch: the
+  keyboard changes to KOReader's layout for that language too.
 - 11 languages can be downloaded from the dictionary manager.
 - Keyboard size and key text size options.
 
@@ -802,7 +803,9 @@ Under `Tools → Ligature`:
 | Rank offensive words down | On | See Recognition |
 | One-handed keyboard | Off | Use one-handed keyboard, and Background blur (on) |
 
-Tap the globe key (🌐) for KOReader's keyboard layout menu.
+Tap the globe key (🌐) for KOReader's keyboard layout menu. Picking the
+layout of one of your languages switches to that language; another
+layout (Russian, say) leaves the language as it is.
 
 ## Code layout
 

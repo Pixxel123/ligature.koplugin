@@ -1,6 +1,9 @@
 local DictionaryController = {}
 DictionaryController.__index = DictionaryController
 
+-- KOReader's setting for the keyboard layout (VirtualKeyboard:init).
+local LAYOUT_SETTING = "keyboard_layout"
+
 local function includes(list, value)
     for _, item in ipairs(list) do
         if item == value then
@@ -24,6 +27,10 @@ function DictionaryController:new(options)
         enabled_setting_key = assert(options.enabled_setting_key),
         setup_setting_key = assert(options.setup_setting_key),
         default_profile = assert(options.default_profile),
+        -- KOReader's VirtualKeyboard.lang_to_keyboard_layout: its layout
+        -- setting's values to the layout files they build. Without it the
+        -- language leaves KOReader's layout alone.
+        layouts = options.layouts or {},
     }, self)
 end
 
@@ -94,7 +101,74 @@ function DictionaryController:_activate(keyboard, id)
         return self:setDictionary(keyboard, id)
     end
     self.settings:saveSetting(self.setting_key, id)
+    self:followLanguage(nil, id)
     return true
+end
+
+-- The KOReader layout file a dictionary is typed with (da_keyboard).
+function DictionaryController:_layoutOf(dictionary)
+    local descriptor = self.registry:get(dictionary, self.plugin_dir)
+    return descriptor and descriptor.keyboard_layout
+end
+
+-- The layout file a value of KOReader's layout setting builds, as
+-- VirtualKeyboard:init picks it: English for one it doesn't know.
+function DictionaryController:_layoutFile(name)
+    return self.layouts[name] or self.layouts.en
+end
+
+-- The value of KOReader's layout setting that builds file: da for
+-- da_keyboard, pt_BR for pt_keyboard.
+function DictionaryController:_layoutName(file)
+    local short = file:match("^(.-)_keyboard$")
+    if short and self.layouts[short] == file then
+        return short
+    end
+    for name, other in pairs(self.layouts) do
+        if other == file then
+            return name
+        end
+    end
+end
+
+-- The enabled language typed with layout file: current when it is one
+-- (English, Italian and Dutch share one), else the first; nil when no
+-- enabled language is typed with it.
+function DictionaryController:_languageFor(file, current)
+    if not file then
+        return nil
+    end
+    local found
+    for _, info in ipairs(self:listEnabled()) do
+        if self:_layoutOf(info.id) == file then
+            if info.id == current then
+                return current
+            end
+            found = found or info.id
+        end
+    end
+    return found
+end
+
+-- Puts KOReader's layout with dictionary's: on a keyboard showing, at
+-- once, or once the finger holding space lifts (on_lift), since switching
+-- rebuilds the keyboard; otherwise in the setting the next keyboard is
+-- built from.
+function DictionaryController:followLanguage(keyboard, dictionary, on_lift)
+    local file = self:_layoutOf(dictionary)
+    local name = file and self:_layoutName(file)
+    if not name or file == self:_layoutFile(
+            self.settings:readSetting(LAYOUT_SETTING)
+            or self.settings:readSetting("language")) then
+        return
+    end
+    if keyboard and on_lift then
+        keyboard.swype_mvp_layout_on_lift = name
+    elseif keyboard and keyboard.visible then
+        keyboard:setKeyboardLayout(name)
+    else
+        self.settings:saveSetting(LAYOUT_SETTING, name)
+    end
 end
 
 -- The language whose personal words to show, and its normalization
@@ -315,13 +389,37 @@ function DictionaryController:scheduleLanguageSetup(keyboard)
     return true
 end
 
+-- Runs before KOReader builds the keyboard, when it opens and when its
+-- layout changes.
 function DictionaryController:initialize(keyboard)
+    local previous = keyboard.swype_mvp_dictionary
     local dictionary = self.settings:readSetting(self.setting_key, "en")
+    local fell_back = false
     if not self.manager:isDictionaryAvailable(dictionary, self.plugin_dir)
             or not self:isEnabled(dictionary) then
         local enabled = self:listEnabled()
         dictionary = enabled[1] and enabled[1].id or "en"
         self.settings:saveSetting(self.setting_key, dictionary)
+        fell_back = true
+    end
+    -- The layout KOReader is about to build picks the language when an
+    -- enabled one is typed with it: chosen from the globe key's menu, or
+    -- the one KOReader opens with. A layout no enabled language uses
+    -- leaves the language alone.
+    local name = keyboard.getKeyboardLayout and keyboard:getKeyboardLayout()
+    local typed_with = self:_languageFor(self:_layoutFile(name), dictionary)
+    if typed_with and typed_with ~= dictionary then
+        dictionary = typed_with
+        self.settings:saveSetting(self.setting_key, dictionary)
+    elseif fell_back then
+        self:followLanguage(nil, dictionary)
+    end
+    if previous and previous ~= dictionary then
+        -- Rebuilt for another layout: leave the old language behind as
+        -- setDictionary does.
+        keyboard:_swypeCommitPendingContext()
+        keyboard:_swypeCancelBucketPrefetch()
+        self.store:keepOnly(dictionary)
     end
     keyboard.swype_mvp_dictionary = dictionary
     keyboard.swype_mvp_normalization_profile = self:_profile(dictionary)
@@ -347,11 +445,14 @@ function DictionaryController:toggle(keyboard)
         end
     end
     local next_info = installed[(current_index or 0) % #installed + 1]
-    keyboard:_swypeSetDictionary(next_info.id)
+    -- Under the finger still holding space: its layout waits for the lift.
+    keyboard:_swypeSetDictionary(next_info.id, true)
     return true
 end
 
-function DictionaryController:setDictionary(keyboard, dictionary)
+-- layout_on_lift: switch KOReader's layout when the finger lifts.
+function DictionaryController:setDictionary(keyboard, dictionary,
+        layout_on_lift)
     if not self.manager:isDictionaryAvailable(dictionary, self.plugin_dir) then
         return false
     end
@@ -367,6 +468,7 @@ function DictionaryController:setDictionary(keyboard, dictionary)
     keyboard:_swypeClearCandidateRow("ui")
     keyboard:_swypeRefreshLanguageIndicator("flashui")
     keyboard:_swypeScheduleWarmUp(0.1)
+    self:followLanguage(keyboard, dictionary, layout_on_lift)
     return true
 end
 

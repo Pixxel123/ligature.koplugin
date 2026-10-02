@@ -111,6 +111,10 @@ function Registry:_readDescriptor(path, id, bundled)
         and manifest.data_language or source_language
     local normalization_profile = isSafeLanguage(manifest.normalization_profile)
         and manifest.normalization_profile or DEFAULT_NORMALIZATION_PROFILE
+    -- The KOReader layout file the language is typed with: da_keyboard.
+    local keyboard_layout = type(manifest.keyboard_layout) == "string"
+        and manifest.keyboard_layout:match("^[a-z][A-Za-z0-9_]*_keyboard$")
+        or nil
 
     local files = {}
     for role, filename in pairs(REQUIRED_FILES) do
@@ -129,6 +133,7 @@ function Registry:_readDescriptor(path, id, bundled)
         version = manifest.version or "?",
         data_language = data_language,
         normalization_profile = normalization_profile,
+        keyboard_layout = keyboard_layout,
         path = path,
         bundled = bundled == true,
         files = files,

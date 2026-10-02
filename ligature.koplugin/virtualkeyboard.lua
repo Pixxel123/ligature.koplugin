@@ -86,6 +86,7 @@ local DictionaryController = loadModule("dictionary_controller")
         enabled_setting_key = "ligature_enabled_dictionaries",
         setup_setting_key = "ligature_language_setup_complete",
         default_profile = Normalization.DEFAULT_PROFILE,
+        layouts = VirtualKeyboard.lang_to_keyboard_layout,
     }
 
 DictionaryManager.registry = DictionaryRegistry

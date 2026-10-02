@@ -113,3 +113,16 @@ it("rereads the folders when told the dictionaries changed", function()
     registry:list(ROOT .. "/plugin")
     T.truthy(scans > after_first)
 end)
+
+it("gives the KOReader layout a dictionary is typed with", function()
+    local registry = fresh()
+    local folder = ROOT .. "/data/swype/dictionaries"
+    addDictionary(folder, "da", 2000)
+    local manifest = io.open(folder .. "/da/manifest.tsv", "a")
+    manifest:write("keyboard_layout\tda_keyboard\n")
+    manifest:close()
+    os.execute("touch -d @3000 " .. folder)
+    T.eq(registry:get("da", ROOT .. "/plugin").keyboard_layout, "da_keyboard")
+    T.eq(registry:get("en", ROOT .. "/plugin").keyboard_layout, nil,
+        "a manifest without one")
+end)
