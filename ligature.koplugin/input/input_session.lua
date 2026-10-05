@@ -98,7 +98,8 @@ function InputSession:recordShortSignature(signature)
     self.failed_signature = signature
 end
 
-function InputSession:recordInsert(signature, candidates, previous_word)
+function InputSession:recordInsert(signature, candidates, previous_word,
+        language)
     if not candidates or #candidates == 0 then
         return
     end
@@ -112,6 +113,7 @@ function InputSession:recordInsert(signature, candidates, previous_word)
         signature = signature,
         word = candidates[1].word,
         previous_word = previous_word,
+        language = language,
     }
     return inserted
 end

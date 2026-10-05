@@ -433,6 +433,27 @@ it("learns the word the device kept, not the intended one", function()
     T.eq(with_context.context_model:bonus("the", "water"), 0)
 end)
 
+it("seeds learned pairs from the settings under the plugin's own key",
+        function()
+    local seeded = Replay.loadPlugin(T.plugin_dir, { context = true,
+        context_settings = {
+            ligature_word_pairs = { en = { the = { water = 3 } } },
+            keyboard_swype_mvp_context_counts = { the = { wafer = 3 } },
+        } })
+    T.truthy(seeded.context_model:bonus("the", "water") > 0)
+    T.eq(seeded.context_model:bonus("the", "wafer"), 0, "the old key")
+end)
+
+it("learns a replayed word in its session's language", function()
+    local with_context = Replay.loadPlugin(T.plugin_dir, { context = true })
+    local attempt = attemptFor("water")
+    attempt.previous_word = "the"
+    attempt.dictionary = "pl"
+    Replay.learn(with_context, attempt)
+    T.truthy(with_context.context_model:bonus("the", "water", 0, "pl") > 0)
+    T.eq(with_context.context_model:bonus("the", "water", 0, "en"), 0)
+end)
+
 it("learns nothing from a word that was deleted again", function()
     local with_context = Replay.loadPlugin(T.plugin_dir, { context = true })
     local attempt = attemptFor("water")

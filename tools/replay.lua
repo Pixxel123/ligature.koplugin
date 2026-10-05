@@ -61,9 +61,9 @@ package.preload["datastorage"] = package.preload["datastorage"] or
 
 local Replay = {}
 
--- The device settings keys ContextModel's and UsageModel's counts are saved
--- under.
-local CONTEXT_SETTING_KEY = "keyboard_swype_mvp_context_counts"
+-- The device settings key UsageModel's counts are saved under, and the one
+-- ContextModel's were under before it named its own SETTING_KEY.
+local OLD_CONTEXT_SETTING_KEY = "keyboard_swype_mvp_context_counts"
 local USAGE_SETTING_KEY = "ligature_word_usage"
 
 local function deepCopy(value)
@@ -97,7 +97,8 @@ end
 -- if given, wires up a personal dictionary read from that folder.
 -- options.context, if true, gives plugin.context_model: a real
 -- ContextModel over an in-memory settings object, seeded with a deep
--- copy of options.context_counts when given. options.usage does the same
+-- copy of its counts in options.context_settings, a settings file's
+-- values, when given. options.usage does the same
 -- for plugin.usage_model, seeded from options.usage_counts, but only when
 -- the plugin directory has a usage model: an older one has none, and
 -- neither learns nor uses word counts. plugin:resetLearning() starts both
@@ -186,9 +187,11 @@ function Replay.loadPlugin(plugin_dir, options)
     local function newLearning()
         local context_model, usage_model
         if options and options.context then
-            context_model = load("context_model"):new(
-                newSettings(CONTEXT_SETTING_KEY, options.context_counts),
-                CONTEXT_SETTING_KEY)
+            local ContextModel = load("context_model")
+            local key = ContextModel.SETTING_KEY or OLD_CONTEXT_SETTING_KEY
+            context_model = ContextModel:new(newSettings(key,
+                options.context_settings and options.context_settings[key]),
+                key)
         end
         local usage_file = options and options.usage
             and io.open(path("usage_model"), "r")
@@ -529,7 +532,8 @@ function Replay.run(plugin, attempt)
     if plugin.context_model then
         context_bonus = function(previous_word, word)
             return plugin.context_model:bonus(previous_word, word,
-                pair_bonus and pair_bonus(previous_word, word) or 0)
+                pair_bonus and pair_bonus(previous_word, word) or 0,
+                dictionary)
         end
     elseif pair_bonus then
         local package = store:open(dictionary)
@@ -638,7 +642,8 @@ function Replay.learn(plugin, attempt)
     end
     local previous_word = attempt.previous_word
     if plugin.context_model and previous_word then
-        plugin.context_model:learn(previous_word:lower(), word:lower())
+        plugin.context_model:learn(previous_word:lower(), word:lower(),
+            attempt.dictionary or "en")
     end
     if plugin.usage_model then
         plugin.usage_model:learn(word, uses)
@@ -1081,12 +1086,11 @@ local function main(args)
         end
         attempts = kept
     end
-    local context_counts = context_settings
-        and dofile(context_settings)[CONTEXT_SETTING_KEY]
+    local context_values = context_settings and dofile(context_settings)
     local usage_counts = usage_settings
         and dofile(usage_settings)[USAGE_SETTING_KEY]
     local options = { personal_dir = personal_dir, context = use_context,
-        context_counts = context_counts, usage = use_usage,
+        context_settings = context_values, usage = use_usage,
         usage_counts = usage_counts, frozen = frozen, no_pairs = no_pairs,
         no_shape = no_shape, touch = use_touch, no_offensive = no_offensive }
     local plugin = Replay.loadPlugin(plugin_dir, options)

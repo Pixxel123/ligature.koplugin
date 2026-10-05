@@ -53,15 +53,16 @@ local normalization = setmetatable({
 -- A controller and keyboard typing into a fake text box. Completions come
 -- from WORDS, in order; learning and timers are recorded.
 local function setup()
-    local state = { timers = {}, pairs = {}, uses = {}, refreshes = 0,
-        asked = {} }
+    local state = { timers = {}, pairs = {}, pair_languages = {}, uses = {},
+        refreshes = 0, asked = {} }
     local ui_manager = {
         scheduleIn = function(_, _, fn) table.insert(state.timers, fn) end,
     }
     local context_model = {
         commit = noop, save = noop,
-        learn = function(_, previous, word)
+        learn = function(_, previous, word, language)
             table.insert(state.pairs, (previous or "-") .. " " .. word)
+            state.pair_languages[#state.pairs] = language
         end,
     }
     local usage_model = {
@@ -271,6 +272,26 @@ it("learns a word tapped out and ended with a space or punctuation",
     T.eq(state.pairs[#state.pairs], "say hello")
     T.eq(state.uses.say, 1)
     T.eq(state.pairs[1], "- say", "no word before the first")
+end)
+
+it("learns tapped words and picked completions in the keyboard's language",
+        function()
+    local _, keyboard, state = setup()
+    keyboard.swype_mvp_dictionary = "de"
+    state.type("s", "a", "y", " ", "h", "e")
+    state.pause()
+    state.pick(1)
+    T.eq(state.pairs[#state.pairs], "say hello")
+    T.eq(state.pair_languages[#state.pairs], "de", "the completion")
+    T.eq(state.pair_languages[1], "de", "the tapped word")
+end)
+
+it("learns tapped words in English when no language is set", function()
+    local _, _, state = setup()
+    state.type("s", "a", "y", " ")
+    state.pause()
+    T.eq(state.pairs[1], "- say")
+    T.eq(state.pair_languages[1], "en")
 end)
 
 it("does not learn a typo or a swiped word as a tapped one", function()

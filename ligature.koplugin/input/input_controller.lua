@@ -213,14 +213,15 @@ function InputController:getPreviousWord(keyboard)
 end
 
 -- What word earns for following previous_word: learned from the user's
--- own text, and from the dictionary's word-pair table.
+-- own text in that dictionary's language, and from its word-pair table.
 function InputController:contextBonus(previous_word, word, dictionary)
     return self.context_model:bonus(previous_word, word,
-        self.dictionary_store:pairBonus(previous_word, word, dictionary))
+        self.dictionary_store:pairBonus(previous_word, word, dictionary),
+        dictionary)
 end
 
-function InputController:learnContext(previous_word, word)
-    self.context_model:learn(previous_word, word)
+function InputController:learnContext(previous_word, word, language)
+    self.context_model:learn(previous_word, word, language)
 end
 
 function InputController:wordUses(word)
@@ -346,7 +347,8 @@ function InputController:_selectCompletion(keyboard, candidate, completion)
     self:_applyTypedCase(keyboard, { candidate }, typed)
     self:deleteText(keyboard, typed)
     self.logger.dbg("swype mvp completed", typed, "=>", candidate.word)
-    self:learnContext(previous_word, candidate.word)
+    self:learnContext(previous_word, candidate.word,
+        keyboard.swype_mvp_dictionary or "en")
     if self.usage_model then
         self.usage_model:learn(candidate.word, self.PICK_USES)
     end
@@ -386,7 +388,7 @@ function InputController:_learnTappedWord(keyboard)
             word = prepared
         end
         self.logger.dbg("swype mvp learned tapped word", word)
-        self:learnContext(previous_word, word)
+        self:learnContext(previous_word, word, language)
         if self.usage_model then
             self.usage_model:learn(word, 1)
         end
@@ -506,7 +508,8 @@ function InputController:selectCandidate(keyboard, candidate, uses)
     end
     self.logger.dbg(
         "swype mvp selected", candidate.signature, "=>", candidate.word)
-    self:learnContext(selection.pending.previous_word, candidate.word)
+    self:learnContext(selection.pending.previous_word, candidate.word,
+        selection.pending.language)
     selection.pending.context_committed = true
     if self.usage_model then
         self.usage_model:learn(candidate.word, uses or self.PICK_USES)
@@ -598,7 +601,8 @@ function InputController:insertBestAndShowCandidates(
     -- The swiped word is learned once it is kept, not as a tapped word.
     keyboard.swype_mvp_tapped_word = nil
     local inserted = keyboard.swype_mvp_session:recordInsert(
-        signature, candidates, previous_word)
+        signature, candidates, previous_word,
+        keyboard.swype_mvp_dictionary or "en")
     local pending = keyboard.swype_mvp_session:getLastInsert()
     if pending and trace_info and self.touch_model
             and keyboard._swypeTouchSample then

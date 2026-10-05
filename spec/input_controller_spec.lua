@@ -573,6 +573,53 @@ it("keeps learning words optional", function()
     T.eq(keyboard.inputbox:text(), "hollow")
 end)
 
+-- A controller learning word pairs in a real model over settings held in
+-- memory, and a keyboard typing in language.
+local function pairsSetup(language)
+    local controller = newController()
+    local values = {}
+    controller.context_model = T.load("context_model"):new({
+        readSetting = function(_, key, default)
+            if values[key] == nil then return default end
+            return values[key]
+        end,
+        saveSetting = function(_, key, value) values[key] = value end,
+    }, "pairs")
+    controller.applyCandidateCase = function() end
+    local keyboard = newTypingKeyboard()
+    keyboard.swype_mvp_dictionary = language
+    return controller, keyboard, controller.context_model
+end
+
+it("learns a kept swipe in the language it was swiped in", function()
+    local controller, keyboard, model = pairsSetup("pl")
+    controller:insertBestAndShowCandidates(keyboard, "x",
+        { { word = "dzien" } }, "dobry")
+    keyboard.swype_mvp_dictionary = "en"
+    controller:commitPendingContext(keyboard)
+    T.eq(model:bonus("dobry", "dzien", 0, "pl"), 600)
+    T.eq(model:bonus("dobry", "dzien", 0, "en"), 0)
+end)
+
+it("learns a picked suggestion in the language it was swiped in",
+        function()
+    local controller, keyboard, model = pairsSetup("pl")
+    controller:insertBestAndShowCandidates(keyboard, "x",
+        { { word = "dzien" }, { word = "dzieki" } }, "dobry")
+    controller:selectCandidate(keyboard, { word = "dzieki" })
+    T.eq(model:bonus("dobry", "dzieki", 0, "pl"), 600)
+    T.eq(model:bonus("dobry", "dzieki", 0, "en"), 0)
+    T.eq(model:bonus("dobry", "dzien", 0, "pl"), 0, "the replaced word")
+end)
+
+it("gives a swipe the pairs learned in the keyboard's language", function()
+    local controller, _, model = pairsSetup("pl")
+    controller.dictionary_store = { pairBonus = function() return 0 end }
+    model:learn("dobry", "dzien", "pl")
+    T.eq(controller:contextBonus("dobry", "dzien", "pl"), 600)
+    T.eq(controller:contextBonus("dobry", "dzien", "en"), 0)
+end)
+
 -- A controller with a touch offset model that records what it is taught,
 -- and a keyboard whose swipes carry a touch sample.
 local function touchSetup()

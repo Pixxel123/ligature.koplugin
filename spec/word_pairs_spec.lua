@@ -115,7 +115,7 @@ end)
 
 it("counts the previous words already saved", function()
     local model = ContextModel:new(newSettings({
-        pairs = { a = { x = 1 }, b = { y = 3 } },
+        pairs = { en = { a = { x = 1 }, b = { y = 3 } } },
     }), "pairs")
     model.MAX_PREVIOUS = 2
     model:learn("c", "z")
@@ -123,6 +123,52 @@ it("counts the previous words already saved", function()
     T.eq(counts.a, nil)
     T.eq(counts.b.y, 3)
     T.eq(counts.c.z, 1)
+end)
+
+it("keeps the pairs learned in each language apart", function()
+    local model = ContextModel:new(newSettings(), "pairs")
+    model:learn("dobry", "dzien", "pl")
+    T.eq(model:bonus("dobry", "dzien", 0, "pl"), 600)
+    T.eq(model:bonus("dobry", "dzien", 0, "en"), 0)
+    T.eq(model:bonus("dobry", "dzien"), 0, "English when no language")
+    model:learn("the", "cat")
+    T.eq(model:bonus("the", "cat", 0, "en"), 600)
+    T.eq(model:bonus("the", "cat", 0, "pl"), 0)
+end)
+
+it("saves the learned pairs by language under a Ligature setting",
+        function()
+    T.eq(ContextModel.SETTING_KEY, "ligature_word_pairs")
+    local settings = newSettings()
+    local model = ContextModel:new(settings, ContextModel.SETTING_KEY)
+    model:learn("dobry", "dzien", "pl")
+    model:learn("the", "cat", "en")
+    model:save()
+    local saved = settings.values.ligature_word_pairs
+    T.eq(saved.pl.dobry.dzien, 1)
+    T.eq(saved.en.the.cat, 1)
+    T.eq(saved.dobry, nil, "no pairs outside a language")
+end)
+
+it("keeps as many previous words for each language", function()
+    local model = ContextModel:new(newSettings({
+        pairs = { en = { a = { x = 1 } } },
+    }), "pairs")
+    model.MAX_PREVIOUS = 1
+    model:learn("b", "y", "pl")
+    T.eq(model:bonus("a", "x", 0, "en"), 600, "English kept its word")
+    T.eq(model:bonus("b", "y", 0, "pl"), 600)
+    model:learn("c", "z", "pl")
+    T.eq(model:getCounts("pl").b, nil, "Polish dropped its own")
+    T.eq(model:bonus("a", "x", 0, "en"), 600)
+end)
+
+it("learns a kept word in the language it was typed in", function()
+    local model = ContextModel:new(newSettings(), "pairs")
+    model:commit({ previous_word = "dobry", word = "dzien",
+        language = "pl" })
+    T.eq(model:bonus("dobry", "dzien", 0, "pl"), 600)
+    T.eq(model:bonus("dobry", "dzien", 0, "en"), 0)
 end)
 
 it("builds a word-pair table the store reads back", function()
