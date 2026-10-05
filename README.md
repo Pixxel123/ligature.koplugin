@@ -2,7 +2,16 @@
 
 Swipe typing for KOReader, tuned for e-ink and for typing with one hand.
 
-Ligature is my fork of
+<img src="screenshots/swiping.png" width="420" alt="Swiping &quot;acknowledged&quot; into KOReader's search box over a page of Pride and Prejudice, with the grey trail across the keyboard and the suggestions for the word before">
+
+Swiping "acknowledged" while searching a book, on a Kindle Paperwhite's
+screen size and resolution.
+
+I mostly use my Kindle's keyboard for searches and quick lookups, and
+tapping those out one key at a time on e-ink gets old fast. Ligature lets
+you swipe them instead.
+
+It's my fork of
 [azac/tapless.koplugin](https://github.com/azac/tapless.koplugin). In type,
 a ligature joins letters into one shape, which is what a swipe does. The
 fork gets far more swipes right, learns how you type, and adds a one-handed
@@ -11,22 +20,45 @@ Paperwhite (12th gen). Some of the recognition work is up for review
 upstream in [#2](https://github.com/azac/tapless.koplugin/pull/2) and
 [#4](https://github.com/azac/tapless.koplugin/pull/4).
 
-<img src="screenshots/swiping.png" width="420" alt="Swiping &quot;acknowledged&quot; into KOReader's search box over a page of Pride and Prejudice, with the grey trail across the keyboard and the suggestions for the word before">
+[Installation](#installation) · [Gestures](#gestures) ·
+[One-handed keyboard](#one-handed-keyboard) ·
+[Languages](#languages-and-keyboard-size) · [Settings](#settings) ·
+[Troubleshooting](#troubleshooting) · [Accuracy](#accuracy) ·
+[How it works](#how-it-works) · [Development](#development)
 
-Swiping "acknowledged" while searching a book, on a Kindle Paperwhite's
-screen size and resolution.
+## Features
+
+- Swipe across the letters to type a word. Tapping works as it always has.
+- Pause while tapping and the suggestion row offers words that finish the
+  one you started.
+- The keyboard learns the words you use, which word tends to follow which,
+  and where your thumb lands.
+- A one-handed keyboard you can move to either side of the screen and
+  resize.
+- 11 languages. Hold space to switch, and KOReader's layout switches with
+  it.
+- A thin grey swipe trail, and partial e-ink refreshes that keep flashing
+  to a minimum.
+- Once your dictionaries are installed, everything works offline.
 
 ## Installation
 
-Copy the `ligature.koplugin` folder into KOReader's `plugins` folder and
-restart KOReader. If you have Tapless, delete its `tapless.koplugin`
-folder first, as both change the same keyboard. Ligature keeps its own
-settings and learned words, so it starts fresh.
+1. Download this repository (`Code → Download ZIP`) and unzip it.
+2. Copy the `ligature.koplugin` folder from inside it (not the outer
+   `ligature.koplugin-main` folder) into KOReader's `plugins` folder. On a
+   Kindle that's `koreader/plugins` when it's plugged in over USB.
+3. Restart KOReader.
+
+Ligature supersedes Tapless and isn't compatible with it. It's developed
+on a Kindle Paperwhite (12th gen) running KOReader v2026.07.2.
+
+### First run
 
 The first time the keyboard opens, it asks which languages you type in.
-English comes with the plugin; any other language you pick is downloaded
-then. Its Show gestures button opens a page with every gesture, which
-is also under `Tools → Ligature → Gesture reference`.
+English comes with the plugin, and any other language you pick is
+downloaded then. The language list has a Show gestures button for a page
+with every gesture. You can find that page later under
+`Tools → Ligature → Gesture reference`.
 
 ## Gestures
 
@@ -46,674 +78,7 @@ is also under `Tools → Ligature → Gesture reference`.
 | Swipe from ◨ (one-handed) | Up leaves, outwards moves the keys, inwards resizes them |
 | Tap outside the keys (one-handed) | Closes the keyboard |
 
-## Compared with upstream
-
-The same recorded swipes, replayed through upstream 0.4.0 and through this
-fork on the full-width keyboard. "First choice" is the word that gets
-typed. "Suggestions" means the word is anywhere in the suggestion row.
-
-| | Upstream 0.4.0 | Ligature |
-|---|---|---|
-| Sentences, first choice (807 swipes) | 54% | 84% |
-| Sentences, suggestions | 63% | 91% |
-| Random words, first choice (212 swipes) | 40% | 75% |
-| Random words, suggestions | 48% | 84% |
-| Random words of 8 or more letters, first choice | 14% | 67% |
-| Swipes that didn't start on the word's first key, first choice | 0% | 40% |
-| Clean generated swipes, common words | 96% | 98% |
-| Clean generated swipes, mid-frequency words | 93% | 96% |
-| Clean generated swipes, rare words | 89% | 84% |
-
-On the sentences the fork gets 252 swipes right that upstream got wrong,
-and 6 wrong that upstream got right. On the random words it's 80 and 5.
-
-Rare words come out worse: of 1,500 clean swipes for rare words, the fork
-fixes 31 and breaks 113. Common words count for more in the ranking, so a
-rare word can lose to a common one with a similar shape.
-
-Upstream has no one-handed keyboard, so the one-handed swipes are only
-shown for the fork:
-
-| One-handed | First choice | Suggestions |
-|---|---|---|
-| Sentences (602 swipes) | 76% | 85% |
-| Random words (101 swipes) | 71% | 88% |
-| Search-style queries (243 swipes) | 60% | 77% |
-
-The queries are what you'd search for on an e-reader: authors, book
-titles, characters and words you'd look up ("perfunctory", "denouement"),
-so many aren't everyday words.
-
-Recognising a swipe takes about 70 ms on the Kindle Paperwhite, against
-19 ms for upstream. Timed on a PC, about 40% of it goes on the shape
-channel (see below), which on two of the sentence sessions lifts first
-choice from 77% to 87%.
-
-<details>
-<summary><b>How these were measured</b></summary>
-
-- 1,965 swipes over 23 sessions, recorded on a Kindle Paperwhite (12th
-  gen) with KOReader v2026.07.2 using `tools/swipe_session.py`: 1,409
-  words in short everyday sentences (11 sessions), 313 random words from
-  three frequency bands (8 sessions) and 243 words of search-style queries
-  (4 sessions). 1,019 were typed full width and 946 one-handed.
-- `tools/replay.lua` feeds the recorded touch points back through each
-  version's recognition code, so both versions see exactly the same
-  swipes. It learns as the keyboard does: word pairs and word counts start
-  over for each session, as on a fresh install, and where your thumb lands
-  carries over, as it would for one person's hand.
-- The clean swipes are generated: a straight line between key centres
-  with a short pause on each key, 1,500 words from each frequency band.
-  They catch changes that break words which used to work.
-- The ranking weights were fitted on the first six random-word sessions,
-  and later constants were chosen by replaying the recordings, so the
-  numbers lean optimistic. The query sessions were recorded after most of
-  that tuning: the keyboard got 58% first choice on the device then,
-  against 60% in replay now.
-- Swipes that upstream cut short when a second finger touched the screen
-  don't show up here, because the recordings were made with that fix in.
-  Before the fix, it cut short 7 of 32 swipes in one session.
-- "Fixed" and "broken" counts come with an exact McNemar test. Both
-  differences above are far beyond chance (p below 1e-17).
-- Timings are the mean over the same two full-width sentence sessions,
-  with KOReader's own LuaJIT on the Kindle, each version in its own
-  process, three runs each. They include reading word lists from storage
-  the first time they're needed.
-
-#### Technical details
-
-```mermaid
-flowchart LR
-    A["Swipe prompted words<br/>on the Kindle"] --> B["Save every touch point"]
-    B --> C["Replay the same swipes<br/>through upstream's code"]
-    B --> D["Replay the same swipes<br/>through the fork's code"]
-    C --> E["Compare,<br/>swipe by swipe"]
-    D --> E
-```
-
-The recorder stores the raw touch events, not what the keyboard made of
-them, together with the key rectangles on screen at the time. Replay
-rebuilds the keyboard layout from those rectangles and drives the gesture
-code with the recorded events, so any version of the recognition code can
-be run on the same swipes. Each attempt also records what happened next:
-kept, picked from the row, or deleted. Replay uses that to learn what the
-device would have learned.
-
-The McNemar test only looks at the swipes where the two versions disagree.
-If a change made no difference, each of those would be a coin toss between
-fixed and broken, and p is the chance of a split at least as uneven as the
-one seen. 252 fixed against 6 broken has p around 2e-66.
-
-</details>
-
-## What's changed
-
-### Recognition
-
-- Long words are found by the shape of the whole swipe, even when the
-  path skips some of their letters.
-- Swipes that start just inside the next key over still find the word.
-- A corner you cut short can lend a letter from the key next to it.
-- Scribbling back and forth on a key types a double letter.
-- Rare short fragments like "bq" and "gtg" stop beating real words.
-- Common words count for more against the shape of the swipe.
-- Swear words and slurs are ranked down, so they stop taking the place of
-  the word you meant.
-- Spellings that only repeat letters ("wee", "weee") no longer fill the
-  row.
-- Swipes that start on the number row type a word, not a digit.
-- Contractions come out with their apostrophes: "dont" types "don't".
-
-<details>
-<summary><b>How recognition works now</b></summary>
-
-Every swipe gives a string of letters the finger passed over, such as
-`wertyuilkl` for "well". Candidate words are looked up in the dictionary
-by first and last letter, scored on how well their letters line up with
-that string and with the actual touch points, then ranked with word
-frequency.
-
-A finger flattens a long word, so its swipe often misses letters the
-word needs, or starts or lifts on a key next to its first or last
-letter. On any swipe that crosses five letters or more,
-the keyboard also looks for words whose path has about the same length and
-shape as the swipe and whose ends lie near the swipe's ends. Those words
-join the others, letters the path never crossed cost a little, and the
-shape of the whole swipe counts for more in the final ranking.
-
-On e-ink it's easy to land just inside a neighbouring key. If the swipe
-starts within a quarter of a key of another key, words starting with that
-key are looked up too. They pay a small penalty, much smaller than a word
-whose first letter the swipe missed completely.
-
-A fast swipe often cuts a corner, so the key at the corner is never
-touched. A word can take up to two of its inner letters from a key next to
-one the path passed over. This only counts where the path actually turned,
-so keys you slide straight past don't lend letters. Each borrowed letter
-costs a little.
-
-A swipe can't show a doubled letter, so "too" and "to" look the same. A
-short back-and-forth on one key counts as a repeated letter and favours the
-doubled spelling. Small wobbles and sharp corners don't count.
-
-Dictionaries are full of short rare strings (bq, chg, gtg) that fit almost
-any short swipe. Words of four letters or fewer that are rare pay a
-penalty, based only on length and frequency, so it works the same in every
-language. A word you use often is exempt (see Learning).
-
-The balance between swipe shape and word frequency was fitted to the
-recorded swipes by maximum likelihood, then pulled back towards the old
-values so rare words didn't lose too much.
-
-Offensive words are ranked as if they were much rarer. They aren't hidden:
-the lists are written for filtering chat, and hold words with innocent uses
-a reader may want. A listed word still comes first when the swipe fits it
-clearly best, and once you've kept it twice it's ranked like any other
-word. Tapping a word out letter by letter types it as always. The lists
-cover 26 languages and come from the
-[List of Dirty, Naughty, Obscene and Otherwise Bad Words](https://github.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words)
-(CC BY 4.0). On the recorded one-handed sessions, listed words showed up in
-the suggestion row 2 times, where there had been 18.
-
-Words that differ only in doubled letters ("we", "wee") look the same to a
-swipe. At most two of them take a place in the suggestion row, and
-spellings with a letter three times in a row are left out.
-
-The keyboard has a row of digits above the letters. A swipe that starts
-on a digit and goes on across letters is taken as starting on the letter
-key below. A tap, or a short slide that doesn't reach another letter, is
-left to KOReader, so digits and the characters you get by sliding off a
-digit key still work.
-
-The English word list had no words with an apostrophe, so swiping "don't"
-typed "dont". There's no apostrophe key to swipe over, so a contraction is
-found by its letters and typed with its apostrophe: "dont" gives "don't",
-"theyre" gives "they're", "im" gives "I'm". Where the letters are a word of
-their own too, both stay: "were" and "we're", "well" and "we'll", "its"
-and "it's". Which one comes first depends on how common each is and the
-word before it.
-
-#### Technical details
-
-Each step looks at fewer words, more carefully:
-
-```mermaid
-flowchart TD
-    A["Swipe: the letters crossed,<br/>e.g. wertyuilkl"] --> B["About 800 words that start and end<br/>with the right letters, or a key next to them"]
-    B -->|"quick check: are the word's<br/>letters crossed in order?"| C["Best 40"]
-    A -->|"5 letters or more:<br/>words with the swipe's shape"| S["Up to 10 more"]
-    C --> D["Careful check: where does<br/>each letter fit best?"]
-    S --> D
-    D --> E["Best 12, ranked again on<br/>the shape of the whole swipe"]
-    E --> F["Suggestion row: best 4"]
-```
-
-##### Letters and how much each one counts
-
-As the finger moves, every new key it enters adds a letter. Each letter
-then gets an intent weight between 0.15 and 1, for how likely it is that
-the finger meant that key rather than passed over it:
-
-```
-intent = 0.15 + 0.45 × closeness + 0.30 × turn + 0.10 × dwell
-
-closeness  1 at the key centre, 0 at 0.65 of a key away
-turn       how sharply the path turned at its closest point, 0 to 1
-dwell      time on the key compared with the average key, 0 to 1
-```
-
-The first and last letters always count at least 0.9. Skipping a letter
-with a low weight, a key the finger only brushed on the way, costs little.
-
-##### Finding candidate words
-
-The dictionary is split into word lists by first and last letter, so
-"well" is in the `wl` list. A swipe reads the list for its own first and
-last letters, plus the lists for up to two keys next to where it ended and
-up to two keys next to where it started, when it started within a quarter
-of a key of them. Only words no longer than the swipe's letter string are
-scored here; the shape channel below finds longer ones.
-
-##### Quick pass
-
-Each word's letters are matched in order against the swipe's letters,
-taking the first place each letter can go. That gives a path cost:
-
-```
-path cost = weight of the swipe letters the word skips
-          + twice the weight of any skipped before its first letter
-            or after its last
-          + 6    if the first letter isn't the key the swipe started on
-            (1 instead, if it's the neighbouring key the swipe started in)
-          + 4    if the last letter isn't the key the swipe ended on
-            (2 if it's taken from a key next to the end point)
-          + 0.5  per letter borrowed from a neighbouring key (at most 2)
-          + up to 4 for how far the touch points were from the key centres
-```
-
-A key can only lend its neighbours a letter where the path turned by at
-least 0.3 radians there. Neighbours are keys whose centres are within 1.2
-key sizes. An edit-distance check (up to two edits) and a special case for
-short words can lower the cost for near misses.
-
-##### Shape channel
-
-On a swipe crossing 5 letters or more, words of 3 letters or more are
-looked at when their first and last keys lie within one key of the
-swipe's ends and their ideal path is 0.7 to 1.4 times as long as the
-swipe. They're ranked by `6000 × shape distance − frequency`, and the best
-10 join the careful check. There, a letter of the word the path never
-crossed costs 2, in the units of a skipped swipe letter.
-
-##### Ranking
-
-Everything is put on one scale, where lower is better:
-
-```
-rank = 949 × path cost
-     − frequency                         (Zipf × 1000: "the" is 7730)
-     + 3122 if the word has 4 letters or fewer, is rarer than Zipf 3
-            and you've used it fewer than 4 times
-     + 3500 if the word is on the offensive list
-            and you've kept it fewer than 2 times
-     − word pair bonus                   (see Learning)
-     − 3354 × scribble confidence for each doubled letter
-     − your own use bonus                (see Learning)
-```
-
-The path cost weight (949), the rare-word cost, the scribble credit and
-the path shape weight (3089, below) were fitted by maximum likelihood on
-the recorded word sessions, using `tools/fit_weights.lua`, with
-leave-one-session-out checks. The full fit made rare words lose too often
-on the clean swipes, so the shipped path and shape weights sit halfway
-between the old ones and the fitted ones, on a log scale.
-
-##### Careful check
-
-The best 40 are scored again with dynamic programming instead of the
-first-fit match. The table has one row per letter of the word and one
-column per swipe letter, and there are three copies of it, for 0, 1 or 2
-borrowed letters. Each cell holds the cheapest way to match the word so
-far: either skip a swipe letter, paying its intent weight, or match it,
-paying the distance from that touch point to the key centre. So a letter
-that appears twice in the swipe is matched where it fits best, not just
-where it comes first.
-
-##### Path shape
-
-The best 12 get a last check on the whole shape. The swipe and the ideal
-path through the word's key centres are both resampled to 20 evenly spaced
-points. The average distance between matching points, in key sizes, plus a
-little for the difference in length, is multiplied by 3089 and added to
-the rank. When the shape channel ran, it's multiplied by 6000 instead.
-
-##### Scribbles
-
-On each key, turns sharper than 45 degrees are added up. If they come to
-at least 0.7 of a full circle and the path on that key is at least 0.65 of
-a key long, the key gets a scribble confidence, which favours words with
-that letter doubled.
-
-##### The number row
-
-The starting point is checked against the digit keys first. If it's on
-one, the key in the row below at the same position is used as the start.
-If the swipe then crosses fewer than two letters, it's handed back to
-KOReader untouched.
-
-##### Contractions
-
-Every word list entry has two spellings: the letters it's matched on and
-the word it types. `tools/add_contractions.py` adds 68 contractions from
-`tools/contractions_en.tsv` under their letters, so `dont` types `don't`,
-at wordfreq's frequency for the real spelling. The apostrophe-less
-spelling is dropped unless it's a word of its own (were, well, its, ill,
-id, hell, shell, shed, wed, lets, cant, wont).
-
-</details>
-
-### Learning
-
-- Words you keep typing rise up the list.
-- The word that usually follows the one before it wins ("the sun", not
-  "the sin").
-- Words you tap out letter by letter count as well as swiped ones.
-- The keyboard learns where your thumb lands and allows for it.
-
-Learning is always on. Nothing is sent anywhere: the counts are kept in
-KOReader's settings.
-
-<details>
-<summary><b>How learning works</b></summary>
-
-Every word you keep in the text is counted. A word you pick from the
-suggestion row counts double, and a word you delete straight away isn't
-counted. From two uses a word gets a boost, which grows with use up to a
-limit, and never lifts a word above the most common words. A word used four
-times or more is also exempt from the rare short word penalty. Up to 2,000
-words are kept, dropping the least used. On the recorded sentence sessions,
-a learned word was put first 161 times when it was the right word, and 15
-times when it wasn't.
-
-A word you tap out and finish with a space or punctuation is counted once
-and learned after the word before it, the same as a swiped word you keep.
-Only dictionary and personal words count, so typos aren't learned. An
-apostrophe is part of the word, so "don't" is learned whole, never "don" or
-"t"; a hyphenated word like "well-known" isn't learned at all.
-
-Upstream Tapless already learned which word you type after which. The
-fork adds a table of common word pairs for English, so this works from the
-first sentence instead of only after you've typed a pair yourself. A pair's
-bonus depends on how much likelier the word is after the previous word
-than anywhere else. The learned bonus and the table bonus are added
-together, up to the same limit the learned bonus had on its own. It only
-applies when the previous word is followed by just a space, so after a
-full stop or a comma nothing is assumed. When the table was added, it
-fixed 18 sentence swipes and broke 1. The fixes were look-alike mistakes:
-"tu" for "to", "will" for "well", "while" for "whole", "sin" for "sun".
-
-The table is 1.8 MB and comes with the English dictionary. Only the part
-for the previous word is read, when it's needed. It was counted from the
-English sentences of [Tatoeba](https://tatoeba.org) (CC BY 2.0 FR) by
-`tools/build_word_pairs.py`, leaving out any sentence that shares four
-words in a row with the test prompts, so replays of the test sessions stay
-fair. See `ligature.koplugin/dictionaries/en/ATTRIBUTION.txt`.
-
-A thumb reaching across a one-handed keyboard tends to land short of the
-keys further away, the same way each time. From the words you keep, the
-keyboard learns how far your swipes land from the keys of the word, and
-shifts later swipes back by that much before reading their keys. It keeps
-a separate offset for the full-width keyboard and for each side of the
-one-handed one, starts after 8 words, and never shifts by more than 0.4
-of a key. Replaying every recorded session in order, it fixed 53
-one-handed swipes and broke 15, and fixed 32 full-width swipes and broke
-15.
-
-#### Technical details
-
-What a word counts for:
-
-| You... | Counts |
-|---|---|
-| swipe a word and leave it in the text | 1 |
-| pick a word from the suggestion row | 2 |
-| tap out a dictionary or personal word and end it with a space or punctuation | 1 |
-| delete a swiped word straight away, or tap out a typo | 0 |
-
-Each count is also learned after the word before it. Then:
-
-```mermaid
-flowchart LR
-    A["How often you<br/>use the word"] --> B["Use bonus"]
-    C["How often you've typed it<br/>after the previous word"] --> D["Pair bonus<br/>(the two added,<br/>capped at 3600)"]
-    E["How often it follows the<br/>previous word in Tatoeba"] --> D
-    B --> F["Word's rank"]
-    D --> F
-```
-
-Every bonus is in the same units as word frequency, Zipf × 1000, so 1000
-is worth one step on a scale where "the" is about 7.7 and a rare word
-about 2.
-
-##### Use bonus
-
-```
-use bonus = 0                          under 2 uses
-          = 500 × log2(uses)           capped at 2000
-          but never lifting the word's frequency past 5500
-```
-
-| Uses | 1 | 2 | 4 | 8 | 16 or more |
-|---|---|---|---|---|---|
-| Bonus | 0 | 500 | 1000 | 1500 | 2000 |
-
-The ceiling means a word you use a lot can catch up with common words, but
-never beat "the" or "and" on frequency alone.
-
-##### Learned pair bonus
-
-For a pair you've typed `count` times: `600 × log2(count + 1)`, capped at
-3600. The counts stop at 255. When a word has more than 24 followers, the
-least used goes. When there are more than 2,000 previous words, the one
-followed least often goes. These caps are there because learned pairs are
-saved in KOReader's settings file, which is rewritten in full on every
-save.
-
-##### Pair table bonus
-
-Counted from 14.9 million words of Tatoeba sentences:
-
-```
-bonus = 1000 × log10( P(word | previous word) / P(word) )
-```
-
-That's the pointwise mutual information in frequency units: how much
-likelier the word is right after the previous word than in general. It's
-capped at 3000, and pairs seen fewer than 3 times or earning less than 300
-are dropped. Each previous word keeps its 96 most frequent followers,
-158,372 pairs in all. Contractions count as words, both before and after:
-"i'm → afraid", "we → don't".
-
-The table is stored like the dictionary: one text file, plus an index of
-where each part starts.
-
-```mermaid
-flowchart LR
-    A["Previous word: the"] --> B["The index says where<br/>words starting 'th' are"]
-    B --> C["Read only that part<br/>of the file"]
-    C --> D["Take the line for 'the':<br/>accident 1065, air 1031, ..."]
-    D --> E["Remember it for next time<br/>(the last 256 words)"]
-```
-
-Pairs are only counted across spaces, the way the keyboard sees the
-previous word. So "Hello, world" has no pair, because the comma breaks it.
-
-##### Where your thumb lands
-
-Offsets are in key widths and heights, so they still hold after the
-keyboard is resized. Each kept word gives the gap between where the swipe
-started and ended and the word's first and last keys. A gap of more than
-0.8 of a key is taken as a word changed afterwards and not learned. The
-first 20 words are averaged; after that each new word moves the offset by
-5% of its gap. The shift is 1.25 times the learned offset, because the
-words it learns from are the ones recognition chose, whose keys lie nearer
-the finger than the words meant.
-
-</details>
-
-### Typing
-
-- Pause while tapping out a word and the row offers words that finish it.
-- Tap ⌫ right after a swipe and the whole word goes. Slide left from ⌫ to
-  delete more words.
-- A second finger touching the screen no longer cuts a swipe short.
-- A swipe that only touches one letter types that letter.
-- Fast tapping doesn't turn into swiped words.
-- Spaces go in front of the next word, so punctuation sits right.
-
-<details>
-<summary><b>Typing details</b></summary>
-
-When you stop tapping for about half a second, the row shows up to four
-words that start with what you've typed. They're ranked the same way as
-swipes: how common the word is, whether it usually follows the word
-before, and how often you use it. Tap one and it replaces what you typed,
-keeps your capitals ("Th" gives "The"), and the next word gets its space
-like after a swipe. The row isn't redrawn on every letter, only when you
-pause, to keep e-ink refreshes down. If you carry on typing past what the
-row was made for, a stale suggestion can't be picked by mistake. When
-nothing matches, the row offers to add the word to your personal words.
-
-The most common 256 words for each first letter are always searched. From
-three letters in, if they don't fill the row, the rest of the dictionary
-is searched too. Those word lists are read in the background while you
-type the first letters, so typing never waits for the disk.
-
-Typing the words from the earlier recorded sessions and pausing once,
-after the second or third letter:
-
-| | Sentences (553 words) | Random words (212) |
-|---|---|---|
-| Word in the suggestions after 2 letters | 70% | 17% |
-| Word first in the suggestions after 2 letters | 49% | 4% |
-| Word in the suggestions after 3 letters | 86% | 61% |
-| Word first in the suggestions after 3 letters | 64% | 27% |
-
-Picking the word at that one pause saves about a quarter of the
-keystrokes in the sentences.
-
-Tapping ⌫ straight after a swipe deletes the whole word, and the word
-isn't learned. Sliding left from
-⌫ deletes whole words: the first once you've slid 0.4 of a key, then one
-more for each key width, up to 50, never past the start of the line. While
-you slide, the words that will go are shown inverted, and lifting deletes
-them.
-
-A thumb resting on the edge of the screen mid-swipe used to be paired with
-the swiping finger into a two-finger gesture, and the swipe ended part-way
-through. It's now ignored until it lifts. This was the biggest single
-cause of misses. Pinch zoom and two-finger typing are unchanged.
-
-On KOReader v2026.07.2 and older, two fingers landing close together were
-merged into one two-finger tap and both keys were lost. The fork backports
-KOReader's fix (koreader#15840). Nothing is changed on newer KOReader.
-
-On e-ink a tap often drifts far enough to count as a swipe, and the
-keypress was lost. A swipe that only crosses one letter now types it, and
-a short slide within half a second of tapping a letter types the key it
-started on.
-
-The space after a swiped word is added when the next word starts, so
-"hello, world" comes out right and text doesn't end in a stray space. A
-swiped word after a tapped word, or after punctuation, gets its space too.
-
-Letter swipes keep working when another plugin or patch replaces the key
-handlers, like the ZenOS keyboard patch.
-
-#### Technical details
-
-##### Completions
-
-```mermaid
-sequenceDiagram
-    participant You
-    participant Row as Suggestion row
-    You->>You: tap "t", "h"
-    Note over You,Row: half a second with no key
-    Row->>You: the, that, this, they
-    You->>You: tap "e", "i"
-    Note over Row: stays as it was: no redraw per letter
-    Note over You,Row: half a second with no key
-    Row->>You: their, theirs, ...
-    You->>Row: tap "their"
-    Row->>You: "thei" becomes "their"
-```
-
-Meanwhile, from the first letter, the word lists for words starting with
-"t" are read in the background, a few milliseconds at a time.
-
-Candidates come from the 256 most common words for the first letter, your
-personal words, and, from three letters if those leave the row short,
-every word list for that first letter that's already in memory. Each
-candidate that starts with the typed letters (accents ignored) is scored:
-
-```
-score = frequency + pair bonus after the previous word + use bonus
-        − 3500 if it's on the offensive list and you've kept it fewer than 2 times
-```
-
-The typed word itself, blocked words and spellings with a letter three
-times in a row are left out, and the best four are shown. A pick only goes
-through if the text box is the same one, the word at the cursor still
-starts with the letters the row was made for, and the picked word still
-starts with the word at the cursor. Otherwise the row is just cleared.
-
-The previous word for completions is the last run of letters before the
-word being typed, if only spaces separate them, the same way the keyboard
-finds it for swipes. Input method layouts (Chinese, Japanese, Korean,
-Vietnamese) get no completions, because their tapped letters are still
-being composed.
-
-##### Second finger
-
-KOReader's gesture detector pairs a new touch with one already down, to
-recognise pinches and two-finger taps. While a swipe is being drawn on the
-keyboard, Ligature unpairs a new touch as it lands and parks it in a state
-that ignores its events until it lifts.
-
-##### Spaces
-
-After a swiped or picked word, a space is waiting. What you do next
-decides what happens to it:
-
-| Next you... | The waiting space |
-|---|---|
-| swipe or type another word | goes in before it: "hello world" |
-| type punctuation | isn't added, and keeps waiting: "hello, world" |
-| type a space | is that space, so you don't get two |
-| move the cursor or press backspace | is dropped |
-
-A pending space remembers the text box and the cursor position. It's only
-used if both are unchanged when the next word starts.
-
-##### Fast tapping
-
-A swipe that starts within 500 ms of a tapped letter and travels less than
-0.6 of a key is typed as a tap on the key it started on.
-
-</details>
-
-### Swipe trail
-
-- The trail is a thin grey line that follows your finger smoothly.
-- It shows in night mode too.
-- The faint ghosting it leaves is cleared with one flash when you pause.
-
-<details>
-<summary><b>Swipe trail details</b></summary>
-
-The trail is drawn with a round brush about 0.75 mm wide, along curves
-through the touch points that end at your finger, so it doesn't lag
-behind. It inverts the pixels under it, which is why it shows light on
-dark keys in night mode and needs nothing saved to clear it. Each new
-piece is shown with e-ink's fast black-and-white update. That update can't
-show grey, so half the pixels under the brush are inverted, in a
-checkerboard fixed to the screen so overlapping pieces line up.
-
-When you lift your finger, a quick refresh clears the trail. Fast updates
-leave faint traces that build up over a long spell of typing, and only a
-flashing refresh removes them. So after 8 swipes, once you stop swiping
-for 3 seconds, the area those trails covered gets one flash. In the
-recorded sessions only 9% of the pauses before the next word were longer
-than 3 seconds, so it mostly comes at the end of a sentence.
-
-</details>
-
-### Suggestion row
-
-- Hold a suggestion to block that word.
-- The row clears its e-ink ghosting every few changes.
-- All four slots are used for words. The language is shown on the space
-  bar instead.
-- The top suggestion is in bold.
-
-<details>
-<summary><b>Suggestion row details</b></summary>
-
-Blocked words are listed under `Tools → Ligature → Manage dictionaries →
-Blocked words` and can be unblocked there. Adding a word to your personal
-words unblocks it. Blocking the word a swipe just typed replaces it with
-the next suggestion.
-
-Each slot is redrawn on its own, and only when its word changes, with a
-fast partial e-ink update. Fast updates leave faint ghosts of earlier
-words, so every sixth time the row changes, the whole row gets one flash
-update. Blocked words are stored per language and skipped when words are
-looked up, for swipes and completions alike.
-
-</details>
-
-### One-handed keyboard
+## One-handed keyboard
 
 - The keys move to one side of the screen, with the page visible beside
   them.
@@ -746,14 +111,14 @@ keyboard.
 
 </details>
 
-### Languages and keyboard size
+## Languages and keyboard size
 
 - Pick your languages the first time the keyboard opens. English comes
   with the plugin, and the other 10 are downloaded when you pick them.
-- The language is shown on the space bar. Hold space to switch: the
+  You can add or remove languages later in the dictionary manager.
+- The language is shown on the space bar. Hold space to switch, and the
   keyboard changes to KOReader's layout for that language too.
-- 11 languages can be downloaded from the dictionary manager.
-- Keyboard size and key text size options.
+- The keyboard's height and the size of the key labels can be changed.
 
 <details>
 <summary><b>Languages and size details</b></summary>
@@ -785,22 +150,9 @@ keyboard.
   the keyboard size, or keeps KOReader's key font size when the size is
   Same as KOReader.
 
-#### Technical details
-
-Each dictionary is a folder with a manifest and its word lists, bundled in
-the plugin (English only) or downloaded to KOReader's data folder. A
-downloaded one with the same name takes over from the bundled one.
-`catalog.json` in the plugin is a copy of the dictionaries repository's
-catalog, used until the dictionary manager first downloads the current
-one; update it when a dictionary release changes the catalog. The folders are only read
-again when one of them changes, since reading every manifest is slow on an
-e-reader. Word lists are loaded when first needed and kept in memory, about
-30 MB for the whole of English at most. Switching language frees the old
-language's lists.
-
 </details>
 
-## Options
+## Settings
 
 Under `Tools → Ligature`:
 
@@ -812,98 +164,173 @@ Under `Tools → Ligature`:
 | Keyboard text size | Auto | Small, Normal or Large key labels |
 | Slide on space to move cursor | On | Slide along the space bar to move the text cursor, one character per quarter of the key's height. Holding space still switches language. |
 | Double space types a period | Off | A second space right after a word, or a space right after a swiped word, becomes ". ". Not used on input method layouts. |
-| Rank offensive words down | On | See Recognition |
+| Rank offensive words down | On | See [Recognition](#recognition) |
 | One-handed keyboard | Off | Use one-handed keyboard, and Background blur (on) |
 
 Tap the globe key (🌐) for KOReader's keyboard layout menu. Picking the
-layout of one of your languages switches to that language; another
+layout of one of your languages switches to that language. Another
 layout (Russian, say) leaves the language as it is.
 
-## Code layout
+## Troubleshooting
 
-The plugin's Lua files are grouped by what they do. `modules.lua` lists
-where each one lives, and the plugin, tests and tools all load them by
-name through it.
+- If a language you picked isn't there, its download didn't happen,
+  usually because Wi-Fi was off. The keyboard offers it once more the next
+  time it opens, or you can download it under
+  `Tools → Ligature → Manage dictionaries`. Until then it types in English.
+- If a word never comes up, you might have blocked it by holding it in the
+  suggestion row. Blocked words are listed under
+  `Tools → Ligature → Manage dictionaries → Blocked words`.
+- If a word isn't in the dictionary, tap it out letter by letter, then tap
+  \+ in the suggestions to add it to your personal words.
+- If a swear word keeps losing to other words, that's on purpose. Words on
+  the offensive lists are ranked down until you've kept them twice. You can
+  turn that off with `Rank offensive words down`.
+- Tapping in Chinese, Japanese, Korean or Vietnamese gets no suggestions.
+  Those layouts are still composing the letters you tap.
 
-| Folder | What's in it |
-|---|---|
-| `koreader/` | Hooks into KOReader's keyboard and touch handling |
-| `input/` | Turning touches and key presses into typed text |
-| `recognition/` | Finding the words a swipe or tapped letters could be |
-| `learning/` | The words and word pairs you keep, and where your thumb lands |
-| `dictionary/` | Reading, installing and managing word lists, and the offensive-word lists |
-| `ui/` | Drawing the suggestion row, the swipe trail, the one-handed keyboard's handle menu and resize frame, and the gesture reference page |
-| `icons/` | The icons in the one-handed handle menu and resize frame |
-| `images/` | The gesture reference page, made from screenshots of the keyboard at a Kindle Paperwhite's settings |
-| `dictionaries/` | The bundled English word lists and word-pair table |
-| `catalog.json` | A copy of the dictionary catalog, for choosing languages offline |
+## Accuracy
 
-## Tools
+The same recorded swipes, replayed through upstream 0.4.0 and through this
+fork on the full-width keyboard. "First choice" is the word that gets
+typed. "Suggestions" means the word is anywhere in the suggestion row.
 
-None of this is in the plugin folder or changes the plugin.
+| | Upstream 0.4.0 | Ligature |
+|---|---|---|
+| Sentences, first choice (807 swipes) | 54% | 84% |
+| Sentences, suggestions | 63% | 91% |
+| Random words, first choice (212 swipes) | 40% | 75% |
+| Random words, suggestions | 48% | 84% |
+| Random words of 8 or more letters, first choice | 14% | 67% |
+| Swipes that didn't start on the word's first key, first choice | 0% | 40% |
+| Clean generated swipes, common words | 96% | 98% |
+| Clean generated swipes, mid-frequency words | 93% | 96% |
+| Clean generated swipes, rare words | 89% | 84% |
 
-- `luajit spec/run.lua` runs the tests.
-- `tools/swipe_session.py` runs a prompted swipe session on a device over
-  SSH, then replays it.
-- `tools/replay.lua` replays recorded sessions through the plugin code.
-  `--compare DIR` shows which swipes a change fixed or broke.
-- `tools/clean_swipes.lua` generates clean swipes for regression checks.
-- `tools/fit_weights.lua` fits the ranking weights to recorded swipes.
-- `tools/build_word_pairs.py` builds a dictionary's word-pair table.
-- `tools/fetch_dictionary_sources.py` and `tools/build_dictionary.py`
-  download the Leipzig word counts and build a dictionary package from
-  them.
-- `tools/build_offensive_lists.py` builds the offensive-word lists.
+On the sentences the fork gets 252 swipes right that upstream got wrong,
+and 6 wrong that upstream got right. On the random words it's 80 and 5.
 
-<details>
-<summary><b>More on the tools</b></summary>
+Rare words come out worse. Of 1,500 clean swipes for rare words, the fork
+fixes 31 and breaks 113. Common words count for more in the ranking, so a
+rare word can lose to a common one with a similar shape.
 
-`swipe_session.py` installs a temporary KOReader patch that shows words,
-sentences or search-style queries to swipe and records every attempt: the
-touch points, the keys, what was typed, and whether you kept it, picked
-another suggestion or deleted it. It prints each result as you go. At the
-end it removes the patch, copies the recording to `sessions/` and replays
-it. Learning is paused while a session is recorded, so the test doesn't
-change your word counts.
+Upstream has no one-handed keyboard, so the one-handed swipes are only
+shown for the fork:
 
-`replay.lua` prints first choice, suggestions and mean reciprocal rank,
-split by word length, by where the swipe started and by full-width or
-one-handed, next to what the device showed at the time, plus the time
-each swipe took. `--compare` lists every swipe that changed between two
-plugin folders, with a McNemar p value. `--context`, `--usage` and
-`--touch` learn word pairs, word counts and where the thumb lands as the
-swipes are replayed, `--per-session` starts pairs and counts over for each
-session, `--losses` shows at which step each missed word was lost, and
-`--no-shape` leaves out the shape channel.
+| One-handed | First choice | Suggestions |
+|---|---|---|
+| Sentences (602 swipes) | 76% | 85% |
+| Random words (101 swipes) | 71% | 88% |
+| Search-style queries (243 swipes) | 60% | 77% |
 
-Recordings go in `sessions/`, which is git-ignored because it contains
-typed text.
+The queries are what you'd search for on an e-reader: authors, book
+titles, characters and words you'd look up ("perfunctory", "denouement"),
+so many aren't everyday words.
 
-#### Technical details
+Recognising a swipe takes about 70 ms on the Kindle Paperwhite, against
+19 ms for upstream. Timed on a PC, about 40% of it goes on the
+[shape channel](docs/how-it-works.md#shape-channel), which on two of the
+sentence sessions lifts first choice from 77% to 87%.
 
-```mermaid
-flowchart LR
-    A["Change the code"] --> B["Replay the recorded<br/>and clean swipes<br/>through old and new"]
-    B --> C{"More fixed than broken,<br/>and clean swipes<br/>no worse?"}
-    C -->|yes| D["Keep it"]
-    C -->|no| E["Rework or drop it"]
-```
+[How these were measured](docs/development.md#measuring-accuracy) has the
+method, and why the numbers lean optimistic.
 
-`fit_weights.lua` treats each recorded swipe as a choice between the
-candidate words, with the chance of each word falling off exponentially
-with its rank score (a conditional logit model). It finds the weights that
-make the intended words most likely with Newton's method, reports standard
-errors, and checks the fit by leaving each session out in turn and scoring
-it with weights fitted on the others.
+## How it works
 
-`clean_swipes.lua` builds a swipe for a word by moving in a straight line
-between its key centres, pausing briefly on each, using the key positions
-from a recorded session so they match a real device.
+Each part starts with what Ligature does differently from upstream
+Tapless. [docs/how-it-works.md](docs/how-it-works.md) has the details and
+the numbers.
 
-`build_word_pairs.py` reads sentence files (plain text, or Tatoeba's TSV
-exports, compressed or not), counts pairs as described under Learning, and
-writes `words.pairs.tsv`, `words.pairs.idx` and their checksums into the
-dictionary's manifest. `--exclude` and `--exclude-words 4` leave out any
-sentence sharing four words in a row with the test prompts.
+### Recognition
 
-</details>
+- Long words are found by the shape of the whole swipe, even when the
+  path skips some of their letters.
+- Swipes that start just inside the next key over still find the word.
+- A corner you cut short can lend a letter from the key next to it.
+- Scribbling back and forth on a key types a double letter.
+- Rare short fragments like "bq" and "gtg" stop beating real words.
+- Common words count for more against the shape of the swipe.
+- Swear words and slurs are ranked down, so they stop taking the place of
+  the word you meant.
+- Spellings that only repeat letters ("wee", "weee") no longer fill the
+  row.
+- Swipes that start on the number row type a word, not a digit.
+- Contractions come out with their apostrophes: "dont" types "don't".
+
+[Details](docs/how-it-works.md#recognition)
+
+### Learning
+
+- Words you keep typing rise up the list.
+- The word that usually follows the one before it wins ("the sun", not
+  "the sin"). Each language learns its own word pairs.
+- Words you tap out letter by letter count as well as swiped ones.
+- The keyboard learns where your thumb lands and allows for it.
+
+[Details](docs/how-it-works.md#learning)
+
+### Typing
+
+- Pause while tapping out a word and the row offers words that finish it.
+- Tap ⌫ right after a swipe and the whole word goes. Slide left from ⌫ to
+  delete more words.
+- A second finger touching the screen no longer cuts a swipe short.
+- A swipe that only touches one letter types that letter.
+- Fast tapping doesn't turn into swiped words.
+- Spaces go in front of the next word, so punctuation sits right.
+
+[Details](docs/how-it-works.md#typing)
+
+### Swipe trail
+
+- The trail is a thin grey line that follows your finger smoothly.
+- It shows in night mode too.
+- The faint ghosting it leaves is cleared with one flash when you pause.
+
+[Details](docs/how-it-works.md#swipe-trail)
+
+### Suggestion row
+
+- Hold a suggestion to block that word.
+- The row clears its e-ink ghosting every few changes.
+- All four slots are used for words. The language is shown on the space
+  bar instead.
+- The top suggestion is in bold.
+
+[Details](docs/how-it-works.md#suggestion-row)
+
+## Privacy
+
+Nothing you type leaves the device. Word counts, word pairs and where your
+thumb lands are kept in KOReader's settings, and personal and blocked words
+in KOReader's data folder. Ligature only goes online to fetch the
+dictionary catalog and the dictionaries you pick, from
+[Pixxel123/ligature.dictionaries](https://github.com/Pixxel123/ligature.dictionaries).
+
+## Development
+
+`luajit spec/run.lua` runs the tests.
+[docs/development.md](docs/development.md) covers the code layout, the
+tools for recording and replaying swipes, and how the accuracy numbers
+were measured.
+
+## Acknowledgements
+
+1. [azac/tapless.koplugin](https://github.com/azac/tapless.koplugin), the
+   plugin Ligature started from.
+2. [KOReader](https://github.com/koreader/koreader), whose keyboard module
+   Ligature includes in modified form.
+3. [wordfreq](https://github.com/rspeer/wordfreq) (CC BY-SA 4.0) and the
+   [Leipzig Corpora Collection](https://wortschatz.uni-leipzig.de)
+   (CC BY 4.0) for the word lists, with
+   [Wiktionary](https://www.wiktionary.org) used to weed out junk.
+4. [Tatoeba](https://tatoeba.org) (CC BY 2.0 FR) for the English word
+   pairs.
+5. The
+   [List of Dirty, Naughty, Obscene and Otherwise Bad Words](https://github.com/LDNOOBW/List-of-Dirty-Naughty-Obscene-and-Otherwise-Bad-Words)
+   (CC BY 4.0) for the offensive-word lists.
+
+Each dictionary's `ATTRIBUTION.txt` has the details.
+
+## License
+
+GNU Affero General Public License, version 3. See [LICENSE](LICENSE).
