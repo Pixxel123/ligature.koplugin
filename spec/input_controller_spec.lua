@@ -732,3 +732,93 @@ it("deletes the words a slide from backspace picked in one step",
     T.eq(keyboard.swype_mvp_tapped_word, nil)
     T.truthy(refreshed >= 1, "suggestion row cleared")
 end)
+
+-- Some plugins give the keyboard their own input box rather than
+-- KOReader's InputText. Ink-Away's (ink/view/textedit.lua) has only the
+-- methods KOReader's own keyboard calls, and no getChar, getText,
+-- delSelection, charpos or charlist. It crashed KOReader on the space
+-- after a swiped word, calling the missing getChar.
+local function newInkAwayInputBox()
+    local text = {}
+    local view = {}
+    function view:textAddChars(s)
+        for char in s:gmatch("[%z\1-\127\194-\244][\128-\191]*") do
+            text[#text + 1] = char
+        end
+    end
+    function view:textDelChar()
+        text[#text] = nil
+    end
+    local inputbox = {
+        parent = view,
+        addChars = function(_, s) view:textAddChars(s) end,
+        delChar = function() view:textDelChar() end,
+        delWord = function() view:textDelChar() end,
+        delToStartOfLine = function() end,
+        leftChar = function() end,
+        rightChar = function() end,
+        upLine = function() end,
+        downLine = function() end,
+        goToStartOfLine = function() end,
+        goToEndOfLine = function() end,
+        scrollUp = function() end,
+        scrollDown = function() end,
+    }
+    return inputbox, function() return table.concat(text) end
+end
+
+it("types, swipes and deletes in an input box like Ink-Away's", function()
+    local controller = newController(ON)
+    local keyboard = newTypingKeyboard()
+    local box, text = newInkAwayInputBox()
+    keyboard.inputbox = box
+    keyboard._swypeReset = function() end
+    controller.context_model.learn = function() end
+    controller.applyCandidateCase = function() end
+    local function swipeWords(...)
+        local candidates = {}
+        for index, word in ipairs({ ... }) do
+            candidates[index] = { word = word }
+        end
+        controller:insertBestAndShowCandidates(keyboard, "x", candidates)
+    end
+
+    for _, key in ipairs({ "M", "a", "l", "a", "z", "a", "n", " " }) do
+        controller:addChar(keyboard, key)
+    end
+    swipeWords("book", "nook")
+    T.eq(text(), "Malazan book")
+    -- The tap that crashed KOReader: space after a swiped word. Without
+    -- getChar there is no telling the word before, so no period.
+    controller:addChar(keyboard, " ")
+    controller:addChar(keyboard, " ")
+    T.eq(text(), "Malazan book  ")
+    swipeWords("of", "if")
+    T.eq(text(), "Malazan book  of")
+    -- Backspace right after a swipe takes the whole word back.
+    controller:delChar(keyboard)
+    T.eq(text(), "Malazan book  ")
+    swipeWords("the", "they")
+    controller:selectCandidate(keyboard, keyboard.swype_mvp_session
+        .candidates[2])
+    T.eq(text(), "Malazan book  they")
+    controller:addChar(keyboard, ".")
+    T.eq(text(), "Malazan book  they.")
+end)
+
+it("deletes back with delChar in an input box without delSelection",
+        function()
+    local box = newInputBox()
+    box.delSelection = nil
+    box:addChars("one three")
+    local keyboard = {
+        inputbox = box,
+        swype_mvp_session = T.load("input_session"):new(),
+        _swypeReset = function() end,
+        _swypeRefreshCandidateRow = function() end,
+    }
+    newController():deleteBefore(keyboard, 5)
+    T.eq(box:text(), "one ")
+    T.eq(box.charpos, 5)
+end)
+

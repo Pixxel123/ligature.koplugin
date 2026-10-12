@@ -2,6 +2,37 @@ local InputController = {}
 InputController.__index = InputController
 local Utf8Proc = require("ffi/utf8proc")
 
+-- The keyboard can be given an input box other than KOReader's InputText:
+-- some plugins (Ink-Away, for one) pass their own, with only what
+-- KOReader's own keyboard calls (addChars, delChar, charpos). Read and
+-- delete through these, never calling getChar or delSelection directly.
+
+-- Whether the input box can say which characters lie around the cursor.
+local function canReadChars(inputbox)
+    return inputbox.getChar ~= nil
+end
+
+-- The character offset from the cursor, or nil when there is none or the
+-- input box cannot say.
+local function charAt(inputbox, offset)
+    if not canReadChars(inputbox) then
+        return nil
+    end
+    return inputbox:getChar(offset)
+end
+
+-- Deletes from charpos from up to the cursor, one character at a time
+-- where the input box has no delSelection.
+local function deleteRange(inputbox, from)
+    if inputbox.delSelection then
+        inputbox:delSelection(from, inputbox.charpos - 1)
+        return
+    end
+    for _ = from, inputbox.charpos - 1 do
+        inputbox:delChar()
+    end
+end
+
 InputController.DOUBLE_SPACE_SETTING = "ligature_double_space_period"
 -- The word lists completions need are read a slice at a time: this many
 -- entries or milliseconds per slice, a slice every WARM_STEP_DELAY
@@ -241,8 +272,8 @@ end
 -- word, or the word is joined to the text before it.
 function InputController:_wordAtCursor(keyboard)
     local inputbox = keyboard.inputbox
-    -- KOReader releases without InputText:getChar cannot say.
-    if not inputbox.getChar then
+    -- An input box without getChar cannot say.
+    if not canReadChars(inputbox) then
         return
     end
     local profile = keyboard.swype_mvp_normalization_profile
@@ -250,14 +281,14 @@ function InputController:_wordAtCursor(keyboard)
         return char ~= nil
             and self.normalization:normalizeChar(char, profile) ~= nil
     end
-    local after = inputbox:getChar(0)
+    local after = charAt(inputbox, 0)
     if isLetter(after) or (after and isApostrophe(after)
-            and isLetter(inputbox:getChar(1))) then
+            and isLetter(charAt(inputbox, 1))) then
         return
     end
     local before = {}
     for offset = -1, -CURSOR_CONTEXT, -1 do
-        local char = inputbox:getChar(offset)
+        local char = charAt(inputbox, offset)
         if not char then
             break
         end
@@ -566,15 +597,15 @@ local SPACED_PUNCTUATION = {
 -- a stray character or an extra backspace can use one up.
 function InputController:_gluedToPreviousWord(keyboard)
     local inputbox = keyboard.inputbox
-    if not inputbox.getChar then
+    if not canReadChars(inputbox) then
         return false
     end
     local profile = keyboard.swype_mvp_normalization_profile
-    local last = inputbox:getChar(-1)
+    local last = charAt(inputbox, -1)
     if not last then
         return false
     end
-    local next_char = inputbox:getChar(0)
+    local next_char = charAt(inputbox, 0)
     if next_char and (self.normalization:normalizeChar(next_char, profile)
                 ~= nil or next_char:match("^%d$") ~= nil) then
         -- The cursor is inside a word (after a space-cursor slide, say);
@@ -740,10 +771,10 @@ function InputController:_takeDoubleSpace(keyboard, key)
         return false
     end
     local inputbox = keyboard.inputbox
-    if inputbox.charpos ~= charpos or inputbox:getChar(-1) ~= " " then
+    if inputbox.charpos ~= charpos or charAt(inputbox, -1) ~= " " then
         return false
     end
-    local previous = inputbox:getChar(-2)
+    local previous = charAt(inputbox, -2)
     return previous ~= nil and not previous:match("^[%s%p]$")
 end
 
@@ -776,7 +807,7 @@ function InputController:addChar(keyboard, key, keep_swype_candidates)
             -- The space the swiped word was waiting for. With the double
             -- space option it counts as the second space, unless the word
             -- already ends in punctuation.
-            local previous = keyboard.inputbox:getChar(-1)
+            local previous = charAt(keyboard.inputbox, -1)
             if self.settings:isTrue(self.DOUBLE_SPACE_SETTING)
                     and not keyboard.uwrap_func
                     and previous and not previous:match("^[%s%p]$") then
@@ -818,7 +849,7 @@ function InputController:addChar(keyboard, key, keep_swype_candidates)
     local starts_word = false
     if letter then
         local before = key_chars[#key_chars - 1]
-            or (inputbox.getChar and inputbox:getChar(-1))
+            or charAt(inputbox, -1)
         starts_word = not before
             or not (self.normalization:normalizeChar(before, profile)
                 or isApostrophe(before) or joinsWord(before))
@@ -872,7 +903,7 @@ function InputController:delChar(keyboard)
     inputbox:delChar()
     -- Backspace within a tapped word keeps it one; once the word is gone,
     -- what is left before the cursor was not tapped here.
-    local previous = inputbox.getChar and inputbox:getChar(-1)
+    local previous = charAt(inputbox, -1)
     if tapped and tapped.inputbox == inputbox and tapped.charpos == charpos
             and previous and (isApostrophe(previous)
                 or self.normalization:normalizeChar(previous,
@@ -896,7 +927,7 @@ function InputController:deleteBefore(keyboard, from)
     self:clearCandidateRow(keyboard)
     local inputbox = keyboard.inputbox
     if from < inputbox.charpos then
-        inputbox:delSelection(from, inputbox.charpos - 1)
+        deleteRange(inputbox, from)
     end
     self:_afterManualEdit(keyboard, false)
 end
