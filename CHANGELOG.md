@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.1
+
+- no longer crashes KOReader when typing in another plugin's text box,
+  such as Ink-Away's: a space after a swiped word closed KOReader
+- swipes use every touch point, not every other one
+- moving the cursor with the arrow keys or a slide along space after a
+  swipe no longer makes backspace delete the wrong text
+
 ## 1.0.0
 
 First release as Ligature, which supersedes Tapless 0.4.0.
