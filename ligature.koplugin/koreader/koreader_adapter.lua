@@ -1131,6 +1131,26 @@ function KoreaderAdapter:install(VirtualKeyboard)
         adapter.input_controller:delChar(self)
     end
 
+    -- The keyboard's cursor keys, and a slide along space, move the cursor
+    -- through these. Ligature hears of each move here, as an input box
+    -- without charpos (Ink-Away's, say) cannot show one. Where charpos can,
+    -- a call that left it in place (left at the very start) moved nothing.
+    -- Input method layouts wrap the input box's methods, not these.
+    for _, name in ipairs({ "leftChar", "rightChar", "upLine", "downLine",
+            "goToStartOfLine", "goToEndOfLine", "scrollUp", "scrollDown" }) do
+        local original = VirtualKeyboard[name]
+        if original then
+            VirtualKeyboard[name] = function(self, ...)
+                local inputbox = self.inputbox
+                local before = inputbox and inputbox.charpos
+                original(self, ...)
+                if before == nil or before ~= inputbox.charpos then
+                    adapter.input_controller:cursorMoved(self)
+                end
+            end
+        end
+    end
+
     return VirtualKeyboard
 end
 

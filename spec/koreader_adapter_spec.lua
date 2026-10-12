@@ -547,3 +547,50 @@ it("lays the handle's menu out as its swipes go: move outwards, leave "
         T.eq(chars[side.inward].key, "resize", side.keys)
     end
 end)
+
+-- The keyboard's cursor keys move the cursor through these methods.
+local function setupCursorKeys(inputbox)
+    local moved = 0
+    local VirtualKeyboard = newKeyboardClass({})
+    for _, name in ipairs({ "leftChar", "rightChar", "upLine", "downLine",
+            "goToStartOfLine", "goToEndOfLine", "scrollUp", "scrollDown" }) do
+        VirtualKeyboard[name] = function(self)
+            self.inputbox.moves = (self.inputbox.moves or 0) + 1
+            if name == "leftChar" and self.inputbox.charpos
+                    and self.inputbox.charpos > 1 then
+                self.inputbox.charpos = self.inputbox.charpos - 1
+            end
+        end
+    end
+    local function noop() end
+    T.load("koreader_adapter"):new{
+        settings = { nilOrTrue = function() return true end },
+        ui_manager = {},
+        input_controller = {
+            cursorMoved = function() moved = moved + 1 end,
+        },
+    }:install(VirtualKeyboard)
+    local keyboard = setmetatable({ inputbox = inputbox,
+        swype_mvp_prefetch_controller = { cancel = noop } }, VirtualKeyboard)
+    return keyboard, function() return moved end
+end
+
+it("tells Ligature when the keyboard moves the cursor", function()
+    local inputbox = { charpos = 3 }
+    local keyboard, moved = setupCursorKeys(inputbox)
+    keyboard:leftChar()
+    T.eq(inputbox.moves, 1, "KOReader's own method still runs")
+    T.eq(moved(), 1, "a move")
+    inputbox.charpos = 1
+    keyboard:leftChar()
+    T.eq(moved(), 1, "left at the start moves nothing")
+end)
+
+it("counts every cursor key as a move in an input box without charpos",
+        function()
+    local keyboard, moved = setupCursorKeys({})
+    keyboard:rightChar()
+    keyboard:goToEndOfLine()
+    keyboard:scrollDown()
+    T.eq(moved(), 3)
+end)

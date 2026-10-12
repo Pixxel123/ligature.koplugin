@@ -822,3 +822,57 @@ it("deletes back with delChar in an input box without delSelection",
     T.eq(box.charpos, 5)
 end)
 
+-- Moving the cursor with the keyboard's arrow keys, or a slide along
+-- space, ends what was tied to where it was.
+local function newMovingInputBox()
+    local box = newInputBox()
+    function box:leftChar()
+        if self.charpos > 1 then self.charpos = self.charpos - 1 end
+    end
+    return box
+end
+
+it("keeps a swiped word once the cursor moves off it", function()
+    local controller = newController()
+    local keyboard = newTypingKeyboard()
+    keyboard.inputbox = newMovingInputBox()
+    keyboard._swypeReset = function() end
+    controller.context_model.learn = function() end
+    swipe(controller, keyboard, "hello", "hallo")
+    keyboard.inputbox:leftChar()
+    keyboard.inputbox:leftChar()
+    controller:cursorMoved(keyboard)
+    -- Backspace deletes one character, not the swiped word's length of
+    -- text before the new cursor.
+    controller:delChar(keyboard)
+    T.eq(keyboard.inputbox:text(), "helo")
+    T.eq(keyboard.swype_mvp_session:getCandidates(), nil, "suggestions gone")
+end)
+
+it("drops the waiting space when the cursor moves, even in an input box "
+        .. "without charpos", function()
+    local controller = newController()
+    local keyboard = newTypingKeyboard()
+    local box, text = newInkAwayInputBox()
+    keyboard.inputbox = box
+    keyboard._swypeReset = function() end
+    controller.applyCandidateCase = function() end
+    controller:insertBestAndShowCandidates(keyboard, "x", { { word = "book" } })
+    controller:cursorMoved(keyboard)
+    -- The space was for the place the swipe ended, which the cursor left.
+    controller:addChar(keyboard, "s")
+    T.eq(text(), "books")
+end)
+
+it("leaves the suggestion row alone on a cursor move with nothing to drop",
+        function()
+    local controller = newController()
+    local keyboard = newTypingKeyboard()
+    local refreshed = 0
+    keyboard._swypeRefreshCandidateRow = function()
+        refreshed = refreshed + 1
+    end
+    controller:cursorMoved(keyboard)
+    controller:cursorMoved(keyboard)
+    T.eq(refreshed, 0)
+end)

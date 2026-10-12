@@ -932,4 +932,24 @@ function InputController:deleteBefore(keyboard, from)
     self:_afterManualEdit(keyboard, false)
 end
 
+-- The keyboard moved the cursor (an arrow key, or a slide along space).
+-- What was tied to where it was no longer applies: the space a swiped
+-- word was waiting for, a double space, the word being tapped out, and
+-- backspace taking the swiped word back, which would now delete the
+-- word's length of text before the new cursor. The swiped word is kept,
+-- as when typing on, so its word pair is learned.
+function InputController:cursorMoved(keyboard)
+    keyboard.swype_mvp_pending_space = nil
+    keyboard.swype_mvp_space_charpos = nil
+    keyboard.swype_mvp_tapped_word = nil
+    local session = keyboard.swype_mvp_session
+    -- Nothing to drop: leave the suggestion row alone, so each step of a
+    -- slide along space does not rebuild it.
+    if not session or session:isClear() then
+        return
+    end
+    self:commitPendingContext(keyboard)
+    self:clearCandidateRow(keyboard)
+end
+
 return InputController

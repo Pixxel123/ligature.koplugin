@@ -503,7 +503,11 @@ decides what happens to it:
 | move the cursor or press backspace | is dropped |
 
 A pending space remembers the text box and the cursor position. It's only
-used if both are unchanged when the next word starts.
+used if both are unchanged when the next word starts. Moving the cursor
+with the keyboard's arrow keys or a slide along space drops it straight
+away, along with backspace's undo of the swiped word, so a backspace
+after moving deletes one character. That also works in text boxes from
+other plugins that can't report where the cursor is.
 
 #### Fast tapping
 

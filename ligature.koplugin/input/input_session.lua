@@ -79,6 +79,13 @@ function InputSession:hasCandidateState()
     return self.candidates ~= nil or self.failed_signature ~= nil
 end
 
+-- True when there is nothing for clear() to drop.
+function InputSession:isClear()
+    return self.candidates == nil and self.last_insert == nil
+        and self.personal_offer == nil and self.completion == nil
+        and self.failed_signature == nil
+end
+
 function InputSession:clear(keep_failed)
     self.candidates = nil
     self.last_insert = nil
