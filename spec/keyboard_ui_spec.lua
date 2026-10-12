@@ -62,6 +62,27 @@ it("registers a screen-wide hold_release range for the switch lift",
     T.eq(range.range(), "screen", "whole screen")
 end)
 
+-- A rate-limited pan is not consumed and reaches the dialog underneath,
+-- and its trace point is lost.
+it("takes every word pan, without a rate limit", function()
+    local ui = T.load("keyboard_ui"):new{
+        candidate_row = {},
+        candidate_widths = {},
+        confirm_box = {},
+        horizontal_group = {},
+        virtual_key = {},
+        ui_manager = {},
+        gesture_range = T.gesture_range,
+        screen = { getSize = function() return "screen" end },
+    }
+    local keyboard = { ges_events = {}, dimen = "keys" }
+    ui:registerGestureRanges(keyboard)
+    local range = keyboard.ges_events.SwypeWordPan[1]
+    T.eq(range.ges, "pan", "gesture")
+    T.eq(range.range(), "keys", "over the keyboard")
+    T.eq(range.rate, nil, "no rate limit")
+end)
+
 it("cleans the suggestion row with a flash every few changes", function()
     local every = T.load("keyboard_ui").ROW_CLEANUP_EVERY
     local changes = {}

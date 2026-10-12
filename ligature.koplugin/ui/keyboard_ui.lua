@@ -77,11 +77,15 @@ function KeyboardUI:createCandidateRow(keyboard, options)
 end
 
 function KeyboardUI:registerGestureRanges(keyboard)
+    -- No rate limit: a pan the range turns down is not consumed, so it
+    -- falls through to the dialog under the keyboard (InputDialog's
+    -- MovableContainer) and its point is lost from the trace. A Kindle
+    -- reports touches about every 15 ms, under the 16.7 ms that rate = 60
+    -- allowed, so every other point of a swipe was being dropped.
     keyboard.ges_events.SwypeWordPan = {
         self.gesture_range:new{
             ges = "pan",
             range = function() return keyboard.dimen end,
-            rate = 60,
         },
     }
     keyboard.ges_events.SwypeWordPanRelease = {
