@@ -38,6 +38,9 @@ None of this is in the plugin folder or changes the plugin.
 - `tools/fetch_dictionary_sources.py` and `tools/build_dictionary.py`
   download the Leipzig word counts and build a dictionary package from
   them.
+- `tools/drop_foreign_words.py` leaves the English words out of another
+  language's package; `tools/resign_dictionary.py` works its signatures
+  out again with the current normalization profile.
 - `tools/build_offensive_lists.py` builds the offensive-word lists.
 
 `swipe_session.py` installs a temporary KOReader patch that shows words,

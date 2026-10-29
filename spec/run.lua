@@ -31,6 +31,7 @@ local specs = {
     "gesture_reference_spec",
     "trace_renderer_spec",
     "word_pairs_spec",
+    "drop_foreign_words_spec",
     "tap_completions_spec",
     "path_shape_spec",
     "missing_letters_spec",

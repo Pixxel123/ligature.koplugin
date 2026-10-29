@@ -62,6 +62,14 @@ def resign(directory, version, drop_misdecoded=False):
             changed += 1
             row[0] = sig
         rows.append(row)
+    rewrite(directory, rows, version)
+    print(f"{directory}: {changed} signatures changed, {dropped} rows "
+          f"dropped, {len(rows)} rows")
+
+
+def rewrite(directory, rows, version=None):
+    """Writes rows as the package's word lists and indexes, and their
+    count, hashes and version into its manifest."""
     rows.sort(key=lambda row: (ac.bucket_key(row[0]), -int(row[2]), row[1]))
     data = os.path.join(directory, "words.buckets.tsv")
     index = os.path.join(directory, "words.buckets.idx")
@@ -88,8 +96,6 @@ def resign(directory, version, drop_misdecoded=False):
     if version:
         values["version"] = version
     ac.update_manifest(directory, values)
-    print(f"{directory}: {changed} signatures changed, {dropped} rows "
-          f"dropped, {len(rows)} rows")
 
 
 def main():

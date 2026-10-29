@@ -35,7 +35,11 @@ package is the --size most frequent Leipzig words.
 With --known, a list of the words and inflected forms Wiktionary knows
 (lower case, one a line), a word Wiktionary does not know that the corpora
 saw fewer than --min-seen times is left out: misspellings, words typed
-without their accents ("reponse"), laughter, web debris.
+without their accents ("reponse"), laughter, web debris. With --english as
+well, the English package, a word Wiktionary does not know also goes when
+English uses it ten times as often: the base's web and subtitle text quotes
+English, and its Portuguese ranked "the" with "casa" (see
+tools/drop_foreign_words.py).
 
 Writes the package the keyboard reads (words.buckets.tsv and .idx,
 words.popular.tsv and .idx, manifest.tsv) and ATTRIBUTION.txt into --out; with
@@ -63,6 +67,13 @@ PROFILES = os.path.join(os.path.dirname(HERE), "ligature.koplugin",
                         "normalization_profiles.tsv")
 CAPITAL_SHARE = 0.95
 POPULAR_PER_FIRST = 256
+# How much more often English must use a word than another language's list
+# does for --english to leave it out: ten times.
+ENGLISH_LEAD = 1000
+# The fewest words a Wiktionary list may hold for --english to use it: a
+# download cut short would take out the language's own words. Danish, the
+# smallest, has about 130,000.
+MIN_KNOWN = 100000
 LICENCE_FILES = ("DATA-LICENSE.txt", "LICENSE-wordfreq.txt")
 # Manifest fields a rebuilt package works out afresh; a base's other fields
 # (name, keyboard layout, profile) are kept.
@@ -180,6 +191,34 @@ def zipf(count, total):
     return str(max(1, round(math.log10(count / total * 1e9) * 1000)))
 
 
+def read_english(directory):
+    """The frequencies of the English package's lower-case words. Its
+    capitalized ones are names ("Michael", "York"), which any language may
+    have."""
+    english = {}
+    for row in ac.read_rows(os.path.join(directory, "words.buckets.tsv")):
+        if row[1] == row[1].lower():
+            english[row[1]] = max(english.get(row[1], 0), int(row[2]))
+    return english
+
+
+def read_known(path):
+    """The words of a Wiktionary list (one a line, lower case)."""
+    with open(path, encoding="utf-8") as text:
+        return {line.strip() for line in text if line.strip()}
+
+
+def english_only(row, english, known, lead=ENGLISH_LEAD):
+    """Whether another language's row is an English word its text quotes:
+    English has it in lower case and uses it lead (Zipf x 1000) more often,
+    and Wiktionary does not know it in the language. A row the language
+    capitalizes goes too: English title words quoted in its text ("Things",
+    "Never") and a few names with them ("New", Turkish "Said")."""
+    key = row[1].lower()
+    return key in english and english[key] - int(row[2]) >= lead \
+        and key not in known
+
+
 def read_manifest(path):
     fields = {}
     with open(path, encoding="utf-8") as text:
@@ -211,6 +250,12 @@ def main():
                              "least frequent word")
     parser.add_argument("--known", help="words Wiktionary knows")
     parser.add_argument("--min-seen", type=int, default=3)
+    parser.add_argument("--english", help="the English package, to leave "
+                                          "out the English words --known "
+                                          "does not know")
+    parser.add_argument("--min-known", type=int, default=MIN_KNOWN,
+                        help="with --english, the fewest words --known "
+                             "may hold")
     parser.add_argument("--size", type=int, default=150000)
     parser.add_argument("--min-count", type=int, default=3)
     parser.add_argument("--contractions",
@@ -235,6 +280,10 @@ def main():
     table = read_profile(profile)
     if not table:
         parser.error(f"no normalization profile {profile}")
+    if args.english and not args.known:
+        parser.error("--english needs --known")
+    if args.english and data_language == "en":
+        parser.error("--english is for the other languages")
     name = args.name or base.get("name") or args.id
     layout = args.keyboard_layout or base.get("keyboard_layout")
     if not layout:
@@ -269,8 +318,10 @@ def main():
         recased = added = 0
     dropped = 0
     if args.known:
-        with open(args.known, encoding="utf-8") as text:
-            known = {line.strip() for line in text}
+        known = read_known(args.known)
+        if args.english and len(known) < args.min_known:
+            parser.error(f"{args.known}: fewer than --min-known "
+                         f"{args.min_known} words")
         seen_counts = collections.Counter()
         for word, count in counts.items():
             seen_counts[word.lower()] += count
@@ -278,6 +329,13 @@ def main():
         rows = [row for row in rows if row[1].lower() in known
                 or seen_counts[row[1].lower()] >= args.min_seen]
         dropped = before - len(rows)
+    english_dropped = 0
+    if args.english:
+        english = read_english(args.english)
+        before = len(rows)
+        rows = [row for row in rows
+                if not english_only(row, english, known)]
+        english_dropped = before - len(rows)
 
     os.makedirs(args.out, exist_ok=True)
     for name_ in LICENCE_FILES:
@@ -348,7 +406,8 @@ def main():
               encoding="utf-8") as out:
         out.write(attribution)
     print(f"{args.id}: {len(rows)} words (recased {recased}, added {added}, "
-          f"left out {dropped}) from {total} Leipzig tokens")
+          f"left out {dropped}, English left out {english_dropped}) from "
+          f"{total} Leipzig tokens")
 
 
 if __name__ == "__main__":
