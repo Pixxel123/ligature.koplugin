@@ -17,6 +17,19 @@ local ShapeChannel = {
     -- How far a word's first or last key may be from the swipe's ends, in
     -- key sizes.
     REACH = 1.0,
+    -- The most letters looked at for each end, nearest first: every first
+    -- and last letter pair is a word list read. An end between keys
+    -- reaches five in about a sixth of the recorded swipes, and four put
+    -- fewer words in the top four for no time saved on a PC.
+    MAX_END_LETTERS = 5,
+    -- Worst-case limits on a swipe's work after its nearest letter pair,
+    -- which is always looked at: words, words whose shapes are compared,
+    -- and time by the device's clock (a word list read from storage the
+    -- first time can be slow). The recorded sessions look at 15,254 words
+    -- and compare 8,277 shapes at most; a fifth of them compare over 2,048.
+    MAX_ENTRIES = 20000,
+    MAX_SHAPES = 10000,
+    BUDGET_MS = 50,
     -- The swipe's length over the word's ideal path length.
     MIN_RATIO = 0.7,
     MAX_RATIO = 1.4,
@@ -57,37 +70,66 @@ function ShapeChannel:triggered(signature)
     return #(signature or "") >= self.TRIGGER_LETTERS
 end
 
--- Whether center lies within REACH of its key sizes from point.
-function ShapeChannel:_reaches(center, point)
+-- How far point is from center, in center's key sizes.
+local function distance(center, point)
     local dx = center.x - point.x
     local dy = center.y - point.y
-    return math.sqrt(dx * dx + dy * dy)
-        <= self.REACH * math.max(1, center.size or 1)
+    return math.sqrt(dx * dx + dy * dy) / math.max(1, center.size or 1)
 end
 
 -- The letters with a key whose centre lies within REACH key sizes of
--- point: the letter's own key, or another key typing it (Danish å for a).
+-- point (the letter's own key, or another key typing it: Danish å for a),
+-- nearest first, at most MAX_END_LETTERS; and each one's distance.
 function ShapeChannel:_lettersNear(point, key_centers)
-    local letters = {}
+    local letters, distances = {}, {}
     for code = string.byte("a"), string.byte("z") do
         local center = key_centers[code]
         if center then
-            local near = self:_reaches(center, point)
-            local others = not near and center.others
+            local nearest = distance(center, point)
+            local others = center.others
             if others then
                 for index = 1, #others do
-                    if self:_reaches(others[index], point) then
-                        near = true
-                        break
-                    end
+                    nearest = math.min(nearest, distance(others[index], point))
                 end
             end
-            if near then
-                letters[#letters + 1] = string.char(code)
+            if nearest <= self.REACH then
+                local letter = string.char(code)
+                letters[#letters + 1] = letter
+                distances[letter] = nearest
             end
         end
     end
-    return letters
+    table.sort(letters, function(left, right)
+        if distances[left] ~= distances[right] then
+            return distances[left] < distances[right]
+        end
+        return left < right
+    end)
+    for index = #letters, self.MAX_END_LETTERS + 1, -1 do
+        letters[index] = nil
+    end
+    return letters, distances
+end
+
+-- Each first and last letter pair, nearest first.
+local function letterPairs(firsts, first_distances, lasts, last_distances)
+    local pairs_ = {}
+    for _, first in ipairs(firsts) do
+        for _, last in ipairs(lasts) do
+            pairs_[#pairs_ + 1] = { first = first, last = last,
+                distance = first_distances[first] + last_distances[last] }
+        end
+    end
+    table.sort(pairs_, function(left, right)
+        if left.distance ~= right.distance then
+            return left.distance < right.distance
+        end
+        if left.first ~= right.first then
+            return left.first < right.first
+        end
+        return left.last < right.last
+    end)
+    return pairs_
 end
 
 -- The trimmed swipe's first and last touch points. PathShape.resample
@@ -175,6 +217,9 @@ function ShapeChannel:candidates(options)
     local dictionary = options.dictionary or "en"
     local data_lang = options.data_language or dictionary
     local found, seen = {}, {}
+    -- The work done, and whether the limits apply yet (see MAX_ENTRIES).
+    local entries_seen, shapes, limited = 0, 0, false
+    local max_entries, max_shapes = self.MAX_ENTRIES, self.MAX_SHAPES
     local limit = self.KEEP
     local sample_count = path_shape.SAMPLE_COUNT
     local max_score = path_shape.MAX_SCORE
@@ -201,6 +246,7 @@ function ShapeChannel:candidates(options)
         if ratio < self.MIN_RATIO or ratio > self.MAX_RATIO then
             return
         end
+        shapes = shapes + 1
         local signature = paths.signatures[position]
         if not signature then
             signature = path_shape.pathSignature(entry, key_centers)
@@ -259,6 +305,11 @@ function ShapeChannel:candidates(options)
         local paths = self:_paths(entries, key_centers)
         local lengths, scales = paths.lengths, paths.scales
         for index = 1, #entries do
+            if limited and (entries_seen >= max_entries
+                    or shapes >= max_shapes) then
+                return
+            end
+            entries_seen = entries_seen + 1
             local length = lengths[index]
             if length >= 0 then
                 consider(entries[index], length, scales[index], paths, index)
@@ -266,15 +317,27 @@ function ShapeChannel:candidates(options)
         end
     end
     local first_point, last_point = swipeEnds(swipe)
-    local lasts = self:_lettersNear(last_point, key_centers)
-    for _, first in ipairs(self:_lettersNear(first_point, key_centers)) do
-        for _, last in ipairs(lasts) do
-            if self.personal_dictionary then
-                scan(self.personal_dictionary:getBucket(first, last,
-                    dictionary, options.normalization_profile))
-            end
-            scan(self.dictionary_store:loadBucket(first, last, dictionary))
+    local time = self.dictionary_store.time
+    local deadline
+    local firsts, first_distances = self:_lettersNear(first_point, key_centers)
+    local lasts, last_distances = self:_lettersNear(last_point, key_centers)
+    for index, pair in ipairs(letterPairs(firsts, first_distances, lasts,
+            last_distances)) do
+        if index == 2 then
+            limited = true
+            deadline = time and time.now() + time.ms(self.BUDGET_MS)
         end
+        if limited and (entries_seen >= max_entries
+                or shapes >= max_shapes
+                or (deadline and time.now() >= deadline)) then
+            break
+        end
+        if self.personal_dictionary then
+            scan(self.personal_dictionary:getBucket(pair.first, pair.last,
+                dictionary, options.normalization_profile))
+        end
+        scan(self.dictionary_store:loadBucket(pair.first, pair.last,
+            dictionary))
     end
     return found
 end

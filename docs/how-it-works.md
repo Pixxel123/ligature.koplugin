@@ -163,6 +163,16 @@ swipe. They're ranked by `6000 × shape distance − frequency`, and the best
 10 join the careful check. There, a letter of the word the path never
 crossed costs 2, in the units of a skipped swipe letter.
 
+At most 5 letters are taken at each end, nearest first, and the word
+lists of each first and last letter pair are read nearest pair first.
+After the nearest pair, which is always read, the channel stops at
+20,000 words, 10,000 shapes compared or 50 ms, whichever comes first.
+The word and shape limits never cut short a swipe in the recorded
+sessions. Replayed at about the Kindle's speed, the time limit stopped
+104 of 6,292 shape searches early and changed no word. They're there for
+a word list read from storage the first time, which can be slow on the
+device.
+
 #### Ranking
 
 Everything is put on one scale, where lower is better:

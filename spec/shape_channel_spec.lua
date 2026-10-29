@@ -173,3 +173,61 @@ it("counts a letter as near a point on another key typing it", function()
         "a,p", "on Danish å, next to p")
     T.eq(table.concat(ch:_lettersNear({ x = 0, y = 200 }, centers), ","), "a")
 end)
+
+it("takes each end's nearest letters first, at most MAX_END_LETTERS",
+        function()
+    local ch = ShapeChannel:new({}, PathShape:new())
+    local centers = {}
+    for index, letter in ipairs({ "q", "w", "e", "r", "t", "y" }) do
+        centers[string.byte(letter)] = { x = index * 20, y = 0, size = 100 }
+    end
+    local letters, distances = ch:_lettersNear({ x = 60, y = 0 }, centers)
+    T.eq(table.concat(letters, ","), "e,r,w,q,t")
+    T.eq(distances.e, 0)
+    ch.MAX_END_LETTERS = 2
+    T.eq(table.concat(ch:_lettersNear({ x = 110, y = 0 }, centers), ","),
+        "t,y", "a tie goes alphabetically")
+end)
+
+-- The real store, recording the word lists read, with a clock that moves
+-- on step microseconds each time it is read.
+local function recordingStore(step)
+    local clock = 0
+    local recording = { read = {}, time = {
+        now = function()
+            clock = clock + (step or 0)
+            return clock
+        end,
+        ms = function(n) return n * 1000 end,
+    } }
+    function recording:loadBucket(first, last, dictionary)
+        self.read[#self.read + 1] = first .. last
+        return store:loadBucket(first, last, dictionary)
+    end
+    return recording
+end
+
+it("reads the nearest letter pair first and stops at its limits",
+        function()
+    local points, centers = swipe("important")
+    local options = { signature = LONG, points = points,
+        key_centers = centers }
+    local all = recordingStore()
+    local before = words(ShapeChannel:new(all, PathShape:new())
+        :candidates(options))
+    T.eq(all.read[1], "it", "the swipe's own ends")
+    T.truthy(#all.read >= 6, table.concat(all.read, ","))
+
+    local few = recordingStore()
+    local limited = ShapeChannel:new(few, PathShape:new())
+    limited.MAX_ENTRIES = 1
+    local found = words(limited:candidates(options))
+    T.eq(table.concat(few.read, ","), "it", "only the nearest pair")
+    T.eq(found[1], before[1])
+
+    local slow = recordingStore(10000)
+    ShapeChannel:new(slow, PathShape:new()):candidates(options)
+    -- The clock is read when the nearest pair is done and before each
+    -- pair after it: 10, 20, 30 and 40 ms on, then 50, which stops it.
+    T.eq(#slow.read, 5, table.concat(slow.read, ","))
+end)
