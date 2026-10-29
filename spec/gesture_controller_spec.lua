@@ -49,6 +49,28 @@ local function newKeyboard(layout)
     return keyboard
 end
 
+-- The UIManager's queue of tasks, each { delay = seconds, fn = task }.
+local function newUIManager()
+    local ui_manager = { tasks = {} }
+    function ui_manager:scheduleIn(delay, fn)
+        table.insert(self.tasks, { delay = delay, fn = fn })
+    end
+    function ui_manager:unschedule(fn)
+        for index = #self.tasks, 1, -1 do
+            if self.tasks[index].fn == fn then
+                table.remove(self.tasks, index)
+            end
+        end
+    end
+    -- Runs the first task as UIManager would once it is due.
+    function ui_manager:runFirst()
+        return table.remove(self.tasks, 1).fn()
+    end
+    return ui_manager
+end
+
+-- Each call to now() moves the clock on a millisecond; clock.now can be
+-- set to let time pass.
 local function newController()
     local clock = { now = 0 }
     local time = {
@@ -58,9 +80,10 @@ local function newController()
         end,
         ms = function(ms) return ms * 1000 end,
     }
-    local ui_manager = { scheduleIn = function() end }
+    local ui_manager = newUIManager()
     local geometry = { new = function(_, point) return point end }
-    return GestureController:new(TraceCollector, ui_manager, time, geometry)
+    return GestureController:new(TraceCollector, ui_manager, time, geometry),
+        ui_manager, clock
 end
 
 local function pan(start, pos)
@@ -196,4 +219,52 @@ it("shifts nothing for a tap, and nothing with no offset learned",
     controller:onPanRelease(plain, pan(start, { x = 140, y = 250 }))
     T.eq(plain.finalized[1].signature, "qws")
     T.eq(plain.finalized[1].trace_info.recognition, nil)
+end)
+
+it("waits for a resting finger with one task, however many points",
+        function()
+    local keyboard = newKeyboard(newLayout())
+    local controller, ui_manager, clock = newController()
+    local start = { x = 150, y = 150 }
+    for x = 150, 250, 10 do
+        controller:onPan(keyboard, pan(start, { x = x, y = 150 }))
+    end
+    controller:onPan(keyboard, pan(start, { x = 250, y = 250 }))
+    T.eq(#ui_manager.tasks, 1)
+    T.eq(ui_manager.tasks[1].delay, 0.4)
+    -- The finger moved 10 ms ago: the task looks again 390 ms on.
+    clock.now = clock.now + 9000
+    ui_manager:runFirst()
+    T.eq(#keyboard.finalized, 0)
+    T.eq(#ui_manager.tasks, 1)
+    T.eq(ui_manager.tasks[1].delay, 0.39)
+    clock.now = clock.now + 400000
+    ui_manager:runFirst()
+    T.eq(#keyboard.finalized, 1)
+    T.eq(keyboard.finalized[1].signature, "wed")
+    T.eq(#ui_manager.tasks, 0)
+end)
+
+it("drops the waiting task when the finger lifts", function()
+    local keyboard = newKeyboard(newLayout())
+    local controller, ui_manager = newController()
+    local start = { x = 150, y = 150 }
+    controller:onPan(keyboard, pan(start, { x = 250, y = 150 }))
+    T.eq(#ui_manager.tasks, 1)
+    controller:onPanRelease(keyboard, pan(start, { x = 250, y = 250 }))
+    T.eq(#keyboard.finalized, 1)
+    T.eq(#ui_manager.tasks, 0)
+    controller:onPan(keyboard, pan(start, { x = 250, y = 150 }))
+    T.eq(#ui_manager.tasks, 1, "the next swipe waits again")
+end)
+
+it("finalizes nothing once the keyboard has closed", function()
+    local keyboard = newKeyboard(newLayout())
+    local controller, ui_manager, clock = newController()
+    controller:onPan(keyboard, pan({ x = 150, y = 150 }, { x = 250, y = 150 }))
+    keyboard.swype_mvp_closed = true
+    clock.now = clock.now + 400000
+    ui_manager:runFirst()
+    T.eq(#keyboard.finalized, 0)
+    T.eq(#ui_manager.tasks, 0)
 end)

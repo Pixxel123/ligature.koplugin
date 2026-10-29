@@ -1,6 +1,13 @@
 local GestureController = {}
 GestureController.__index = GestureController
 
+-- A swipe the finger rests on without lifting is taken once it has rested
+-- REST_MS; the task that waits for it looks FINALIZE_DELAY_MS after the
+-- swipe's first point, then that long after the newest point, until the
+-- finger has rested.
+GestureController.FINALIZE_DELAY_MS = 400
+GestureController.REST_MS = 350
+
 function GestureController:new(trace_collector, ui_manager, time_api, geometry)
     return setmetatable({
         trace_collector = assert(trace_collector),
@@ -17,27 +24,40 @@ function GestureController:reset(keyboard, keep_prefetch)
     if not keep_prefetch then
         keyboard:_swypeCancelBucketPrefetch()
     end
-    keyboard.swype_mvp_trace_generation =
-        (keyboard.swype_mvp_trace_generation or 0) + 1
+    if keyboard.swype_mvp_finalize_task then
+        self.ui_manager:unschedule(keyboard.swype_mvp_finalize_task)
+        keyboard.swype_mvp_finalize_task = nil
+    end
     keyboard.swype_mvp_trace = nil
     keyboard.swype_mvp_last_point_time = nil
 end
 
+-- One task a swipe, rather than one a point: a swipe's hundred or so
+-- points each moved the last point's time on, and each left a task in
+-- UIManager's queue that woke only to find a newer one.
 function GestureController:scheduleFinalize(keyboard)
-    keyboard.swype_mvp_trace_generation =
-        (keyboard.swype_mvp_trace_generation or 0) + 1
-    local generation = keyboard.swype_mvp_trace_generation
-    self.ui_manager:scheduleIn(0.4, function()
-        if keyboard.swype_mvp_closed
-                or keyboard.swype_mvp_trace_generation ~= generation
-                or not keyboard.swype_mvp_trace
-                or not keyboard.swype_mvp_last_point_time
-                or self.time.now() - keyboard.swype_mvp_last_point_time
-                    < self.time.ms(350) then
+    if keyboard.swype_mvp_finalize_task then
+        return
+    end
+    local task
+    task = function()
+        keyboard.swype_mvp_finalize_task = nil
+        if keyboard.swype_mvp_closed or not keyboard.swype_mvp_trace
+                or not keyboard.swype_mvp_last_point_time then
+            return
+        end
+        local rested_ms = (self.time.now()
+            - keyboard.swype_mvp_last_point_time) / self.time.ms(1)
+        if rested_ms < self.REST_MS then
+            keyboard.swype_mvp_finalize_task = task
+            self.ui_manager:scheduleIn(
+                (self.FINALIZE_DELAY_MS - rested_ms) / 1000, task)
             return
         end
         self:finalizeTrace(keyboard)
-    end)
+    end
+    keyboard.swype_mvp_finalize_task = task
+    self.ui_manager:scheduleIn(self.FINALIZE_DELAY_MS / 1000, task)
 end
 
 function GestureController:addPoint(keyboard, pos)

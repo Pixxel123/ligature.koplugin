@@ -417,7 +417,7 @@ function Replay.run(plugin, attempt)
     local profile = info.normalization_profile
     local clock = 0
     local controller = plugin.gesture_controller:new(plugin.trace_collector,
-        { scheduleIn = noop },
+        { scheduleIn = noop, unschedule = noop },
         { now = function() return clock end,
             ms = function(n) return n * 1000 end },
         { new = function(_, fields) return fields end })
