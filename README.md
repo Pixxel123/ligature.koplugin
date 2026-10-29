@@ -16,9 +16,7 @@ It's my fork of
 a ligature joins letters into one shape, which is what a swipe does. The
 fork gets far more swipes right, learns how you type, and adds a one-handed
 keyboard. The recognition was tuned on real swipes recorded on a Kindle
-Paperwhite (12th gen). Some of the recognition work is up for review
-upstream in [#2](https://github.com/azac/tapless.koplugin/pull/2) and
-[#4](https://github.com/azac/tapless.koplugin/pull/4).
+Paperwhite (12th gen).
 
 [Installation](#installation) · [Gestures](#gestures) ·
 [One-handed keyboard](#one-handed-keyboard) ·
@@ -190,9 +188,12 @@ layout (Russian, say) leaves the language as it is.
 
 ## Accuracy
 
-The same recorded swipes, replayed through upstream 0.4.0 and through this
-fork on the full-width keyboard. "First choice" is the word that gets
-typed. "Suggestions" means the word is anywhere in the suggestion row.
+The same recorded swipes, replayed through upstream 0.4.0, the version
+Ligature forked from, and through this fork on the full-width keyboard.
+"First choice" is the word that gets typed. "Suggestions" means the word is
+anywhere in the suggestion row. Upstream has since released 0.5.0 to
+0.7.0, with a shape channel inspired by Ligature's and native code on
+some devices; those haven't been measured here.
 
 | | Upstream 0.4.0 | Ligature |
 |---|---|---|
@@ -227,7 +228,7 @@ titles, characters and words you'd look up ("perfunctory", "denouement"),
 so many aren't everyday words.
 
 Recognising a swipe takes about 70 ms on the Kindle Paperwhite, against
-19 ms for upstream. Timed on a PC, about 40% of it goes on the
+19 ms for upstream 0.4.0. Timed on a PC, about 40% of it goes on the
 [shape channel](docs/how-it-works.md#shape-channel), which on two of the
 sentence sessions lifts first choice from 77% to 87%.
 
