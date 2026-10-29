@@ -108,6 +108,11 @@ function Scoring:buildNextPositions(trace)
     return trace_chars, next_positions
 end
 
+-- The two rows editDistance works in, kept rather than made for every row
+-- of every word scored. Only the band it fills is read, and the cells
+-- just outside it are set to infinity, as a new row's would read.
+local edit_rows = { {}, {} }
+
 function Scoring:editDistance(left, right, max_distance)
     max_distance = max_distance or self.EDIT_DISTANCE_MAX
     local left_len = #left
@@ -117,21 +122,24 @@ function Scoring:editDistance(left, right, max_distance)
     end
 
     local infinity = max_distance + 1
-    local previous = {}
-    for j = 0, math.min(right_len, max_distance) do
+    local previous, current = edit_rows[1], edit_rows[2]
+    local last = math.min(right_len, max_distance)
+    for j = 0, last do
         previous[j] = j
     end
+    previous[last + 1] = infinity
     for i = 1, left_len do
-        local current = {}
         local from = math.max(1, i - max_distance)
         local to = math.min(right_len, i + max_distance)
+        current[from - 1] = infinity
         current[0] = i <= max_distance and i or infinity
+        current[to + 1] = infinity
         local row_min = current[0]
         for j = from, to do
             local cost = string.byte(left, i) == string.byte(right, j) and 0 or 1
-            local deletion = (previous[j] or infinity) + 1
-            local insertion = (current[j - 1] or infinity) + 1
-            local substitution = (previous[j - 1] or infinity) + cost
+            local deletion = previous[j] + 1
+            local insertion = current[j - 1] + 1
+            local substitution = previous[j - 1] + cost
             local value = math.min(deletion, insertion, substitution)
             if value > infinity then
                 value = infinity
@@ -142,9 +150,9 @@ function Scoring:editDistance(left, right, max_distance)
         if row_min > max_distance then
             return infinity
         end
-        previous = current
+        previous, current = current, previous
     end
-    return previous[right_len] or infinity
+    return previous[right_len]
 end
 
 function Scoring:_lendsNeighbours(observations, position)
@@ -634,10 +642,15 @@ function Scoring:finishEntryScore(signature, entry, score, matched_positions,
     if endpoint_score and (#candidate <= 3 or (entry.freq or 0) >= 6500) then
         score = math.min(score, math.max(endpoint_score, score - 1))
     end
-    local edit_score = self:editDistance(
-        signature, candidate, self.EDIT_DISTANCE_MAX)
-    if edit_score <= self.EDIT_DISTANCE_MAX then
-        score = math.min(score, edit_score + math.floor(#signature / 2))
+    -- The edit distance is at least the gap between the lengths, so it can
+    -- only lower a score above half the signature and that gap.
+    local half = math.floor(#signature / 2)
+    if score > half + math.abs(#signature - #candidate) then
+        local edit_score = self:editDistance(
+            signature, candidate, self.EDIT_DISTANCE_MAX)
+        if edit_score <= self.EDIT_DISTANCE_MAX then
+            score = math.min(score, edit_score + half)
+        end
     end
     local repeat_bonus = 0
     if entry.repeat_positions and trace_info and trace_info.observations then

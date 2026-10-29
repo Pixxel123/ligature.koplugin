@@ -463,3 +463,44 @@ it("keeps a word in the row when every candidate repeats a letter",
         function()
     T.eq(rowOf({ { "zzz", "z" }, { "zzzz", "z" } }, 4), "zzz,zzzz")
 end)
+
+-- Edit distance over the whole table, capped where editDistance gives up.
+local function plainEditDistance(left, right, max_distance)
+    local previous = {}
+    for j = 0, #right do
+        previous[j] = j
+    end
+    for i = 1, #left do
+        local current = { [0] = i }
+        for j = 1, #right do
+            local cost = left:byte(i) == right:byte(j) and 0 or 1
+            current[j] = math.min(previous[j] + 1, current[j - 1] + 1,
+                previous[j - 1] + cost)
+        end
+        previous = current
+    end
+    return math.min(previous[#right], max_distance + 1)
+end
+
+it("measures edit distance as the whole table does, up to its limit", function()
+    local scoring = T.load("scoring"):new(T.normalization)
+    local seed = 12345
+    local function random(n)
+        seed = (seed * 1103515245 + 12345) % 2147483648
+        -- The high bits: the low ones repeat every few calls.
+        return math.floor(seed / 65536) % n
+    end
+    local function word()
+        local letters = {}
+        for index = 1, random(9) do
+            letters[index] = string.char(97 + random(4))
+        end
+        return table.concat(letters)
+    end
+    for _ = 1, 20000 do
+        local left, right, max_distance = word(), word(), 1 + random(3)
+        T.eq(scoring:editDistance(left, right, max_distance),
+            plainEditDistance(left, right, max_distance),
+            left .. " " .. right .. " " .. max_distance)
+    end
+end)
