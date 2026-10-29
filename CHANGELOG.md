@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.0.2
+
+- the dictionaries of the ten languages besides English no longer suggest
+  English words, which came up in Portuguese as "the" and "you"; update
+  them under Manage dictionaries
+- loads when another plugin has changed KOReader's keyboard first, as
+  Appearance before 1.9.0 did; Ligature fell back to KOReader's own
+  keyboard then
+- swipes are a little quicker on the Kindle, with less memory used for
+  each one
+
 ## 1.0.1
 
 - no longer crashes KOReader when typing in another plugin's text box,
