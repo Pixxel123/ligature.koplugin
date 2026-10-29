@@ -45,6 +45,7 @@ local specs = {
     "candidate_widths_spec",
     "side_band_spec",
     "koreader_adapter_spec",
+    "find_upvalue_spec",
 }
 
 for _, name in ipairs(specs) do
